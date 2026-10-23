@@ -52,3 +52,8 @@ Do not commit API keys, authentication secrets, raw private conversations, repor
 [PR #4](https://github.com/rayadinaveen98-ship-it/bridge/pull/4) merged. The Flutter internal APK now has a test-account/passphrase login instead of manual JWT input. The backend exchanges locally verified salted-scrypt credentials for 30-minute RS256 JWTs; the route is disabled by default and loopback-only. A private Windows Docker lab launcher is at [`scripts/Start-BridgeLocalLab.ps1`](scripts/Start-BridgeLocalLab.ps1). Do **not** use any other app's Supabase project; Bridge has no dedicated deployed database yet.
 
 [Flutter APK CI](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/39942130635) and [backend/PostgreSQL CI](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/39942130666) both passed. The artifact is a debug build and expires according to GitHub Actions retention. The in-chat APK copy is not a public service or production release. No live two-device hardware tests, public registration, age-assurance provider, or staffed moderation exist.
+
+
+## Test with one Android phone + Windows laptop
+
+No second Android phone or emulator is required to validate two **synthetic** accounts. Keep the local backend running, open a second PowerShell window in your Bridge repository, run `git pull`, then `node .\apps\api\scripts\BridgeSecondTester.mjs`. Sign in with the private `tester_b` passphrase, then select English and start a match as `tester_a` on the phone. The laptop terminal displays incoming messages and lets you reply. See the [step-by-step one-phone test guide](docs/engineering/ONE_PHONE_QA.md). This is not a second physical-device certification or public service.
