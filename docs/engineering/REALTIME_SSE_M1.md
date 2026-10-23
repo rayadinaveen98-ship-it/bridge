@@ -13,7 +13,7 @@
 ## Security limitations
 
 - Real identities/message text are never included in SSE event data, but event metadata is sensitive and stays behind bearer auth.
-- The stream authenticates the JWT once and rechecks database eligibility before each event and 20-second heartbeat. **Token expiry is not yet revalidated periodically**; do not expose without short-lived sessions and a revocation/expiry implementation.
+- Stream JWT signature/expiry and database eligibility are rechecked before every event and 20-second heartbeat. Active session revocation, issuer key rotation, and emergency disconnect policy remain unimplemented; do not expose publicly.
 - In-memory hub works for **exactly one Node process**. Multiple API instances require a shared pub/sub transport; otherwise an outbox event claimed by the wrong instance can leave a connected client without a live hint (REST replay still recovers).
 - In-memory per-subject rate limits do not stop distributed abuse.
 - The service must remain bound to `127.0.0.1` or `::1`; no public internet reverse proxy is configured.
