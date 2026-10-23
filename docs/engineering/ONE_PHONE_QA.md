@@ -37,3 +37,16 @@ Use one Android phone as **tester_a** and your existing Windows laptop as **test
 
 ## Important boundaries
 All traffic is restricted to 127.0.0.1 local test host (Android accesses it via USB port reverse). This is **not** a secure production deployment. Never use your regular account passwords or invite real users. The account eligibility flags are synthetic fixtures only.
+
+
+## Observed manual QA result — 2026-10-23
+
+User-provided Windows PowerShell screenshot from the local synthetic lab shows:
+- **PASS:** terminal helper signed in as \`tester_b\` and enabled English;
+- **PASS:** terminal reported \`MATCHED!\` with pseudonym Stardust (\`tester_a\` on Android);
+- **PASS:** the laptop displayed incoming phone messages including \`Hiii\`, \`Sup\`, and an emoji;
+- **PASS:** terminal reported acknowledged laptop sends \`hello\` (message sequence 2) and \`nice\` (message sequence 5).
+- **NOT YET VERIFIED:** screenshot does not itself prove laptop-originated messages rendered on the phone; ask user to confirm.
+- **PENDING:** mutual connection persistence, network interruption/reconnect, block/report enforcement on devices, second physical-phone testing and public-release safety requirements.
+
+This is a manual operator observation on a local synthetic-account environment. No test credentials, tokens or user account identifiers are stored here. Do not misstate it as public launch readiness or full two-way device-delivery certification.
