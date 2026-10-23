@@ -28,3 +28,22 @@ Do not publish private test passphrases, account tokens, personal details or int
 - Background/resume on physical devices and USB fault recovery are not fully automated in Android CI.
 - Session refresh and revocation, stored local cursors and a mobile-safe networking layer are M3 scope.
 - Moderation staffing/incident response, age assurance, scalable matchmaking, protection against abusive sign-ups and security review are required before public users.
+
+
+## CI verification
+
+Both Foundation jobs passed in GitHub Actions run 39954995708 (2026-10-23): https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/39954995708
+
+Verified in isolated PostgreSQL 16 only; the mobile USB-interruption and blocked-account UX checks still require user/device testing.
+
+## Applying backend safety fixes on Windows
+
+If an old random session is still open, finish it before restarting (in the existing desktop helper use /end). In the local Bridge repository run git pull. In the original server PowerShell terminal press Ctrl+C, then start the backend again with:
+
+    powershell -ExecutionPolicy Bypass -File .\scripts\Start-BridgeLocalLab.ps1
+
+Leave that first terminal open. Open a second PowerShell terminal in the Bridge folder and run:
+
+    node .\apps\api\scripts\BridgeSecondTester.mjs
+
+Use the pre-existing private tester_b passphrase (script will NOT regenerate it). The phone's ADB USB reverse may need to be re-applied; the previous M2 APK is unchanged. If lab tokens have expired, sign in again on the phone.
