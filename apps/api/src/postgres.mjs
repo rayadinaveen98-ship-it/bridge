@@ -69,6 +69,28 @@ export function createPostgresService(pool, onError = () => {}) {
   if (!pool?.query || !pool?.connect) throw new TypeError("Postgres pool required");
   return {
     onError,
+    // Checked on connection AND before every live notification. The client
+    // never chooses its own age, account ID or moderation eligibility.
+    async authorizeEvents(subject,conversationId) {
+      return transaction(pool,async c=>{
+        const {other,conv,participant,me}=await participants(c,conversationId,subject);
+        if(conv.state!=="open" || participant.left_at)
+          throw new ApiError(403,"conversation_closed");
+        const recipient=await c.query(
+          "SELECT status,age_verified_at,safety_eligible FROM bridge_accounts WHERE id=$1",[other]);
+        if(recipient.rows[0]?.status!=="active" || !recipient.rows[0]?.age_verified_at ||
+           recipient.rows[0]?.safety_eligible!==true)
+          throw new ApiError(403,"recipient_unavailable");
+        if(conv.kind==="connection"){
+          const pair=[me.id,other].sort();
+          const linked=await c.query(
+            "SELECT 1 FROM bridge_connections WHERE member_low=$1 AND member_high=$2 AND ended_at IS NULL",
+            pair);
+          if(!linked.rows.length)throw new ApiError(403,"connection_closed");
+        }
+        return true;
+      });
+    },
     async bootstrap(subject) {
       const c=await pool.connect();
       try {
