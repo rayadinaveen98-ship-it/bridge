@@ -9,7 +9,7 @@ function fake(responses, requests) {
       body:options.body && JSON.parse(options.body)});
     const result=responses.shift();
     assert.ok(result, "No fake result for "+path);
-    return new Response(result.value===undefined?"":JSON.stringify(result.value),
+    return new Response(result.status===204?null:result.value===undefined?"":JSON.stringify(result.value),
       {status:result.status||200,
         headers:{"Content-Type":"application/json"}});
   };
