@@ -15,12 +15,12 @@
 
 ## Known production blockers
 - No operational age verification, moderator dashboard or on-call safety response.
-- No real PostgreSQL integration/concurrency tests; this environment has no Postgres tools.
+- Basic real PostgreSQL integration and concurrent message-sequencing tests passed in [CI run 39931219488](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/39931219488); high-load/multi-worker stress and incident scenarios remain untested.
 - Matching uses one global PostgreSQL advisory lock for reservations. This is deliberate correctness-first M1; throughput and deadlock behavior must be profiled/refactored.
 - No user/device notifications, realtime fanout or online-presence validation.
 - No per-account distributed rate limiting/abuse heuristics yet, and no private API production gateway.
 - Session renewal/JWKS/key rotation, audit trail, retention schedules, data deletion and secrets policy remain to be implemented.
 - The service does not provision accounts or bypass eligibility. Real users cannot sign up.
-- Only static and fake-PG tests have been exercised, not production security assurance.
+- Static/unit, fake-PG, and scoped real PostgreSQL CI integration tests have passed; these do **not** constitute production security assurance.
 
 **No real users, payments or publicly reachable stranger chat until launch/safety gates pass.**
