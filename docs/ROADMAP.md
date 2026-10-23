@@ -27,6 +27,11 @@
 - **Not deployed**. No operational age assurance, live human moderation or public user onboarding.
 - Hosted CI PostgreSQL status is not verified here; database migration cannot be run locally without Postgres.
 
+## M1 durability checkpoint — 2026-10-23
+- [PR #1](https://github.com/rayadinaveen98-ship-it/bridge/pull/1) merged; added transactional outbox, retryable claim/ack dispatcher, unit and real Postgres tests.
+- **Both GitHub Actions jobs passed** in [run 39931219488](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/39931219488), including migrations 0001+0002 and an explicit non-owner role RLS visibility test.
+- No real-time network publisher, background delivery worker, mobile app, age-assurance provider or live moderation deployed yet.
+
 ## Phase 4 — backend foundation
 - Accounts, privacy controls, authentication sessions and abuse limits.
 - Schema migrations, transactional matching state machine and message persistence.
