@@ -18,3 +18,20 @@ See \`src/http.mjs\` and \`docs/engineering/M1_API.md\`.
 
 ## Next
 Implement secure Postgres-backed service, integration test concurrency in a real database, connect a vetted authentication/age assurance provider, and only then allow two test adults to exchange real messages. Do not expose this service to the public internet yet.
+
+## Internal login (M2 laboratory)
+
+No user-facing manual JWT is required in the Flutter application. To use synthetic test accounts, provision an isolated local PostgreSQL database named `bridge_lab` (or `bridge_test`) and apply migrations `0001`, `0002`, `0003`. This step must NOT use CineRelay, Creator OS or any shared Supabase project.
+
+Run from `apps/api` with `BRIDGE_DATABASE_URL` set to a local lab database:
+
+```sh
+npm install
+node scripts/create_lab_accounts.mjs
+```
+
+This command generates a 3072-bit RSA signing keypair in a local private folder and prints two independently generated synthetic test-account passphrases **once**. Store them privately, do not paste them in GitHub or chat, and never use them as personal passwords. Rerunning the script will not silently reset existing accounts. The synthetic lab-only eligibility flags are NOT age verification or real moderation.
+
+Set `BRIDGE_AUTH_PUBLIC_KEY_FILE` to the generated public key; set `BRIDGE_LAB_PRIVATE_KEY_FILE` to the private key; `BRIDGE_AUTH_ISSUER=bridge-internal-lab`; `BRIDGE_AUTH_AUDIENCE=bridge-api`; `BRIDGE_ALLOW_LAB_LOGIN=1`; `BRIDGE_DATABASE_URL` to your loopback lab DB. Start `node src/start.mjs`. The API remains bound to loopback and may be bridged over USB using `adb reverse tcp:8787 tcp:8787`.
+
+Lab login signs 30-minute RS256 tokens after verifying a salted scrypt passphrase and checking server-side account eligibility. The login route is disabled unless explicitly enabled. It is NOT production registration, password recovery, full session revocation, real age assurance, or human moderation. No public deployment.
