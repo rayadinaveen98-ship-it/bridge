@@ -24,6 +24,8 @@ _2026-10-23. Documented from project discussions and the latest offline artifact
 | In-memory per-subject rate limiter | Laboratory-only | Must become distributed anti-abuse controls |
 | Authenticated single-process SSE + durable replay | Implemented and CI verified | See M1 live-delivery spec; no distributed broker yet |
 | Flutter M1 internal Android client | Built and debug APK CI passed | Synthetic-account lab only; no physical two-device certification, no public release |
+| M2 no-manual-JWT lab login | Implemented, CI passed | Synthetic pre-provisioned users, 30-minute signed tokens, loopback-only; public login forbidden |
+| Windows local Docker lab bootstrap | Committed | Requires user's machine with Node.js 22+, Docker Desktop; cannot reach users from public internet |
 
 ## Reconciliation note
 
