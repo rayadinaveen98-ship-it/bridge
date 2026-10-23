@@ -63,10 +63,21 @@ test("real PostgreSQL: matchmaking, durable messaging, votes and block", {
       clientMessageId:keyA,body:"Hello there"
     });
     assert.equal(first.sequenceNumber,1);
+    const outboxOne=await pool.query(
+      "SELECT event_key,payload,published_at FROM bridge_event_outbox WHERE event_key=$1",
+      ["message:"+first.id]);
+    assert.equal(outboxOne.rows.length,1);
+    assert.equal(outboxOne.rows[0].payload.messageId,first.id);
+    assert.equal(outboxOne.rows[0].payload.sequenceNumber,1);
+    assert.equal(outboxOne.rows[0].payload.body,undefined);
     const again=await service.sendMessage(a.subject,conversationId,{
       clientMessageId:keyA,body:"Hello there"
     });
     assert.equal(again.id,first.id);
+    const replayCount=await pool.query(
+      "SELECT count(*)::int AS total FROM bridge_event_outbox WHERE event_key=$1",
+      ["message:"+first.id]);
+    assert.equal(replayCount.rows[0].total,1);
     await assert.rejects(service.sendMessage(a.subject,conversationId,{
       clientMessageId:keyA,body:"tampered retry"
     }),e=>e instanceof ApiError&&e.status===409);
