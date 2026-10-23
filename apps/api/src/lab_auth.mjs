@@ -38,7 +38,7 @@ export async function verifyLabPassphrase(plaintext, expected) {
   const salt = hasStoredHash ? Buffer.from(expected.salt,"hex") : DUMMY_SALT;
   const hash = await scrypt(candidate, salt, HASH_BYTES, SCRYPT);
   const stored = hasStoredHash ? Buffer.from(expected.hash,"hex") : Buffer.alloc(HASH_BYTES);
-  return hasStoredHash && timingSafeEqual(hash,stored);
+  return Boolean(hasStoredHash) && timingSafeEqual(hash,stored);
 }
 
 export function signLabJwt(subject, signing) {
