@@ -1,0 +1,56 @@
+name: Bridge Android internal
+
+on:
+  pull_request:
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/android-internal.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/android-internal.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  debug-apk:
+    name: Flutter tests and debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate missing Android platform files without overwriting Dart
+        run: flutter create --platforms=android --project-name bridge_mobile --org com.bridge.internal --no-pub apps/mobile
+      - name: Fetch Dart dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+      - name: Check Dart source
+        working-directory: apps/mobile
+        run: flutter analyze --no-fatal-infos
+      - name: Run Flutter widget and protocol tests
+        working-directory: apps/mobile
+        run: flutter test
+      - name: Compile debug-only internal APK
+        working-directory: apps/mobile
+        run: flutter build apk --debug
+      - name: Archive internal test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: bridge-m1-internal-debug-apk
+          path: apps/mobile/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7
+          if-no-files-found: error
