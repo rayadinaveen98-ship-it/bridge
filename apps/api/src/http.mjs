@@ -73,7 +73,11 @@ export function createHandler(service, authentication, liveHub = null) {
         const conversationId=assertId(eventStream[1]);
         return await liveHub.open({
           subject,conversationId,req,res,
-          authorize:()=>service.authorizeEvents(subject,conversationId)
+          authorize:async()=>{
+            // A long-lived stream must not outlive the signed JWT.
+            verifyBearer(req.headers.authorization, authentication);
+            await service.authorizeEvents(subject,conversationId);
+          }
         });
       }
       const messages = pathname.match(/^\/v1\/conversations\/([^/]+)\/messages$/);
