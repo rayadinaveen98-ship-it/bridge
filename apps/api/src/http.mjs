@@ -67,6 +67,10 @@ export function createHandler(service, authentication, liveHub = null) {
           return send(res, 204);
         }
       }
+      const peerRoute = pathname.match(/^\/v1\/conversations\/([^/]+)\/peer$/);
+      if (peerRoute && method === "GET") {
+        return send(res,200,await service.conversationPeer(subject,assertId(peerRoute[1])));
+      }
       const eventStream = pathname.match(/^\/v1\/conversations\/([^/]+)\/events$/);
       if (eventStream && method === "GET") {
         if (!liveHub) throw new ApiError(503,"realtime_unavailable");
