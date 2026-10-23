@@ -403,7 +403,6 @@ class _BridgeHomeState extends State<BridgeHome>
   ]);
 
   Widget _chat() {
-    final id = bridge.conversationId!;
     return Column(children: [
       Padding(padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
         child: Row(children: [
