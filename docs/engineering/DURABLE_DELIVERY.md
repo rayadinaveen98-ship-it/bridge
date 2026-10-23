@@ -13,4 +13,4 @@ Files:
 
 **Not implemented:** Production publisher adapter, broker, worker process, operational alerts/dead-letter handling, live WebSocket subscriptions, physical-device tests. The added outbox does NOT itself mean real-time messaging works.
 
-**Deployment constraints:** migration not yet verified as applied in a real database. The GitHub CI PostgreSQL service test must pass before this is treated as validated SQL. Never deploy this schema to a shared database without DBA review.
+**Verified on isolated PostgreSQL 16 CI:** migrations 0001+0002, message-outbox atomicity/deduplication, simulated transport failure and replay/ack, and public-style database role RLS tests passed on October 23, 2026 ([Actions run](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/39931219488)). This validates the tested paths only, not production operations, load behavior, or security approval. Never deploy the schema to a shared database without review.
