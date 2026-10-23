@@ -50,3 +50,7 @@ User-provided Windows PowerShell screenshot from the local synthetic lab shows:
 - **PENDING:** mutual connection persistence, network interruption/reconnect, block/report enforcement on devices, second physical-phone testing and public-release safety requirements.
 
 This is a manual operator observation on a local synthetic-account environment. No test credentials, tokens or user account identifiers are stored here. Do not misstate it as public launch readiness or full two-way device-delivery certification.
+
+## Follow-up operator confirmation — 2026-10-23
+
+In the subsequent chat, the tester responded that everything was working after the two-way message verification request. Record **operator-reported Android↔Windows message exchange as successful**, not independently observed telemetry. This statement does **not** establish successful mutual connection retention, reconnection after network loss, report review, block enforcement, or multi-device testing. Those remain explicit next QA gates.
