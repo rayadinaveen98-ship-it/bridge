@@ -21,3 +21,7 @@ coverage/
 __pycache__/
 .pytest_cache/
 tests/artifacts/
+
+# Never commit local synthetic test JWT signing keys
+.bridge-private-lab/
+apps/api/.bridge-private-lab/
