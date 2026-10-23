@@ -43,8 +43,9 @@ class BridgeController extends ChangeNotifier {
     busy = true;
     error = null;
     _notify();
-    final candidate = BridgeApi(endpoint, bearer);
+    BridgeApi? candidate;
     try {
+      candidate = BridgeApi(endpoint, bearer);
       final result = await candidate.bootstrap();
       final available = (result['languages'] as List? ?? []);
       final catalog = available.map((lang) {
@@ -61,7 +62,7 @@ class BridgeController extends ChangeNotifier {
       connected = true;
       info = 'Authenticated lab session. Choose your languages.';
     } catch (e) {
-      candidate.dispose();
+      candidate?.dispose();
       _failure(e);
     } finally {
       busy = false;
@@ -86,6 +87,8 @@ class BridgeController extends ChangeNotifier {
     pendingText = null;
     _notify();
   }
+
+  void clearError() { error = null; _notify(); }
 
   void toggleLanguage(String code) {
     if (chosenLanguages.contains(code)) {
@@ -223,8 +226,8 @@ class BridgeController extends ChangeNotifier {
   void _scheduleReconnect(String id, int version) {
     if (conversationId != id || version != _streamVersion || api == null) return;
     _reconnectTimer?.cancel();
-    final seconds = 1 << _reconnectAttempt.clamp(0, 3);
-    _reconnectAttempt = (_reconnectAttempt + 1).clamp(0, 3);
+    final seconds = 1 << _reconnectAttempt.clamp(0, 3).toInt();
+    _reconnectAttempt = (_reconnectAttempt + 1).clamp(0, 3).toInt();
     _reconnectTimer = Timer(Duration(seconds: seconds), () {
       if (conversationId == id && version == _streamVersion) _listen(id);
     });
