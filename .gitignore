@@ -1,0 +1,23 @@
+# secrets and local tooling
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.keystore
+*.jks
+*.key
+*.db
+*.sqlite
+node_modules/
+.dart_tool/
+build/
+dist/
+coverage/
+.idea/
+.vscode/
+.DS_Store
+*.log
+__pycache__/
+.pytest_cache/
+tests/artifacts/
