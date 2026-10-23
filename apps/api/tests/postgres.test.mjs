@@ -55,3 +55,41 @@ test("report requires reporter/target and does not claim moderation action",asyn
   await assert.rejects(svc.report("test",{reportedAccountId:"account-b",category:"spam"}),e=>e instanceof ApiError&&e.status===404);
   assert.ok(!d.seen.some(x=>x[0].includes("INSERT INTO bridge_reports")));
 });
+
+test("expired pending search is reported as expired",async()=>{
+  const d=stub(async sql=>{
+    if(sql.includes("SELECT id FROM bridge_accounts WHERE auth_subject"))return {rows:[{id:"account-a"}]};
+    if(sql.includes("SELECT q.state,q.expires_at"))return {rows:[{
+      state:"waiting",expires_at:new Date(Date.now()-60000),conversation_id:null
+    }]};
+    return {rows:[]};
+  });
+  const status=await createPostgresService(d.pool).queueStatus("test","request-id");
+  assert.equal(status.state,"expired");
+});
+test("duplicate message with conflicting content is rejected before message insertion",async()=>{
+  const d=stub(async(sql)=>{
+    if(sql.includes("FROM bridge_accounts WHERE auth_subject"))return {rows:[{
+      id:"a",status:"active",age_verified_at:new Date(),safety_eligible:true
+    }]};
+    if(sql.includes("FROM bridge_conversations WHERE id="))return {rows:[{
+      id:"conversation",state:"open",kind:"random",next_message_sequence:8
+    }]};
+    if(sql.includes("FROM bridge_conversation_participants WHERE conversation_id="))return {rows:[
+      {account_id:"a",left_at:null},{account_id:"b",left_at:null}
+    ]};
+    if(sql.includes("FROM bridge_blocks WHERE"))return {rows:[]};
+    if(sql.includes("FROM bridge_accounts WHERE id="))return {rows:[{
+      status:"active",age_verified_at:new Date(),safety_eligible:true
+    }]};
+    if(sql.includes("FROM bridge_messages")&&sql.includes("client_message_id="))return {rows:[{
+      id:"old",conversation_id:"conversation",sender_id:"a",sequence_number:7,
+      body:"original",sent_at:new Date()
+    }]};
+    return {rows:[]};
+  });
+  await assert.rejects(createPostgresService(d.pool).sendMessage("test","conversation",{
+    clientMessageId:"client-id",body:"altered"
+  }),e=>e instanceof ApiError&&e.status===409);
+  assert.ok(!d.seen.some(x=>x[0].includes("INSERT INTO bridge_messages")));
+});

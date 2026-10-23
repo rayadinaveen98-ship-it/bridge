@@ -106,7 +106,11 @@ export function createPostgresService(pool, onError = () => {}) {
           throw new ApiError(409,"active_match");
 
         let existing=(await c.query(
-          "SELECT request_id,state,match_session_id FROM bridge_match_queue WHERE account_id=$1 FOR UPDATE",[me.id])).rows[0];
+          "SELECT request_id,state,match_session_id,expires_at FROM bridge_match_queue WHERE account_id=$1 FOR UPDATE",[me.id])).rows[0];
+        if (existing && existing.state==="waiting" && new Date(existing.expires_at).getTime()<=Date.now()) {
+          await c.query("UPDATE bridge_match_queue SET state='expired' WHERE account_id=$1",[me.id]);
+          existing={...existing,state:"expired"};
+        }
         if(existing && existing.request_id===idempotencyKey) {
           if(existing.state==="reserved"){
             const found=await c.query("SELECT id FROM bridge_conversations WHERE match_session_id=$1",[existing.match_session_id]);
@@ -180,10 +184,12 @@ export function createPostgresService(pool, onError = () => {}) {
       const me=await pool.query("SELECT id FROM bridge_accounts WHERE auth_subject=$1",[subject]);
       const a=requireRows(me,403,"account_unavailable");
       const q=requireRows(await pool.query(
-        "SELECT q.state,q.match_session_id,c.id AS conversation_id " +
+        "SELECT q.state,q.expires_at,q.match_session_id,c.id AS conversation_id " +
         "FROM bridge_match_queue q LEFT JOIN bridge_conversations c ON c.match_session_id=q.match_session_id " +
         "WHERE q.account_id=$1 AND q.request_id=$2",[a.id,requestId]));
-      return {requestId,state:q.state==="reserved"?"connected":q.state,conversationId:q.conversation_id||null};
+      const expired=q.state==="waiting" && new Date(q.expires_at).getTime()<=Date.now();
+      return {requestId,state:expired?"expired":q.state==="reserved"?"connected":q.state,
+        conversationId:q.conversation_id||null};
     },
     async cancelQueue(subject,requestId) {
       await transaction(pool,async c=>{
@@ -213,8 +219,10 @@ export function createPostgresService(pool, onError = () => {}) {
       return transaction(pool,async c=>{
         const {me,conv,participant,other}=await participants(c,conversationId,subject);
         if(conv.state!=="open" || participant.left_at) throw new ApiError(403,"conversation_closed");
-        const otherAccount=await c.query("SELECT status FROM bridge_accounts WHERE id=$1",[other]);
-        if(otherAccount.rows[0]?.status!=="active") throw new ApiError(403,"recipient_unavailable");
+        const otherAccount=await c.query(
+          "SELECT status,age_verified_at,safety_eligible FROM bridge_accounts WHERE id=$1",[other]);
+        if(otherAccount.rows[0]?.status!=="active" || !otherAccount.rows[0]?.age_verified_at ||
+           otherAccount.rows[0]?.safety_eligible!==true) throw new ApiError(403,"recipient_unavailable");
         if(conv.kind==="connection"){
           const valid=await c.query("SELECT 1 FROM bridge_connections WHERE " +
             "member_low=$1 AND member_high=$2 AND ended_at IS NULL",[...[me.id,other].sort()]);
