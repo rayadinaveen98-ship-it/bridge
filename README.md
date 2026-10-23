@@ -32,7 +32,7 @@ Open `prototype/bridge-v1.html` in a browser. Demo users, messages, reports, age
 
 ## Foundation tests
 
-Use Node.js >=22. Run `npm test --prefix packages/matching` for pure matching rules and static schema/design/API contract checks. Run `npm test --prefix apps/api` for offline HTTP/auth, rate limiter and fake-database tests. The separate real PostgreSQL test requires a disposable `bridge_test` database and is configured in GitHub Actions; a successful hosted CI run is not yet confirmed. See [database integration instructions](docs/engineering/POSTGRES_TESTS.md).
+Use Node.js >=22. Run `npm test --prefix packages/matching` for pure matching rules and static schema/design/API contract checks. Run `npm test --prefix apps/api` for offline HTTP/auth, rate limiter and fake-database tests. The separate real PostgreSQL test requires a disposable `bridge_test` database and is configured in GitHub Actions; the [GitHub Actions PostgreSQL 16 integration run](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/39931219488) passed after applying migrations 0001 and 0002 and checking real-database matching, messaging, outbox retries, blocks, reports and RLS isolation. See [database integration instructions](docs/engineering/POSTGRES_TESTS.md).
 
 ## Proposed production tech stack (not yet deployed)
 
@@ -42,4 +42,4 @@ Flutter; TypeScript/NestJS; PostgreSQL with Supabase; server-authoritative match
 
 Do not commit API keys, authentication secrets, raw private conversations, report evidence or personal information. Public repo visibility does not equal open-source licensing: no license chosen.
 
-**Next:** Verify the PostgreSQL 16 integration workflow passes, audit transactional concurrency/security, then add age-assurance and moderator operations before any real user test. Flutter integration, realtime delivery and APK remain pending. No public beta before safety/legal/operations readiness.
+**Next:** Audit load/concurrency, implement an actual authenticated realtime publisher and device message subscriptions, then add age-assurance and staffed moderation before any real user trial. Flutter integration and APK remain pending. No public beta before safety/legal/operations readiness.
