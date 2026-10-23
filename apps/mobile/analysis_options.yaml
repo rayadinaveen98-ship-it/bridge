@@ -1,0 +1,6 @@
+analyzer:
+  errors:
+    dead_code: warning
+    invalid_assignment: error
+    undefined_identifier: error
+    undefined_class: error
