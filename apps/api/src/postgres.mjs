@@ -236,7 +236,7 @@ export function createPostgresService(pool, onError = () => {}) {
     async messages(subject,conversationId,afterSequence) {
       return transaction(pool,async c=>{
         const {me,conv,participant}=await participants(c,conversationId,subject);
-        if(participant.left_at || (conv.state!=="open" && conv.kind!=="connection")) throw new ApiError(403,"conversation_closed");
+        if(participant.left_at || conv.state!=="open") throw new ApiError(403,"conversation_closed");
         const q=await c.query(
           "SELECT id,conversation_id,sequence_number,sender_id,body,sent_at FROM bridge_messages " +
           "WHERE conversation_id=$1 AND sequence_number>$2 ORDER BY sequence_number LIMIT $3",
@@ -307,7 +307,21 @@ export function createPostgresService(pool, onError = () => {}) {
     async castVote(subject,conversationId,decision) {
       return transaction(pool,async c=>{
         const {me,other,conv}=await participants(c,conversationId,subject);
-        if(conv.kind==="connection")return {status:"connected"};
+        // Closed random sessions must never be reopened by late accept votes.
+        if(conv.state!=="open")throw new ApiError(409,"conversation_closed");
+        const recipient=await c.query(
+          "SELECT status,age_verified_at,safety_eligible FROM bridge_accounts WHERE id=$1",[other]);
+        if(recipient.rows[0]?.status!=="active" || !recipient.rows[0]?.age_verified_at ||
+           recipient.rows[0]?.safety_eligible!==true)throw new ApiError(403,"recipient_unavailable");
+        if(conv.kind==="connection"){
+          if(decision==="withdraw")throw new ApiError(409,"already_connected");
+          const pair=[me.id,other].sort();
+          const current=await c.query(
+            "SELECT id FROM bridge_connections WHERE member_low=$1 AND member_high=$2 " +
+            "AND ended_at IS NULL",[...pair]);
+          if(!current.rows.length)throw new ApiError(409,"connection_closed");
+          return {status:"connected",connectionId:current.rows[0].id};
+        }
         await c.query(
           "INSERT INTO bridge_connection_votes(conversation_id,voter_id,status) VALUES($1,$2,$3) " +
           "ON CONFLICT(conversation_id,voter_id) DO UPDATE SET status=EXCLUDED.status,updated_at=now()",
@@ -343,12 +357,18 @@ export function createPostgresService(pool, onError = () => {}) {
       });
     },
     async connections(subject) {
-      const me=requireRows(await pool.query("SELECT id FROM bridge_accounts WHERE auth_subject=$1",[subject]),403);
+      const me=requireRows(await pool.query(
+        "SELECT id FROM bridge_accounts WHERE auth_subject=$1 AND status='active' " +
+        "AND age_verified_at IS NOT NULL AND safety_eligible=true",[subject]),403);
       const q=await pool.query(
         "SELECT co.id,co.source_conversation_id,co.created_at,p.pseudonym " +
         "FROM bridge_connections co JOIN bridge_profiles p ON p.account_id = " +
         "(CASE WHEN co.member_low=$1 THEN co.member_high ELSE co.member_low END) " +
+        "JOIN bridge_accounts peer ON peer.id=p.account_id " +
+        "JOIN bridge_conversations conversation ON conversation.id=co.source_conversation_id " +
         "WHERE (co.member_low=$1 OR co.member_high=$1) AND co.ended_at IS NULL " +
+        "AND peer.status='active' AND peer.age_verified_at IS NOT NULL " +
+        "AND peer.safety_eligible=true AND conversation.state='open' " +
         "AND NOT EXISTS(SELECT 1 FROM bridge_blocks b WHERE " +
         "(b.blocker_id=co.member_low AND b.blocked_id=co.member_high) OR " +
         "(b.blocker_id=co.member_high AND b.blocked_id=co.member_low)) " +
