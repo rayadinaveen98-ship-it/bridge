@@ -22,7 +22,8 @@ _2026-10-23. Documented from project discussions and the latest offline artifact
 | Internal loopback HTTP gateway + PostgreSQL transaction service | Implemented, internal only | No public deployment; framework decision may be revisited |
 | PostgreSQL 16 integration suite | Passed in GitHub Actions | Synthetic fixtures and scoped transaction tests |
 | In-memory per-subject rate limiter | Laboratory-only | Must become distributed anti-abuse controls |
-| Authenticated single-process SSE + durable replay | Implemented and CI verified | See M1 live-delivery spec; no distributed broker or Android client yet |
+| Authenticated single-process SSE + durable replay | Implemented and CI verified | See M1 live-delivery spec; no distributed broker yet |
+| Flutter M1 internal Android client | Built and debug APK CI passed | Synthetic-account lab only; no physical two-device certification, no public release |
 
 ## Reconciliation note
 
