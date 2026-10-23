@@ -4,6 +4,8 @@ import { createHandler } from "./http.mjs";
 import { createPostgresService } from "./postgres.mjs";
 import { createLiveHub } from "./live.mjs";
 import { createOutboxDispatcher } from "./outbox.mjs";
+import { createLabLogin } from "./lab_auth.mjs";
+import { createPublicKey } from "node:crypto";
 
 const required=["BRIDGE_DATABASE_URL","BRIDGE_AUTH_PUBLIC_KEY_FILE","BRIDGE_AUTH_ISSUER","BRIDGE_AUTH_AUDIENCE"];
 for(const key of required) if(!process.env[key])throw new Error("Missing required configuration: "+key);
@@ -25,11 +27,26 @@ const service=createPostgresService(pool,error=>console.error("Bridge backend er
 const liveHub=createLiveHub({maxTotal:100,maxPerSubject:2,heartbeatMs:20000});
 const dispatcher=createOutboxDispatcher(pool,event=>liveHub.publish(event),
   error=>console.error("Bridge outbox issue",error?.code||error?.name||"unknown"));
-const server=createServer(createHandler(service,{
+const auth={
   publicKeyPem:readFileSync(process.env.BRIDGE_AUTH_PUBLIC_KEY_FILE,"utf8"),
   issuer:process.env.BRIDGE_AUTH_ISSUER,
   audience:process.env.BRIDGE_AUTH_AUDIENCE
-},liveHub));
+};
+const labEnabled=process.env.BRIDGE_ALLOW_LAB_LOGIN==="1";
+let labCredentials=null;
+if(labEnabled){
+  if(!process.env.BRIDGE_LAB_PRIVATE_KEY_FILE){
+    throw Error("BRIDGE_LAB_PRIVATE_KEY_FILE required in lab mode");
+  }
+  const privateKeyPem=readFileSync(process.env.BRIDGE_LAB_PRIVATE_KEY_FILE,"utf8");
+  const derived=createPublicKey(privateKeyPem).export({type:"spki",format:"pem"}).toString();
+  const configured=createPublicKey(auth.publicKeyPem).export({type:"spki",format:"pem"}).toString();
+  if(derived!==configured)throw Error("Lab signing and verification keys differ");
+  labCredentials=createLabLogin(pool,{
+    privateKeyPem,issuer:auth.issuer,audience:auth.audience
+  },{enabled:true});
+}
+const server=createServer(createHandler(service,auth,liveHub,labCredentials));
 // One internal process only: outbox claims do not distribute across SSE nodes.
 // A future multi-node service requires a cross-node broker plus durable replay.
 let draining=false,stopping=false;
