@@ -17,6 +17,7 @@ Bridge is an adult-oriented, pseudonymous social discovery concept built around 
 - [Pure matching-domain reference and tests](packages/matching/) — matching eligibility, safety exclusions, language-neutral ranking.
 - [Internal API implementation](apps/api/) — RS256-authenticated HTTP gateway, PostgreSQL transactions for matching/messaging, blocking, report intake and mutual connections. **Authenticated internal SSE notification delivery** and outbox polling are implemented in code, not deployed for live users.
 - [Live-message delivery protocol and limitations](docs/engineering/REALTIME_SSE_M1.md) — stream, replay, block checks and single-node restrictions.
+- [Flutter Android internal client](apps/mobile/) — laboratory-only test APK source; validated build workflow, no public user signup.
 - [Proposed PostgreSQL migration](database/migrations/0001_bridge_foundation.sql), [API endpoints](docs/engineering/M1_API.md) and [state machine contract](docs/engineering/M1_STATES.md). Not deployed or applied.
 
 Open `prototype/bridge-v1.html` in a browser. Demo users, messages, reports, age-gating and permissions are **simulated**. No real accounts, real chat, database, moderators, verified encryption, age-assurance service or monetization is present.
@@ -43,4 +44,4 @@ Flutter; TypeScript/NestJS; PostgreSQL with Supabase; server-authoritative match
 
 Do not commit API keys, authentication secrets, raw private conversations, report evidence or personal information. Public repo visibility does not equal open-source licensing: no license chosen.
 
-**Next:** Implement first internal Flutter Android test client and two-device messaging, then add durable cursor storage, token/session revocation, distributed anti-abuse protections, age assurance and staffed moderation. Realtime SSE is single-process and loopback-only, **not** a public service. No APK or beta release yet.
+**Android M1 internal build:** [Flutter test client](apps/mobile/) is implemented. [PR #3](https://github.com/rayadinaveen98-ship-it/bridge/pull/3) merged after [Android CI run 39937613672](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/39937613672) passed Flutter analysis, tests, and debug APK compilation. The APK is an ephemeral GitHub Actions artifact (7-day retention), not a signed release or public app. **Next:** test two physical Android devices against a dedicated internal backend; harden token/session revocation, durable cursor storage, distributed abuse controls, age assurance and staffed moderation. SSE is single-process and loopback-only, not public.
