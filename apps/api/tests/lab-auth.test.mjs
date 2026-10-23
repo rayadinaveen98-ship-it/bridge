@@ -21,7 +21,7 @@ test("lab secrets use salted scrypt hashes and reject incorrect strings",async()
   assert.equal(await verifyLabPassphrase("long synthetic passphrase A",a),true);
   assert.equal(await verifyLabPassphrase("bad password",a),false);
   assert.equal(await verifyLabPassphrase("anybody",null),false);
-  assert.throws(()=>hashLabPassphrase("short"),TypeError);
+  await assert.rejects(hashLabPassphrase("short"),TypeError);
 });
 
 test("RS256 lab token is verifiable and identifies backend account subject",()=>{
