@@ -39,13 +39,13 @@ class BridgeController extends ChangeNotifier {
     _notify();
   }
 
-  Future<void> connect(String endpoint, String bearer) async {
+  Future<void> connect(String endpoint, String handle, String passphrase) async {
     busy = true;
     error = null;
     _notify();
     BridgeApi? candidate;
     try {
-      candidate = BridgeApi(endpoint, bearer);
+      candidate = await BridgeApi.labLogin(endpoint, handle, passphrase);
       final result = await candidate.bootstrap();
       final available = (result['languages'] as List? ?? []);
       final catalog = available.map((lang) {
@@ -60,7 +60,7 @@ class BridgeController extends ChangeNotifier {
       languages..clear()..addAll(catalog);
       chosenLanguages.clear(); // Language choice is never preselected.
       connected = true;
-      info = 'Authenticated lab session. Choose your languages.';
+      info = 'Test account connected. Choose your languages.';
     } catch (e) {
       candidate?.dispose();
       _failure(e);

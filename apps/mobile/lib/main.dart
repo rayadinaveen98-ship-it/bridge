@@ -54,7 +54,8 @@ class _BridgeHomeState extends State<BridgeHome>
     with WidgetsBindingObserver {
   final BridgeController bridge = BridgeController();
   final endpoint = TextEditingController(text: 'http://127.0.0.1:8787');
-  final jwt = TextEditingController();
+  final testHandle = TextEditingController();
+  final testPassphrase = TextEditingController();
   final composer = TextEditingController();
   final scroll = ScrollController();
   int tab = 0;
@@ -77,16 +78,17 @@ class _BridgeHomeState extends State<BridgeHome>
     WidgetsBinding.instance.removeObserver(this);
     bridge.dispose();
     endpoint.dispose();
-    jwt.dispose();
+    testHandle.dispose();
+    testPassphrase.dispose();
     composer.dispose();
     scroll.dispose();
     super.dispose();
   }
 
   Future<void> _connect() async {
-    await bridge.connect(endpoint.text, jwt.text);
+    await bridge.connect(endpoint.text, testHandle.text, testPassphrase.text);
     if (bridge.connected) {
-      jwt.clear();
+      testPassphrase.clear();
       if (mounted) setState(() { tab = 0; });
     }
   }
@@ -200,12 +202,12 @@ class _BridgeHomeState extends State<BridgeHome>
       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 35, height: 1.16,
         letterSpacing: -1.1)),
     const SizedBox(height: 14),
-    const Text('This build only connects to a developer-operated test backend. '
-      'There is no public registration or live age verification yet.',
+    const Text('Sign in with your private test account. This internal build '
+      'is not connected to public chat or real age verification.',
       style: TextStyle(color: Color(0xFFB6B5CD), height: 1.5)),
     const SizedBox(height: 36),
     _panel(children: [
-      const Text('CONNECT TO LAB', style: TextStyle(
+      const Text('INTERNAL TEST SIGN IN', style: TextStyle(
         fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.2)),
       const SizedBox(height: 16),
       TextField(controller: endpoint,
@@ -213,10 +215,15 @@ class _BridgeHomeState extends State<BridgeHome>
         decoration: const InputDecoration(labelText: 'Loopback API URL',
           prefixIcon: Icon(Icons.link))),
       const SizedBox(height: 14),
-      TextField(controller: jwt, obscureText: !tokenVisible,
+      TextField(controller: testHandle,
+        enableSuggestions: false, autocorrect: false,
+        decoration: const InputDecoration(labelText: 'Test account',
+          hintText: 'tester_a', prefixIcon: Icon(Icons.person_outline))),
+      const SizedBox(height: 14),
+      TextField(controller: testPassphrase, obscureText: !tokenVisible,
         enableSuggestions: false, autocorrect: false,
         maxLines: 1,
-        decoration: InputDecoration(labelText: 'Temporary test JWT',
+        decoration: InputDecoration(labelText: 'Test passphrase',
           prefixIcon: const Icon(Icons.key_outlined),
           suffixIcon: IconButton(icon: Icon(tokenVisible
             ? Icons.visibility_off : Icons.visibility),
@@ -225,11 +232,15 @@ class _BridgeHomeState extends State<BridgeHome>
       const SizedBox(height: 18),
       FilledButton.icon(onPressed: bridge.busy ? null : _connect,
         icon: const Icon(Icons.lock_open), label: Text(
-          bridge.busy ? 'Connecting...' : 'Connect securely')),
+          bridge.busy ? 'Signing in...' : 'Sign in to test Bridge')),
+      const SizedBox(height: 12),
+      const Text('Test accounts are created on your local development computer. '
+        'No manual JWT is needed.',
+        style: TextStyle(fontSize: 12, color: Color(0xFFB6B5CD))),
     ]),
     const SizedBox(height: 20),
     const Text('For physical Android devices, run adb reverse tcp:8787 tcp:8787 '
-      'while the internal API listens on your computer. Never paste real account tokens.',
+      'while the internal API listens on your computer. Do not use real passwords or accounts.',
       style: TextStyle(fontSize: 12, color: Color(0xFF9494AE), height: 1.5)),
   ]);
 

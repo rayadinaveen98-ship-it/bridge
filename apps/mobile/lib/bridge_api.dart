@@ -85,6 +85,40 @@ class BridgeApi {
     }
   }
 
+  /// Internal test login. Credentials are used only in a single HTTP request
+  /// to a local loopback service and are never persisted.
+  static Future<BridgeApi> labLogin(
+      String endpoint, String handle, String passphrase) async {
+    final base = validateLabEndpoint(endpoint);
+    if (handle.trim().isEmpty || passphrase.isEmpty) {
+      throw const FormatException('Enter test account and passphrase.');
+    }
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 8);
+    try {
+      final request = await client.postUrl(base.resolve('/internal/lab/login'))
+          .timeout(const Duration(seconds: 12));
+      request.headers.contentType = ContentType.json;
+      request.write(jsonEncode({'handle':handle.trim(),
+        'passphrase':passphrase}));
+      final response = await request.close().timeout(const Duration(seconds: 12));
+      final text = await utf8.decoder.bind(response).join()
+          .timeout(const Duration(seconds: 12));
+      if (response.statusCode != 200) {
+        String code='test_login_unavailable';
+        try {
+          final body=jsonDecode(text);
+          if(body is Map && body['error'] is String)code=body['error'] as String;
+        } catch (_) {}
+        throw BridgeException(response.statusCode,code);
+      }
+      final body = jsonDecode(text);
+      if (body is! Map || body['token'] is! String) {
+        throw const FormatException('Invalid lab login response.');
+      }
+      return BridgeApi(endpoint,body['token'] as String);
+    } finally {client.close(force:true);}
+  }
+
   final Uri origin;
   final String token;
   final HttpClient _http = HttpClient()..connectionTimeout = const Duration(seconds: 8);
