@@ -45,3 +45,10 @@ Flutter; TypeScript/NestJS; PostgreSQL with Supabase; server-authoritative match
 Do not commit API keys, authentication secrets, raw private conversations, report evidence or personal information. Public repo visibility does not equal open-source licensing: no license chosen.
 
 **Android M1 internal build:** [Flutter test client](apps/mobile/) is implemented. [PR #3](https://github.com/rayadinaveen98-ship-it/bridge/pull/3) merged after [Android CI run 39937613672](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/39937613672) passed Flutter analysis, tests, and debug APK compilation. The APK is an ephemeral GitHub Actions artifact (7-day retention), not a signed release or public app. **Next:** test two physical Android devices against a dedicated internal backend; harden token/session revocation, durable cursor storage, distributed abuse controls, age assurance and staffed moderation. SSE is single-process and loopback-only, not public.
+
+
+## M2 internal sign-in checkpoint (2026-10-23)
+
+[PR #4](https://github.com/rayadinaveen98-ship-it/bridge/pull/4) merged. The Flutter internal APK now has a test-account/passphrase login instead of manual JWT input. The backend exchanges locally verified salted-scrypt credentials for 30-minute RS256 JWTs; the route is disabled by default and loopback-only. A private Windows Docker lab launcher is at [`scripts/Start-BridgeLocalLab.ps1`](scripts/Start-BridgeLocalLab.ps1). Do **not** use any other app's Supabase project; Bridge has no dedicated deployed database yet.
+
+[Flutter APK CI](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/39942130635) and [backend/PostgreSQL CI](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/39942130666) both passed. The artifact is a debug build and expires according to GitHub Actions retention. The in-chat APK copy is not a public service or production release. No live two-device hardware tests, public registration, age-assurance provider, or staffed moderation exist.
