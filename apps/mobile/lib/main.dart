@@ -127,7 +127,7 @@ class _BridgeHomeState extends State<BridgeHome>
               if (bridge.conversationId == null) _header(),
               if (bridge.error != null)
                 _banner(bridge.error!, const Color(0xFFB25162), Icons.error_outline,
-                    onDismiss: () { bridge.error = null; bridge.notifyListeners(); }),
+                    onDismiss: () { bridge.clearError(); }),
               if (bridge.info != null && bridge.conversationId == null)
                 _banner(bridge.info!, const Color(0xFF396A66), Icons.info_outline),
               Expanded(child: bridge.conversationId != null ? _chat() :
