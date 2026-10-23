@@ -44,6 +44,13 @@
 - Strict authorization for all conversation and mutual-connection operations.
 - Report queue, reviewer roles, audit logging, retention and deletion functionality.
 
+## Android M1 internal build checkpoint — 2026-10-23
+- [PR #3](https://github.com/rayadinaveen98-ship-it/bridge/pull/3) merged: Flutter Android client, unranked language choices, matchmaking, chat, SSE replay, mutual connections, report/block controls, debug-only loopback traffic policy.
+- [Android Actions run 39937613672](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/39937613672) passed Flutter analysis, protocol/widget tests and debug APK build/upload.
+- APK artifact is a short-lived internal test binary, not a production release.
+- **Not yet verified:** two physical devices exchanging messages; server age assurance, human moderation, push, encrypted cursor persistence, distributed streaming.
+- Next: provision a dedicated synthetic test lab and run two physical-device M1 acceptance tests.
+
 ## Phase 5 — Android M1
 - Flutter app on two physical Android devices.
 - A real compatible match; ordered durable messages; reconnect; end and block; mutual save.
