@@ -1,0 +1,23 @@
+# Decision log
+
+_2026-10-23. Documented from project discussions and the latest offline artifact._
+
+| Decision | Status | Reason |
+|---|---|---|
+| Working codename Bridge | Temporary | Branding/name not final |
+| Combined discovery + mutual friendship product | Agreed direction | Differentiate through the complete conversation-to-connection experience |
+| Android-first production | Proposed | App Store restrictions make pure anonymous/random chat risky on iOS |
+| 18-screen offline interactive prototype | Completed | Flow validation before substantial infrastructure spend |
+| English-only demo UI, explicit unranked multilingual conversation preferences | Latest prototype baseline | Language equality without unsupported worldwide operational claims |
+| No geography-first or language-first feature priority | Latest documented requirement | All supported languages have equal product standing |
+| Text-first UX | Agreed V1 | Lower infrastructure and abuse risk than voice/video |
+| Mutually accepted relationships | Agreed V1 | Consent-based continuation |
+| Blocking/reporting and moderation operations before real public release | Mandatory | UGC abuse and legal responsibilities |
+| Flutter + NestJS + PostgreSQL/Supabase | Architectural proposal | Needs proof-of-concept and load tests |
+| End-to-end encrypted chat | Not claimed / not implemented | Requires dedicated security design and review |
+| Monetization through optional premium/cosmetics and limited ads | Hypothesis | Must validate willingness-to-pay and contribution economics |
+| Final name / pricing / public release date | Open | Dependent on testing, policy and funding |
+
+## Reconciliation note
+
+Early planning explored a Telugu/English-focused pilot for liquidity. The **latest prototype and flow specification explicitly supersede any language-first product policy**: conversational language choice is unranked and user-controlled. Operational launch coverage and pilots still depend on actual staffing and evidence, not a hidden preference embedded in the matching system.
