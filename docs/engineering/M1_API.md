@@ -10,11 +10,12 @@
 | GET /matches/search/:requestId | own requestId | 200 waiting/reserved/connected/unmatched | 404 |
 | DELETE /matches/search/:requestId | own requestId | 204 cancel | 404 |
 | GET /conversations/:id/messages | afterSequence >=0 | 200 ordered messages | 403, 404 |
+| GET /conversations/:id/peer | authenticated chat participant | 200 peer accountId, pseudonym, avatarKey | 403, 404 |
 | GET /conversations/:id/events | Bearer JWT; streaming HTTP Authorization | 200 SSE ready/heartbeat/message-available metadata; REST replay after ready | 401, 403, 404, 429, 503 |
 | POST /conversations/:id/messages | Idempotency-Key; clientMessageId UUID, body 1–4000 chars | 201 messageId, server sequence | 403, 409, 429 |
 | POST /conversations/:id/close | own conversation | 204 end/release slots | 403 |
 | PUT /conversations/:id/connection-vote | decision accept/withdraw | 200 pending/connected/withdrawn | 403 |
-| GET /connections | bearer token | 200 own connections | 401 |
+| GET /connections | bearer token | 200 own connections with conversationId + pseudonym | 401 |
 | PUT /blocks/:targetId | target UUID | 204 server-enforced block | 403 |
 | DELETE /blocks/:targetId | target UUID | 204 remove own block | 403 |
 | POST /reports | reportedAccountId, category, optional conversationId/details | 202 reportId queued | 403, 429 |
