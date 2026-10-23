@@ -22,8 +22,8 @@
 
 ## Testing
 
-`npm test --prefix apps/api` exercises two independent authenticated SSE HTTP clients, outsider rejection, event privacy, disconnect and REST replay, and subscriber count bounds. Other tests exercise outbox at-least-once and PostgreSQL matching. The integrated outbox-to-SSE flow is limited to the single-process lab until real concurrency/security testing.
+`npm test --prefix apps/api` exercises two independent authenticated SSE HTTP clients, outsider rejection, event privacy, disconnect and REST replay, and subscriber count bounds. Other tests exercise outbox at-least-once and PostgreSQL matching. The integrated outbox-to-SSE flow passed isolated PostgreSQL 16 tests with two authorized subscribers and denied/revoked subscribers in [CI run 39934866721](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/39934866721). The result remains scoped to one process and synthetic test accounts; load and production security tests are pending.
 
 ## Next technical gate
 
-Verify all GitHub CI jobs; integrate JWT expiry/revocation checks into active streams, add explicit account reports/blocks terminating live sessions, exercise outbox under concurrent requests and process crashes, then build the first Flutter test client. No public chat until safety/age-verification requirements are complete.
+Hosted GitHub CI is green. Implement active session revocation (expiry checks exist), private lab environment support, crash/restart/backpressure testing, concurrent multi-worker behavior and the first Flutter test client. No public chat until safety/age-verification requirements are complete.
