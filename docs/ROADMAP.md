@@ -56,6 +56,13 @@
 - A real compatible match; ordered durable messages; reconnect; end and block; mutual save.
 - Working server-side safety actions, not simulated dialogs.
 
+## Internal test-login update — 2026-10-23
+- Replaced the manual JWT field in the Flutter lab app with local test-account handle and passphrase.
+- Added opt-in backend login, salted-scrypt credential hashing, 30-minute signed token exchange, per-handle local throttling and a synthetic local account provisioner.
+- No connected Bridge Supabase project or live hosted API exists; do not reuse other app databases.
+- GitHub Actions checks validate code and synthetic PostgreSQL login; not production security certification.
+- Before real two-device use: provision a dedicated test backend and verify device/ADB connectivity. Public chat remains disabled.
+
 ## Phase 6 — test and security gate
 - Unit/integration/e2e tests and load testing; security and privacy assessment.
 - Age-assurance, moderation staffing, user support and legal/policy readiness.
