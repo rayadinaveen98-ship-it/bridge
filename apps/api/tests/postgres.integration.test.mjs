@@ -4,6 +4,8 @@ import { randomUUID } from "node:crypto";
 import { createPostgresService } from "../src/postgres.mjs";
 import { createOutboxDispatcher } from "../src/outbox.mjs";
 import { ApiError } from "../src/auth.mjs";
+import { createLiveHub } from "../src/live.mjs";
+import { EventEmitter } from "node:events";
 
 /** Only runs in an explicitly isolated database. Migration must be applied first. */
 test("real PostgreSQL: matchmaking, durable messaging, votes and block", {
@@ -90,6 +92,27 @@ test("real PostgreSQL: matchmaking, durable messaging, votes and block", {
     const messages=await service.messages(a.subject,conversationId,0);
     assert.deepEqual(messages.map(x=>x.sequenceNumber),[1,2,3]);
 
+    // Real SQL authorization + two distinct notification subscribers.
+    const hub=createLiveHub();
+    function testStream() {
+      const req=new EventEmitter(),res=new EventEmitter(),frames=[];
+      res.writableEnded=false;res.destroyed=false;
+      res.writeHead=()=>res;
+      res.write=chunk=>{frames.push(chunk);return true;};
+      res.end=()=>{res.writableEnded=true;res.emit("close");};
+      return {req,res,frames};
+    }
+    const streamA=testStream(),streamB=testStream(),stranger=testStream();
+    await hub.open({subject:a.subject,conversationId,req:streamA.req,res:streamA.res,
+      authorize:()=>service.authorizeEvents(a.subject,conversationId)});
+    await hub.open({subject:b.subject,conversationId,req:streamB.req,res:streamB.res,
+      authorize:()=>service.authorizeEvents(b.subject,conversationId)});
+    await assert.rejects(
+      hub.open({subject:c.subject,conversationId,req:stranger.req,res:stranger.res,
+        authorize:()=>service.authorizeEvents(c.subject,conversationId)}),
+      error=>error instanceof ApiError&&error.status===404);
+    assert.equal(hub.size,2);
+
     // The first outbox publish fails: event remains available after retry delay.
     const observed = [];
     const failing=createOutboxDispatcher(pool,async payload => {
@@ -106,12 +129,18 @@ test("real PostgreSQL: matchmaking, durable messaging, votes and block", {
     const delivered=[];
     const success=createOutboxDispatcher(pool,async payload => {
       delivered.push(payload);
+      await hub.publish(payload);
     });
     const succeeded=await success.drainOnce(10);
     assert.equal(succeeded.published,3);
     assert.equal(succeeded.failed,0);
     assert.equal(new Set(delivered.map(x=>x.payload.messageId)).size,3);
     assert.ok(delivered.every(x=>!Object.hasOwn(x.payload,"body")));
+    for(const sub of [streamA,streamB]){
+      assert.equal(sub.frames.filter(x=>x.includes("event: message-available")).length,3);
+      assert.ok(sub.frames.every(x=>!x.includes("Hello there")));
+    }
+    assert.equal(stranger.frames.length,0);
     const finished=await pool.query(
       "SELECT count(*)::int AS total FROM bridge_event_outbox WHERE published_at IS NOT NULL");
     assert.equal(finished.rows[0].total,3);
@@ -128,6 +157,13 @@ test("real PostgreSQL: matchmaking, durable messaging, votes and block", {
     assert.equal(dm.sequenceNumber,4);
 
     await service.block(a.subject,b.id);
+    // Any queued stale delivery after a block is refused for both participants.
+    assert.equal(await hub.publish({
+      type:"conversation.message.accepted",conversationId,
+      payload:{messageId:dm.id,sequenceNumber:dm.sequenceNumber}
+    }),0);
+    assert.equal(hub.size,0);
+    hub.closeAll();
     await assert.rejects(service.sendMessage(b.subject,conversationId,{
       clientMessageId:randomUUID(),body:"should be blocked"
     }),e=>e instanceof ApiError&&e.status===403);

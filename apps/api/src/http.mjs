@@ -30,7 +30,7 @@ function send(res, status, value) {
   res.end(status === 204 ? "" : JSON.stringify(value));
 }
 
-export function createHandler(service, authentication) {
+export function createHandler(service, authentication, liveHub = null) {
   if (!service || !authentication) throw new TypeError("Backend dependencies required");
   const limit = createLimiter();
   return async (req, res) => {
@@ -66,6 +66,19 @@ export function createHandler(service, authentication) {
           await service.cancelQueue(subject, requestId);
           return send(res, 204);
         }
+      }
+      const eventStream = pathname.match(/^\/v1\/conversations\/([^/]+)\/events$/);
+      if (eventStream && method === "GET") {
+        if (!liveHub) throw new ApiError(503,"realtime_unavailable");
+        const conversationId=assertId(eventStream[1]);
+        return await liveHub.open({
+          subject,conversationId,req,res,
+          authorize:async()=>{
+            // A long-lived stream must not outlive the signed JWT.
+            verifyBearer(req.headers.authorization, authentication);
+            await service.authorizeEvents(subject,conversationId);
+          }
+        });
       }
       const messages = pathname.match(/^\/v1\/conversations\/([^/]+)\/messages$/);
       if (messages) {
@@ -117,9 +130,12 @@ export function createHandler(service, authentication) {
       const status = error instanceof ApiError ? error.status : 500;
       // Do not disclose internal stack, database errors, account existence or secrets.
       if (status >= 500 && typeof service.onError === "function") service.onError(error);
-      if (!res.writableEnded) send(res, status, {
-        error: error instanceof ApiError ? error.code : "internal_error"
-      });
+      if (res.headersSent) {
+        // SSE headers cannot be rewritten as JSON if a stream fails mid-flight.
+        if (!res.writableEnded) res.end();
+      } else if (!res.writableEnded) {
+        send(res, status, {error: error instanceof ApiError ? error.code : "internal_error"});
+      }
     }
   };
 }
