@@ -1,4 +1,5 @@
 import { ApiError, verifyBearer, assertId, assertMessage, assertPreferences } from "./auth.mjs";
+import { createLimiter } from "./limiter.mjs";
 
 const MAX_BODY_BYTES = 16 * 1024;
 
@@ -31,6 +32,7 @@ function send(res, status, value) {
 
 export function createHandler(service, authentication) {
   if (!service || !authentication) throw new TypeError("Backend dependencies required");
+  const limit = createLimiter();
   return async (req, res) => {
     try {
       const pathname = new URL(req.url, "http://127.0.0.1").pathname;
@@ -39,6 +41,7 @@ export function createHandler(service, authentication) {
         return send(res, 200, { alive: true, deployed: false });
       }
       const { subject } = verifyBearer(req.headers.authorization, authentication);
+      limit(subject, method, pathname);
       if (method === "GET" && pathname === "/v1/bootstrap") {
         return send(res, 200, await service.bootstrap(subject));
       }

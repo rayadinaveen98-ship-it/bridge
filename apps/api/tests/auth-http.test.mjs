@@ -41,6 +41,7 @@ test("HTTP routes require verified token and delegate immutable subject", async 
     bootstrap: async subject=>({ subject, languages:[], featureFlags:{} }),
     enqueue: async(subject,body)=>{recorded.push({subject,body});return {requestId:uuid,state:"waiting"};},
     report: async()=>({reportId:uuid,state:"queued"}),
+    connections: async()=>[],
     onError:()=>{}
   };
   const server=createServer(createHandler(svc,auth));
@@ -60,6 +61,6 @@ test("HTTP routes require verified token and delegate immutable subject", async 
     assert.equal(queued.status,202);
     assert.equal(recorded.length,1);
     assert.deepEqual(recorded[0],{subject:"test|member-a",body:{topic:"Cinema",idempotencyKey:uuid}});
-    assert.equal((await fetch(base+"/v1/connections",opts)).status,500); // not implemented mock
+    assert.equal((await fetch(base+"/v1/connections",opts)).status,200);
   } finally {await new Promise(r=>server.close(r));}
 });
