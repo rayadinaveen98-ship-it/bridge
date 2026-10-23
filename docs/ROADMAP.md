@@ -7,6 +7,13 @@
 - Proposed cross-language equality requirement (no preset language; user-selected shared language matching).
 - Preliminary desktop/mobile prototype checks were reported in the original workflow. These are *not* a substitute for an independently reproducible repository CI run.
 
+## Foundation progress — 2026-10-23
+- Added candidate light/dark semantic design tokens and screen-state/component specification.
+- Added unit-testable language-neutral matching eligibility and candidate ranking module.
+- Added proposed PostgreSQL relational schema, API paths, messaging state contracts and fail-closed RLS baseline.
+- Added lightweight CI checks; tests validate logic/static contracts only, not deployment or data-security compliance.
+- All work committed on `main`; neither API nor production app is running.
+
 ## Phase 3 — validate design and decisions
 - Review flows on mobile with real consenting adult research participants (without hosting live stranger chat).
 - Validate error, empty, loading, keyboard, smaller-display, screen-reader, light/dark and RTL states.

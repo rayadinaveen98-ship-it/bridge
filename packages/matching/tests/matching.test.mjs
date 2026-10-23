@@ -40,8 +40,8 @@ test("language order, identity and number never enter soft ranking", () => {
   const b = person("b", { interests: ["cinema"], languages: ["en", "sw"] });
   const seeker = person("s", { interests: ["cinema"], languages: ["sw", "en", "te"] });
   assert.equal(compatibilityScore(seeker, a), compatibilityScore(seeker, b));
-  assert.equal(findCandidate(seeker, [a, b], context).candidateId, "a");
-  assert.equal(findCandidate(seeker, [b, a], context).candidateId, "a");
+  assert.equal(findCandidate(seeker, [a, b], { ...context, nowMs: 1000 }).candidateId, "a");
+  assert.equal(findCandidate(seeker, [b, a], { ...context, nowMs: 1000 }).candidateId, "a");
 });
 test("soft preferences, queue age and deterministic ID break ties", () => {
   const s = person("s", { interests: ["cinema"] });

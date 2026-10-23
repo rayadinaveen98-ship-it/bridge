@@ -14,6 +14,8 @@ _2026-10-23. Documented from project discussions and the latest offline artifact
 | Mutually accepted relationships | Agreed V1 | Consent-based continuation |
 | Blocking/reporting and moderation operations before real public release | Mandatory | UGC abuse and legal responsibilities |
 | Flutter + NestJS + PostgreSQL/Supabase | Architectural proposal | Needs proof-of-concept and load tests |
+| Pure matching-domain eligibility/ranking and PostgreSQL schema | Foundation committed | Design / test artifacts, not live authorization or deployed backend |
+| Light/dark UI design tokens | Initial baseline | Accessibility, RTL, contrast and device tests remain |
 | End-to-end encrypted chat | Not claimed / not implemented | Requires dedicated security design and review |
 | Monetization through optional premium/cosmetics and limited ads | Hypothesis | Must validate willingness-to-pay and contribution economics |
 | Final name / pricing / public release date | Open | Dependent on testing, policy and funding |
