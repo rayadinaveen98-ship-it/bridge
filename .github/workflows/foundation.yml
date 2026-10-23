@@ -42,8 +42,10 @@ jobs:
           node-version: '22'
       - name: Install database client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
-      - name: Apply migration in isolated test database
-        run: psql "$BRIDGE_TEST_DATABASE_URL" -X -v ON_ERROR_STOP=1 -f database/migrations/0001_bridge_foundation.sql
+      - name: Apply migrations in isolated test database
+        run: |
+          psql "$BRIDGE_TEST_DATABASE_URL" -X -v ON_ERROR_STOP=1 -f database/migrations/0001_bridge_foundation.sql
+          psql "$BRIDGE_TEST_DATABASE_URL" -X -v ON_ERROR_STOP=1 -f database/migrations/0002_message_outbox.sql
       - name: Install server database driver
         run: npm install --prefix apps/api --no-package-lock --no-audit --no-fund
       - name: Run full API suite against disposable PostgreSQL

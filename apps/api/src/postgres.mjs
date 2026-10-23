@@ -245,6 +245,16 @@ export function createPostgresService(pool, onError = () => {}) {
           await c.query(
             "UPDATE bridge_conversations SET next_message_sequence=next_message_sequence+1 WHERE id=$1",
             [conversationId]);
+          // One outbox row per accepted message, in the SAME DB transaction.
+          // Keep private message bodies out of delivery events.
+          await c.query(
+            "INSERT INTO bridge_event_outbox(event_key,event_type,conversation_id,payload) " +
+            "VALUES($1,'conversation.message.accepted',$2,$3::jsonb) " +
+            "ON CONFLICT (event_key) DO NOTHING",
+            ["message:" + msg.id, conversationId, JSON.stringify({
+              messageId: msg.id, sequenceNumber: Number(msg.sequence_number)
+            })]
+          );
         }
         return {id:msg.id,conversationId:msg.conversation_id,
           sequenceNumber:Number(msg.sequence_number),senderId:msg.sender_id,body:msg.body,sentAt:msg.sent_at};
