@@ -1,0 +1,16 @@
+name: Foundation checks
+on:
+  push:
+  pull_request:
+jobs:
+  matching:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Matching-domain unit tests
+        run: npm test --prefix packages/matching
+      - name: Validate design token JSON
+        run: node -e "const t=require('./design/tokens/bridge.v1.json'); if (!t.color?.dark || !t.spacing) process.exit(1)"
