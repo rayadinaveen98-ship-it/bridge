@@ -165,4 +165,5 @@ catch (error) {
   running=false;
   if(refreshTimer)clearInterval(refreshTimer);
   rl?.close();
+  if(!rl) stdin.pause();
 }
