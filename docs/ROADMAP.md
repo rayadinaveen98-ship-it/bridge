@@ -60,7 +60,7 @@
 - Replaced the manual JWT field in the Flutter lab app with local test-account handle and passphrase.
 - Added opt-in backend login, salted-scrypt credential hashing, 30-minute signed token exchange, per-handle local throttling and a synthetic local account provisioner.
 - No connected Bridge Supabase project or live hosted API exists; do not reuse other app databases.
-- GitHub Actions checks validate code and synthetic PostgreSQL login; not production security certification.
+- **Validated in GitHub Actions:** [Flutter analysis/widget tests and debug APK](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/39942130635) and [Node/PostgreSQL 16 login tests](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/39942130666) both passed. Source merged in [PR #4](https://github.com/rayadinaveen98-ship-it/bridge/pull/4). These do not constitute production security certification.
 - Before real two-device use: provision a dedicated test backend and verify device/ADB connectivity. Public chat remains disabled.
 
 ## Phase 6 — test and security gate
