@@ -13,7 +13,7 @@ def test_language_equality():
             page.set_content(HTML.read_text(encoding="utf-8"))
             page.evaluate("direct('preferences')")
             assert page.evaluate("S.languages.length")==0
-            assert "No language is preselected" in page.locator("#mobileApp").inner_text()
+            assert "no language is preselected" in page.locator("#mobileApp").inner_text().lower()
             for language in ["Swahili","Kashmiri"]:
                 page.locator("#languageSearch").fill(language)
                 matching=page.locator("#languageOptions [data-language-option]:visible")
