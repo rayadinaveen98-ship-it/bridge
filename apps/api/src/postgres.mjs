@@ -223,6 +223,16 @@ export function createPostgresService(pool, onError = () => {}) {
           "UPDATE bridge_match_queue SET state='cancelled' WHERE account_id=$1 AND request_id=$2",[me.id,requestId]);
       });
     },
+    async conversationPeer(subject,conversationId) {
+      return transaction(pool,async c=>{
+        const {other}=await participants(c,conversationId,subject);
+        const peer=requireRows(await c.query(
+          "SELECT a.id,p.pseudonym,p.avatar_key FROM bridge_accounts a " +
+          "JOIN bridge_profiles p ON p.account_id=a.id WHERE a.id=$1",
+          [other]),404);
+        return {accountId:peer.id,pseudonym:peer.pseudonym,avatarKey:peer.avatar_key};
+      });
+    },
     async messages(subject,conversationId,afterSequence) {
       return transaction(pool,async c=>{
         const {me,conv,participant}=await participants(c,conversationId,subject);
@@ -335,9 +345,16 @@ export function createPostgresService(pool, onError = () => {}) {
     async connections(subject) {
       const me=requireRows(await pool.query("SELECT id FROM bridge_accounts WHERE auth_subject=$1",[subject]),403);
       const q=await pool.query(
-        "SELECT id,created_at FROM bridge_connections WHERE (member_low=$1 OR member_high=$1) " +
-        "AND ended_at IS NULL ORDER BY created_at DESC LIMIT 100",[me.id]);
-      return q.rows.map(x=>({id:x.id,createdAt:x.created_at}));
+        "SELECT co.id,co.source_conversation_id,co.created_at,p.pseudonym " +
+        "FROM bridge_connections co JOIN bridge_profiles p ON p.account_id = " +
+        "(CASE WHEN co.member_low=$1 THEN co.member_high ELSE co.member_low END) " +
+        "WHERE (co.member_low=$1 OR co.member_high=$1) AND co.ended_at IS NULL " +
+        "AND NOT EXISTS(SELECT 1 FROM bridge_blocks b WHERE " +
+        "(b.blocker_id=co.member_low AND b.blocked_id=co.member_high) OR " +
+        "(b.blocker_id=co.member_high AND b.blocked_id=co.member_low)) " +
+        "ORDER BY co.created_at DESC LIMIT 100",[me.id]);
+      return q.rows.map(x=>({id:x.id,conversationId:x.source_conversation_id,
+        pseudonym:x.pseudonym,createdAt:x.created_at}));
     },
     async block(subject,targetId) {
       await transaction(pool,async c=>{
