@@ -146,15 +146,48 @@ test("real PostgreSQL: matchmaking, durable messaging, votes and block", {
     assert.equal(finished.rows[0].total,3);
     assert.deepEqual(await success.drainOnce(10),{claimed:0,published:0,failed:0});
 
-    await service.closeConversation(a.subject,conversationId);
+    // A connection may be saved only while the random chat is still open.
     assert.equal((await service.castVote(a.subject,conversationId,"accept")).status,"pending");
+    assert.equal((await service.connections(a.subject)).length,0);
     const connected=await service.castVote(b.subject,conversationId,"accept");
     assert.equal(connected.status,"connected");
     assert.ok(connected.connectionId);
+    assert.equal((await service.connections(a.subject)).length,1);
+    assert.equal((await service.connections(b.subject)).length,1);
+    assert.equal((await service.connections(c.subject)).length,0);
+    assert.equal((await service.castVote(a.subject,conversationId,"accept")).status,"connected");
+    await assert.rejects(service.closeConversation(a.subject,conversationId),
+      e=>e instanceof ApiError&&e.status===409);
     const dm=await service.sendMessage(a.subject,conversationId,{
       clientMessageId:randomUUID(),body:"Reconnected"
     });
     assert.equal(dm.sequenceNumber,4);
+
+    // Reconnect after an offline interval: the DB, not SSE, holds the replay.
+    streamA.res.end();
+    streamB.res.end();
+    assert.equal(hub.size,0);
+    const reconnectA=testStream();
+    await hub.open({subject:a.subject,conversationId,req:reconnectA.req,res:reconnectA.res,
+      authorize:()=>service.authorizeEvents(a.subject,conversationId)});
+    assert.ok(reconnectA.frames.some(x=>x.includes("event: ready")));
+    const missed=await service.messages(a.subject,conversationId,3);
+    assert.deepEqual(missed.map(x=>x.sequenceNumber),[4]);
+
+    // A closed random room cannot be revived by late mutual votes.
+    const waiting=await service.enqueue(c.subject,{topic:null,idempotencyKey:randomUUID()});
+    assert.equal(waiting.state,"waiting");
+    const secondMatch=await service.enqueue(a.subject,{topic:null,idempotencyKey:randomUUID()});
+    assert.equal(secondMatch.state,"connected");
+    const closedRoom=secondMatch.conversationId;
+    await service.closeConversation(a.subject,closedRoom);
+    for(const who of [a.subject,c.subject]){
+      await assert.rejects(service.castVote(who,closedRoom,"accept"),
+        e=>e instanceof ApiError&&e.status===409&&e.code==="conversation_closed");
+      await assert.rejects(service.messages(who,closedRoom,0),
+        e=>e instanceof ApiError&&e.status===403);
+    }
+    assert.equal((await service.connections(c.subject)).length,0);
 
     await service.block(a.subject,b.id);
     // Any queued stale delivery after a block is refused for both participants.
@@ -168,6 +201,14 @@ test("real PostgreSQL: matchmaking, durable messaging, votes and block", {
       clientMessageId:randomUUID(),body:"should be blocked"
     }),e=>e instanceof ApiError&&e.status===403);
     assert.equal((await service.connections(a.subject)).length,0);
+    assert.equal((await service.connections(b.subject)).length,0);
+    // Blocking survives closure of the previously connected room.
+    const blockedSearch=await service.enqueue(b.subject,{topic:null,idempotencyKey:randomUUID()});
+    assert.equal(blockedSearch.state,"waiting");
+    const newSearch=await service.enqueue(a.subject,{topic:null,idempotencyKey:randomUUID()});
+    assert.equal(newSearch.state,"waiting");
+    const theirStatus=await service.queueStatus(b.subject,blockedSearch.requestId);
+    assert.equal(theirStatus.state,"waiting");
     const report=await service.report(a.subject,{
       reportedAccountId:b.id,conversationId,category:"spam",details:"Synthetic integration test"
     });
