@@ -38,7 +38,7 @@ export function createHandler(service, authentication) {
       const pathname = new URL(req.url, "http://127.0.0.1").pathname;
       const method = req.method;
       if (method === "GET" && pathname === "/healthz") {
-        return send(res, 200, { alive: true, deployed: false });
+        return send(res, 200, { alive: true, component: "bridge-internal-api" });
       }
       const { subject } = verifyBearer(req.headers.authorization, authentication);
       limit(subject, method, pathname);

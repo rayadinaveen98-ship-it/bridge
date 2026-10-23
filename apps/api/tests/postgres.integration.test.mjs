@@ -8,8 +8,10 @@ import { ApiError } from "../src/auth.mjs";
 test("real PostgreSQL: matchmaking, durable messaging, votes and block", {
   skip: !process.env.BRIDGE_TEST_DATABASE_URL
 }, async () => {
-  if (!process.env.BRIDGE_TEST_DATABASE_URL.includes("bridge_test")) {
-    throw new Error("Refusing to run integration test against non-test database");
+  const dbUrl = new URL(process.env.BRIDGE_TEST_DATABASE_URL);
+  if (dbUrl.pathname !== "/bridge_test" ||
+      !["127.0.0.1", "localhost", "::1"].includes(dbUrl.hostname)) {
+    throw new Error("Refusing to run destructive integration test outside loopback bridge_test database");
   }
   const { Pool } = await import("pg");
   const pool = new Pool({ connectionString: process.env.BRIDGE_TEST_DATABASE_URL, max: 6 });

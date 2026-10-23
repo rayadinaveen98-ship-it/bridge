@@ -23,3 +23,7 @@ _2026-10-23. Documented from project discussions and the latest offline artifact
 ## Reconciliation note
 
 Early planning explored a Telugu/English-focused pilot for liquidity. The **latest prototype and flow specification explicitly supersede any language-first product policy**: conversational language choice is unranked and user-controlled. Operational launch coverage and pilots still depend on actual staffing and evidence, not a hidden preference embedded in the matching system.
+
+| Internal loopback HTTP gateway + PostgreSQL transaction service | Initial code committed | Production framework decision (NestJS vs thin gateway) to revisit after real DB integration; not deployed |
+| GitHub Actions PostgreSQL 16 integration suite | Workflow committed | Hosted run status not yet verified; synthetic fixtures only |
+| Basic per-subject in-memory rate limiter | Laboratory-only | Must be replaced with distributed abuse prevention before public testing |

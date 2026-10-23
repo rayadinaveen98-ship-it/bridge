@@ -20,6 +20,13 @@
 - Verify legal exposure, app-store policies and age assurance approach.
 - Finalize architecture acceptance criteria, privacy data map and moderation operating model.
 
+## Backend engineering update — 2026-10-23
+- Added RS256 authenticated loopback-only HTTP routes with strict request validation and basic in-process laboratory quotas.
+- Implemented SQL transaction-backed queue matching, durable message sequencing/idempotency, double-opt-in connections, blocking and report intake.
+- Added isolated PostgreSQL 16 integration tests to GitHub Actions and dependency-free fake-Postgres/HTTP tests.
+- **Not deployed**. No operational age assurance, live human moderation or public user onboarding.
+- Hosted CI PostgreSQL status is not verified here; database migration cannot be run locally without Postgres.
+
 ## Phase 4 — backend foundation
 - Accounts, privacy controls, authentication sessions and abuse limits.
 - Schema migrations, transactional matching state machine and message persistence.
