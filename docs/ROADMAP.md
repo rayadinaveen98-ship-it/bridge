@@ -84,3 +84,11 @@ Prototype complete ≠ production implementation. Unverified revenue figures and
 [PR #6](https://github.com/rayadinaveen98-ship-it/bridge/pull/6) merged. [Foundation CI run 39954995708](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/39954995708) passed both matching and real PostgreSQL 16 integration jobs. Newly tested: two-sided mutual connection while chat is open, connection persistence, offline replay from sequence cursor, closed-chat vote/read refusal, blocking access revocation and prevention of re-matching that pair. Ineligible/closed peer connections are filtered from list results.
 
 **Live-device status:** operator-confirmed two-account Android<->Windows message delivery; mutual-connection UI, actual USB interruption/resume and on-device block flow still await the operator's manual QA. Running local backend must be restarted after git pull to pick up these server changes. The existing M2 APK is unchanged. No public release.
+
+
+## M2 Android replay repair and QA handoff — 2026-11-14
+
+- [PR #7](https://github.com/rayadinaveen98-ship-it/bridge/pull/7) **merged** at commit `fe618119`: the Android controller now verifies contiguous replay, rejects gaps/conflicts without advancing the cursor, and ignores stale in-flight responses from a closed/switched conversation.
+- Seven Flutter replay regression tests, static analysis, and Android debug compilation **passed** in [PR CI 43599109135](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43599109135). Backend/PostgreSQL CI **passed** on [main 43599576368](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43599576368).
+- **M2 acceptance remains OPEN:** confirm mutual Keep on Android, USB disconnect/replay with exactly-once display, report acknowledgment, block denial/no-rematch, and expired-session handling. Only the earlier synthetic Android ↔ Windows message exchange has operator-reported evidence.
+- **M3 remains unstarted**; do not confuse debug APK compilation with physical device acceptance or public launch.

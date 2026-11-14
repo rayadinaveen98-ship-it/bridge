@@ -1,6 +1,6 @@
 # Bridge — social discovery platform (working codename)
 
-**Current status: research + offline prototype + early backend code, SQL schema and tests. Backend is not deployed and does not permit public signup. No Android APK exists.**
+**Current status (2026-11-14): internal M2 lab implementation with Flutter Android debug APK, local-only backend, PostgreSQL integration tests, and operator-reported Android ↔ Windows two-account chat. M2 physical-device acceptance is still open. No publicly deployed service, public signup, verified age assurance, or staffed moderation exists.**
 
 Bridge is an adult-oriented, pseudonymous social discovery concept built around **Discover → Match → Talk → Mutually Connect → Reconnect**. Its purpose is engaging spontaneous conversations that may become ongoing relationships with both parties' consent.
 
@@ -57,3 +57,10 @@ Do not commit API keys, authentication secrets, raw private conversations, repor
 ## Test with one Android phone + Windows laptop
 
 No second Android phone or emulator is required to validate two **synthetic** accounts. Keep the local backend running, open a second PowerShell window in your Bridge repository, run `git pull`, then `node .\apps\api\scripts\BridgeSecondTester.mjs`. Sign in with the private `tester_b` passphrase, then select English and start a match as `tester_a` on the phone. The laptop terminal displays incoming messages and lets you reply. See the [step-by-step one-phone test guide](docs/engineering/ONE_PHONE_QA.md). This is not a second physical-device certification or public service.
+
+
+## M2 Android replay safety checkpoint — 2026-11-14
+
+[PR #7](https://github.com/rayadinaveen98-ship-it/bridge/pull/7) merged into `main` at `fe618119`. The Android message client now rejects incomplete/out-of-order replay pages before moving its cursor and ignores fetch results from a conversation the user has already left. Seven new regression tests were added. The [Flutter analysis, widget/protocol tests and debug APK build](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43599109135) passed on the PR; [foundation/PostgreSQL checks](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43599576368) also passed after merge. The debug artifact is ephemeral and must not be marketed or distributed as a public release.
+
+**Next verified gate:** [M2 stability & safety acceptance](docs/engineering/M2_STABILITY_ACCEPTANCE.md) with one Android phone and one Windows laptop. Mutual connection, disconnected replay, report, block and session-expiry behavior still require operator-provided device evidence. No M3 features or production launch are authorized by passing CI alone.
