@@ -61,7 +61,13 @@ class BridgeController extends ChangeNotifier {
       languages..clear()..addAll(catalog);
       chosenLanguages.clear(); // Language choice is never preselected.
       connected = true;
-      info = 'Test account connected. Choose your languages.';
+      final activeId = result['activeConversationId'];
+      if (activeId is String && activeId.isNotEmpty) {
+        info = 'Restoring your existing conversation.';
+        await openConversation(activeId);
+      } else {
+        info = 'Test account connected. Choose your languages.';
+      }
     } catch (e) {
       candidate?.dispose();
       _failure(e);
@@ -133,7 +139,24 @@ class BridgeController extends ChangeNotifier {
         info = 'Looking for a compatible person...';
       }
     } catch (e) {
-      _failure(e);
+      if (e is BridgeException && e.status == 409 &&
+          e.code == 'active_match') {
+        // Recover rather than delete/replace an active conversation.
+        try {
+          final existing = await client.bootstrap();
+          final activeId = existing['activeConversationId'];
+          if (activeId is String && activeId.isNotEmpty) {
+            await openConversation(activeId);
+            info = 'Resumed your existing conversation.';
+          } else {
+            _failure(e);
+          }
+        } catch (recoveryError) {
+          _failure(recoveryError);
+        }
+      } else {
+        _failure(e);
+      }
     } finally {
       busy = false;
       _notify();
