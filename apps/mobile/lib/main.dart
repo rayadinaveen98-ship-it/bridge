@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'bridge_controller.dart';
+import 'bridge_api.dart' show bridgeQaConfiguredOrigin;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,7 +54,8 @@ class BridgeHome extends StatefulWidget {
 class _BridgeHomeState extends State<BridgeHome>
     with WidgetsBindingObserver {
   final BridgeController bridge = BridgeController();
-  final endpoint = TextEditingController(text: 'http://127.0.0.1:8787');
+  final endpoint = TextEditingController(text: bridgeQaConfiguredOrigin.isEmpty
+      ? 'http://127.0.0.1:8787' : bridgeQaConfiguredOrigin);
   final testHandle = TextEditingController();
   final testPassphrase = TextEditingController();
   final composer = TextEditingController();
@@ -212,7 +214,7 @@ class _BridgeHomeState extends State<BridgeHome>
       const SizedBox(height: 16),
       TextField(controller: endpoint,
         keyboardType: TextInputType.url,
-        decoration: const InputDecoration(labelText: 'Loopback API URL',
+        decoration: const InputDecoration(labelText: 'Bridge test API URL',
           prefixIcon: Icon(Icons.link))),
       const SizedBox(height: 14),
       TextField(controller: testHandle,

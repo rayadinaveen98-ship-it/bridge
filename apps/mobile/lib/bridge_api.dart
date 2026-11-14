@@ -4,6 +4,9 @@ import 'dart:io';
 import 'dart:math';
 
 /// Internal Bridge lab client. No secrets/tokens are persisted to disk.
+/// Build-time allowlist for one exact internal Render HTTPS origin.
+const String bridgeQaConfiguredOrigin =
+    String.fromEnvironment('BRIDGE_QA_ORIGIN', defaultValue: '');
 class BridgeException implements Exception {
   const BridgeException(this.status, this.code);
   final int status;
@@ -47,20 +50,32 @@ class SseParser {
   }
 }
 
-Uri validateLabEndpoint(String value) {
+Uri validateLabEndpoint(String value,
+    {String configuredCloudOrigin = bridgeQaConfiguredOrigin}) {
   final uri = Uri.tryParse(value.trim());
   if (uri == null ||
-      uri.scheme != 'http' ||
-      !{'127.0.0.1', 'localhost', '10.0.2.2', '::1'}.contains(uri.host) ||
-      uri.port <= 0 ||
-      uri.port > 65535 ||
       uri.userInfo.isNotEmpty ||
-      uri.path.isNotEmpty && uri.path != '/' ||
-      uri.query.isNotEmpty ||
-      uri.fragment.isNotEmpty) {
+      (uri.path.isNotEmpty && uri.path != '/') ||
+      uri.query.isNotEmpty || uri.fragment.isNotEmpty) {
+    throw const FormatException('Unapproved Bridge QA endpoint.');
+  }
+  final isLocal = uri.scheme == 'http' &&
+      {'127.0.0.1', 'localhost', '10.0.2.2', '::1'}.contains(uri.host) &&
+      uri.hasPort && uri.port > 0 && uri.port <= 65535;
+  // A remote endpoint is only valid when compiled explicitly into this APK.
+  final configured = Uri.tryParse(configuredCloudOrigin.trim());
+  final isCloud = configured != null &&
+      configured.scheme == 'https' &&
+      configured.host.endsWith('.onrender.com') &&
+      configured.userInfo.isEmpty &&
+      (configured.path.isEmpty || configured.path == '/') &&
+      configured.query.isEmpty && configured.fragment.isEmpty &&
+      !configured.hasPort &&
+      uri.scheme == 'https' && !uri.hasPort &&
+      uri.origin == configured.origin;
+  if (!isLocal && !isCloud) {
     throw const FormatException(
-      'Only loopback or Android emulator host HTTP endpoints are allowed.',
-    );
+      'Only local lab or the configured HTTPS Bridge QA server is allowed.');
   }
   return uri;
 }

@@ -16,6 +16,25 @@ void main() {
       expect(() => validateLabEndpoint(bad), throwsFormatException, reason: bad);
     }
   });
+  test('cloud QA only accepts the exact compiled HTTPS Render origin', () {
+    const approved = 'https://bridge-private-qa.onrender.com';
+    expect(validateLabEndpoint(approved, configuredCloudOrigin: approved).origin,
+        approved);
+    for (final bad in [
+      'https://evil.onrender.com',
+      'http://bridge-private-qa.onrender.com',
+      'https://bridge-private-qa.onrender.com.evil.example',
+      'https://bridge-private-qa.onrender.com/?token=leak',
+      'https://user:secret@bridge-private-qa.onrender.com',
+      'https://bridge-private-qa.onrender.com:8443',
+    ]) {
+      expect(
+        () => validateLabEndpoint(bad, configuredCloudOrigin: approved),
+        throwsFormatException,
+        reason: bad,
+      );
+    }
+  });
   test('request IDs are proper UUID v4 shape and distinct', () {
     final first = newRequestId();
     final second = newRequestId();

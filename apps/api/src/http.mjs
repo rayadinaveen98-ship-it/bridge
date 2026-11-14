@@ -30,7 +30,7 @@ function send(res, status, value) {
   res.end(status === 204 ? "" : JSON.stringify(value));
 }
 
-export function createHandler(service, authentication, liveHub = null, labLogin = null) {
+export function createHandler(service, authentication, liveHub = null, labLogin = null, {cloudQa=false} = {}) {
   if (!service || !authentication) throw new TypeError("Backend dependencies required");
   const limit = createLimiter();
   return async (req, res) => {
@@ -40,15 +40,19 @@ export function createHandler(service, authentication, liveHub = null, labLogin 
       if (method === "GET" && pathname === "/healthz") {
         return send(res, 200, { alive: true, component: "bridge-internal-api" });
       }
-      // This route is disabled unless explicitly enabled by a local test operator.
+      // Login is disabled unless explicitly enabled by a local or cloud QA operator.
       // Test passphrases are never recorded, logged or treated as age assurance.
       if (method === "POST" && pathname === "/internal/lab/login") {
         if (!labLogin?.enabled) throw new ApiError(404,"not_found");
         const ip = req.socket.remoteAddress || "";
-        if (!["127.0.0.1","::1","::ffff:127.0.0.1"].includes(ip)) {
+        if (!cloudQa && !["127.0.0.1","::1","::ffff:127.0.0.1"].includes(ip)) {
           throw new ApiError(403,"local_only");
         }
         const input = await readBody(req);
+        if (cloudQa && !["tester_a","tester_b"].includes(
+            typeof input.handle === "string" ? input.handle.trim().toLowerCase() : "")) {
+          throw new ApiError(401,"invalid_credentials");
+        }
         return send(res,200,await labLogin.login({
           handle: input.handle,passphrase:input.passphrase
         },ip));

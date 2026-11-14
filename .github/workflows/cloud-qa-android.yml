@@ -1,0 +1,66 @@
+name: Bridge cloud QA debug APK
+
+# Explicit manual launch only, after our hosted test URL is confirmed.
+on:
+  workflow_dispatch:
+    inputs:
+      qa_origin:
+        description: 'Approved Bridge QA HTTPS origin (https://your-service.onrender.com)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  cloud-qa-debug:
+    name: Flutter cloud QA tests and APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      QA_ORIGIN: ${{ inputs.qa_origin }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate the exact HTTPS Render origin
+        run: |
+          node --input-type=module -e '
+          const origin = process.env.QA_ORIGIN || "";
+          let url;
+          try { url = new URL(origin); }
+          catch { throw new Error("QA origin must be a valid HTTPS URL"); }
+          if (url.protocol !== "https:" || !url.hostname.endsWith(".onrender.com") ||
+              !/^[a-z0-9-]+\.onrender\.com$/.test(url.hostname) ||
+              url.username || url.password || url.port ||
+              url.pathname !== "/" || url.search || url.hash ||
+              origin !== url.origin) {
+            throw new Error("Expected the exact approved Render HTTPS origin");
+          }
+          '
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Prepare Flutter Android scaffolding
+        run: flutter create --platforms=android --project-name bridge_mobile --org com.bridge.internal --no-pub apps/mobile
+      - name: Install Flutter dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+      - name: Analyze and test
+        working-directory: apps/mobile
+        run: |
+          flutter analyze --no-fatal-infos
+          flutter test
+      - name: Build internal HTTPS-only QA APK
+        working-directory: apps/mobile
+        run: flutter build apk --debug --dart-define=BRIDGE_QA_ORIGIN="$QA_ORIGIN"
+      - name: Upload private-tester APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bridge-cloud-qa-debug-apk
+          path: apps/mobile/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7
+          if-no-files-found: error
