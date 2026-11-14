@@ -1,7 +1,12 @@
 name: Bridge cloud QA debug APK
 
-# Explicit manual launch only, after our hosted test URL is confirmed.
+# Founder-approved test origin; make a cloud-connected APK on each relevant main update.
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/cloud-qa-android.yml'
   workflow_dispatch:
     inputs:
       qa_origin:
@@ -18,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
-      QA_ORIGIN: ${{ inputs.qa_origin }}
+      QA_ORIGIN: ${{ inputs.qa_origin || 'https://bridge-private-qa.onrender.com' }}
     steps:
       - uses: actions/checkout@v4
       - name: Validate the exact HTTPS Render origin
@@ -36,6 +41,21 @@ jobs:
             throw new Error("Expected the exact approved Render HTTPS origin");
           }
           '
+      - name: Smoke check hosted API health and authentication boundary
+        run: |
+          set -euo pipefail
+          for route in "/healthz" "/v1/bootstrap"; do
+            status=$(curl --retry 5 --retry-delay 12 --max-time 30 --silent --show-error \
+              --output /dev/null --write-out '%{http_code}' "$QA_ORIGIN$route")
+            if [[ "$route" == "/healthz" && "$status" != "200" ]]; then
+              echo "Bridge API health check failed: status=$status"
+              exit 1
+            fi
+            if [[ "$route" == "/v1/bootstrap" && "$status" != "401" ]]; then
+              echo "Bridge auth boundary failed: status=$status"
+              exit 1
+            fi
+          done
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
