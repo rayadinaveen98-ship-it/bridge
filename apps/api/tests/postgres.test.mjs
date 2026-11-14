@@ -93,3 +93,36 @@ test("duplicate message with conflicting content is rejected before message inse
   }),e=>e instanceof ApiError&&e.status===409);
   assert.ok(!d.seen.some(x=>x[0].includes("INSERT INTO bridge_messages")));
 });
+
+test("bootstrap resumes only the authenticated account's active open random room",async()=>{
+  const d=stub(async(sql,args)=>{
+    if(sql.includes("FROM bridge_accounts WHERE auth_subject"))return {rows:[{
+      id:"account-a",status:"active",age_verified_at:new Date(),safety_eligible:true
+    }]};
+    if(sql.includes("FROM bridge_supported_languages"))return {rows:[{
+      code:"en",display_name:"English"
+    }]};
+    if(sql.includes("FROM bridge_active_match_slots slot")) {
+      assert.deepEqual(args,["account-a"]);
+      assert.match(sql,/conv\.state='open'/);
+      assert.match(sql,/part\.left_at IS NULL/);
+      return {rows:[{id:"room-id"}]};
+    }
+    throw new Error("Unexpected SQL in bootstrap: "+sql);
+  });
+  const result=await createPostgresService(d.pool).bootstrap("test-subject");
+  assert.equal(result.activeConversationId,"room-id");
+  assert.deepEqual(result.languages,[{code:"en",displayName:"English"}]);
+  assert.ok(d.seen.some(x=>x[0]==="RELEASE"));
+});
+
+test("bootstrap returns null when no active match exists",async()=>{
+  const d=stub(async(sql)=>{
+    if(sql.includes("FROM bridge_accounts WHERE auth_subject"))return {rows:[{
+      id:"account-a",status:"active",age_verified_at:new Date(),safety_eligible:true
+    }]};
+    return {rows:[]};
+  });
+  const result=await createPostgresService(d.pool).bootstrap("test-subject");
+  assert.equal(result.activeConversationId,null);
+});
