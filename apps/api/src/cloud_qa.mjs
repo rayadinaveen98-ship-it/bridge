@@ -3,7 +3,8 @@
  * Secrets stay in the deployment environment; never return them in API responses.
  */
 import { createPrivateKey, createPublicKey, randomUUID } from "node:crypto";
-import { hashLabPassphrase } from "./lab_auth.mjs";
+import { hashLabPassphrase, createLabLogin } from "./lab_auth.mjs";
+import { verifyBearer } from "./auth.mjs";
 
 const QA_HANDLES = Object.freeze([
   ["tester_a", "Stardust", "BRIDGE_QA_TESTER_A_PASSPHRASE"],
@@ -93,4 +94,35 @@ export async function provisionCloudQaAccounts(pool, passphrases) {
   await pool.query(
     "INSERT INTO bridge_supported_languages(code,display_name,moderation_ready) " +
     "VALUES('en','English',true) ON CONFLICT(code) DO NOTHING");
+}
+
+/**
+ * Founder QA startup gate: test the same login path used by Android.
+ * Never logs credentials, token values or account identities.
+ * Fails closed when Render's secrets no longer match existing Neon credentials.
+ */
+export async function verifyCloudQaCredentials(pool, passphrases, signing) {
+  const temporaryLogin = createLabLogin(pool, signing, {enabled:true});
+  for (const [handle] of QA_HANDLES) {
+    try {
+      const issued = await temporaryLogin.login({
+        handle,
+        passphrase:passphrases[handle]
+      }, "cloud-qa-boot-check");
+      const claims = verifyBearer("Bearer " + issued.token, {
+        publicKeyPem:signing.publicKeyPem,
+        issuer:signing.issuer,
+        audience:signing.audience
+      });
+      if (!claims.subject.startsWith("bridge-cloud-qa:")) {
+        throw new Error("Not a cloud QA identity");
+      }
+    } catch {
+      throw new Error(
+        "Bridge Cloud QA login self-check failed. " +
+        "Render credentials may differ from the existing database. " +
+        "Reconcile test secrets explicitly; never auto-reset credentials."
+      );
+    }
+  }
 }
