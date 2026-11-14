@@ -6,7 +6,7 @@ import { createLiveHub } from "./live.mjs";
 import { createOutboxDispatcher } from "./outbox.mjs";
 import { createLabLogin } from "./lab_auth.mjs";
 import { createPublicKey } from "node:crypto";
-import { readCloudQaConfig, provisionCloudQaAccounts } from "./cloud_qa.mjs";
+import { readCloudQaConfig, provisionCloudQaAccounts, verifyCloudQaCredentials } from "./cloud_qa.mjs";
 
 const cloudQa=readCloudQaConfig(process.env);
 const required=cloudQa ? ["BRIDGE_DATABASE_URL"] :
@@ -47,6 +47,8 @@ if(cloudQa){
   // Database schema is applied separately after founder confirmation.
   await provisionCloudQaAccounts(pool,cloudQa.passphrases);
   labCredentials=createLabLogin(pool,cloudQa.signing,{enabled:true});
+  await verifyCloudQaCredentials(pool,cloudQa.passphrases,cloudQa.signing);
+  console.log("Bridge cloud QA login self-check passed for both synthetic accounts");
 } else if(labEnabled){
   if(!process.env.BRIDGE_LAB_PRIVATE_KEY_FILE){
     throw Error("BRIDGE_LAB_PRIVATE_KEY_FILE required in lab mode");
