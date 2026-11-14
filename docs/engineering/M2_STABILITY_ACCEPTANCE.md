@@ -2,6 +2,23 @@
 
 This is a local synthetic-test-account checklist. No production service, public stranger chat or real-world age assurance is implied.
 
+## Status ledger — 2026-11-14
+
+| Evidence gate | Status | Basis |
+|---|---|---|
+| Android ↔ Windows two-account chat | Operator-reported PASS | 2026-10-23 one-phone QA report (synthetic local lab) |
+| M2 closed-chat/connection/block/replay PostgreSQL regressions | CI PASS | GitHub Actions 39954995708 |
+| Android contiguous message replay & duplicate/gap protection | CI PASS | PR #7, GitHub Actions 43599109135 |
+| Android debug APK compiled from replay-fix PR | CI PASS | GitHub Actions 43599109135 |
+| Post-merge main backend/PostgreSQL CI | CI PASS | GitHub Actions 43599576368 |
+| On-device mutual Keep/persistent connection | NOT VERIFIED | Operator device test required |
+| On-device USB interruption / ordered exactly-once recovery | NOT VERIFIED | Operator device test required |
+| On-device report, block denial, and no-rematch | NOT VERIFIED | Operator device test required |
+| Expired-session UX | NOT VERIFIED | Operator device test required |
+| Real users / production safety readiness | NOT READY | No public deployment, age assurance or staffed moderation |
+
+CI PASS is not device PASS. Do not mark M2 complete until all required manual acceptance is logged, along with build identity and any failures.
+
 ## Automated regression suite
 GitHub Actions Foundation checks runs PostgreSQL 16 transaction/integration tests for:
 - Mutual connection requires two independent accepts during an open chat.
@@ -46,4 +63,6 @@ Leave that first terminal open. Open a second PowerShell terminal in the Bridge 
 
     node .\apps\api\scripts\BridgeSecondTester.mjs
 
-Use the pre-existing private tester_b passphrase (script will NOT regenerate it). The phone's ADB USB reverse may need to be re-applied; the previous M2 APK is unchanged. If lab tokens have expired, sign in again on the phone.
+Use the pre-existing private tester_b passphrase (script will NOT regenerate it). The phone's ADB USB reverse may need to be re-applied. Use the **updated** debug APK from [successful PR #7 Android CI](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43599109135) rather than the earlier M2 binary (GitHub artifacts expire). If lab tokens have expired, sign in again on the phone. Debug signing keys can differ between CI builds; if Android rejects an update because of an incompatible signature, uninstall the old internal test app and install the new debug build. No persistent user data is maintained by this synthetic lab client.
+
+When recording acceptance, note: tested commit/build artifact, Android device and OS, Windows/Node and local lab versions, exact manual steps, expected vs observed results, screenshots/logs **redacted of passphrases/tokens/chat content**, and each test's PASS/FAIL/BLOCKED status. Only then close the M2 gate.
