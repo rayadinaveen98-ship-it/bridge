@@ -94,9 +94,27 @@ export function createPostgresService(pool, onError = () => {}) {
     async bootstrap(subject) {
       const c=await pool.connect();
       try {
-        await account(c,subject);
-        const q=await c.query("SELECT code,display_name FROM bridge_supported_languages WHERE moderation_ready=true ORDER BY display_name");
-        return {languages:q.rows.map(x=>({code:x.code,displayName:x.display_name})),featureFlags:{voice:false,video:false,publicChat:false}};
+        const me=await account(c,subject);
+        const q=await c.query(
+          "SELECT code,display_name FROM bridge_supported_languages " +
+          "WHERE moderation_ready=true ORDER BY display_name");
+        // A user may reopen an app with an active random match whose local
+        // conversation ID was held only in memory. Return only their own
+        // active/open room; never create a new match or reveal another user's.
+        const active=await c.query(
+          "SELECT conv.id FROM bridge_active_match_slots slot " +
+          "JOIN bridge_match_sessions ms ON ms.id=slot.match_session_id " +
+          "JOIN bridge_conversations conv ON conv.match_session_id=ms.id " +
+          "JOIN bridge_conversation_participants part ON " +
+          "part.conversation_id=conv.id AND part.account_id=slot.account_id " +
+          "WHERE slot.account_id=$1 AND ms.state='active' " +
+          "AND conv.kind='random' AND conv.state='open' " +
+          "AND part.left_at IS NULL LIMIT 1", [me.id]);
+        return {
+          languages:q.rows.map(x=>({code:x.code,displayName:x.display_name})),
+          activeConversationId:active.rows[0]?.id||null,
+          featureFlags:{voice:false,video:false,publicChat:false}
+        };
       } finally {c.release();}
     },
     async setPreferences(subject,body) {
