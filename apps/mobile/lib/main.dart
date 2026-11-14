@@ -88,6 +88,14 @@ class _BridgeHomeState extends State<BridgeHome>
   }
 
   Future<void> _connect() async {
+    if (bridgeQaConfiguredOrigin.isNotEmpty &&
+        endpoint.text.trim() == bridgeQaConfiguredOrigin &&
+        testPassphrase.text.length != 64) {
+      _snack('Cloud QA passphrase must have 64 characters. '
+          'Currently entered: ${testPassphrase.text.length}. '
+          'Copy only the value after Passphrase:');
+      return;
+    }
     await bridge.connect(endpoint.text, testHandle.text, testPassphrase.text);
     if (bridge.connected) {
       testPassphrase.clear();
@@ -176,7 +184,7 @@ class _BridgeHomeState extends State<BridgeHome>
       Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(color: const Color(0xFF2D3444),
           borderRadius: BorderRadius.circular(99)),
-        child: const Text('INTERNAL M1', style: TextStyle(fontSize: 10,
+        child: Text(bridgeQaConfiguredOrigin.isNotEmpty ? 'CLOUD QA' : 'INTERNAL M1', style: const TextStyle(fontSize: 10,
           letterSpacing: 1.0, fontWeight: FontWeight.bold)),
       ),
     ]),
@@ -224,6 +232,7 @@ class _BridgeHomeState extends State<BridgeHome>
       const SizedBox(height: 14),
       TextField(controller: testPassphrase, obscureText: !tokenVisible,
         enableSuggestions: false, autocorrect: false,
+        onChanged: (_) => setState(() {}),
         maxLines: 1,
         decoration: InputDecoration(labelText: 'Test passphrase',
           prefixIcon: const Icon(Icons.key_outlined),
@@ -231,19 +240,30 @@ class _BridgeHomeState extends State<BridgeHome>
             ? Icons.visibility_off : Icons.visibility),
             onPressed: () => setState(() { tokenVisible = !tokenVisible; }))),
       ),
+      if (bridgeQaConfiguredOrigin.isNotEmpty) ...[
+        const SizedBox(height: 8),
+        Text('Test passphrase: ${testPassphrase.text.length}/64 characters. '
+          'Copy only the value, without spaces or labels.',
+          style: const TextStyle(fontSize: 11, color: Color(0xFFB6B5CD))),
+      ],
       const SizedBox(height: 18),
       FilledButton.icon(onPressed: bridge.busy ? null : _connect,
         icon: const Icon(Icons.lock_open), label: Text(
           bridge.busy ? 'Signing in...' : 'Sign in to test Bridge')),
       const SizedBox(height: 12),
-      const Text('Test accounts are created on your local development computer. '
-        'No manual JWT is needed.',
-        style: TextStyle(fontSize: 12, color: Color(0xFFB6B5CD))),
+      Text(bridgeQaConfiguredOrigin.isNotEmpty
+        ? 'These are private cloud QA accounts, not public Bridge accounts.'
+        : 'Test accounts are created on your local development computer. '
+          'No manual JWT is needed.',
+        style: const TextStyle(fontSize: 12, color: Color(0xFFB6B5CD))),
     ]),
     const SizedBox(height: 20),
-    const Text('For physical Android devices, run adb reverse tcp:8787 tcp:8787 '
-      'while the internal API listens on your computer. Do not use real passwords or accounts.',
-      style: TextStyle(fontSize: 12, color: Color(0xFF9494AE), height: 1.5)),
+    Text(bridgeQaConfiguredOrigin.isNotEmpty
+      ? 'Cloud QA connects directly over HTTPS. No USB or ADB is required. '
+        'Use only the two approved synthetic accounts.'
+      : 'For physical Android devices, run adb reverse tcp:8787 tcp:8787 '
+        'while the internal API listens on your computer. Do not use real passwords or accounts.',
+      style: const TextStyle(fontSize: 12, color: Color(0xFF9494AE), height: 1.5)),
   ]);
 
   Widget _tabContent() {
