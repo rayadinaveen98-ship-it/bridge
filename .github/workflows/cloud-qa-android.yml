@@ -1,7 +1,12 @@
 name: Bridge cloud QA debug APK
 
-# Explicit manual launch only, after our hosted test URL is confirmed.
+# Founder-approved test origin; make a cloud-connected APK on each relevant main update.
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/cloud-qa-android.yml'
   workflow_dispatch:
     inputs:
       qa_origin:
@@ -18,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
-      QA_ORIGIN: ${{ inputs.qa_origin }}
+      QA_ORIGIN: ${{ inputs.qa_origin || 'https://bridge-private-qa.onrender.com' }}
     steps:
       - uses: actions/checkout@v4
       - name: Validate the exact HTTPS Render origin
