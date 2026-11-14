@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { generateKeyPairSync } from "node:crypto";
-import { readCloudQaConfig } from "../src/cloud_qa.mjs";
+import { readCloudQaConfig, verifyCloudQaCredentials } from "../src/cloud_qa.mjs";
+import { hashLabPassphrase } from "../src/lab_auth.mjs";
 
 const keys=generateKeyPairSync("rsa",{modulusLength:3072});
 const privatePem=keys.privateKey.export({type:"pkcs8",format:"pem"}).toString();
@@ -41,4 +42,34 @@ test("cloud QA cannot accept a short RSA signing key",()=>{
   assert.throws(()=>readCloudQaConfig({
     ...good,BRIDGE_QA_PRIVATE_KEY_B64:Buffer.from(weak).toString("base64")
   }),/key/i);
+});
+
+test("QA startup self-check verifies both accounts through real login logic",async()=>{
+  const a=await hashLabPassphrase(good.BRIDGE_QA_TESTER_A_PASSPHRASE);
+  const b=await hashLabPassphrase(good.BRIDGE_QA_TESTER_B_PASSPHRASE);
+  const pool={
+    query:async(_sql,args)=>{
+      const data={
+        tester_a:{...a, subject:"bridge-cloud-qa:a"},
+        tester_b:{...b, subject:"bridge-cloud-qa:b"}
+      };
+      const selected=data[args[0]];
+      return {rows:selected ? [{
+        auth_subject:selected.subject,status:"active",age_verified_at:new Date(),
+        safety_eligible:true,salt:selected.salt,passphrase_hash:selected.hash
+      }] : []};
+    }
+  };
+  const signing=readCloudQaConfig(good).signing;
+  await verifyCloudQaCredentials(pool,{
+    tester_a:good.BRIDGE_QA_TESTER_A_PASSPHRASE,
+    tester_b:good.BRIDGE_QA_TESTER_B_PASSPHRASE
+  },signing);
+  await assert.rejects(
+    verifyCloudQaCredentials(pool,{
+      tester_a:good.BRIDGE_QA_TESTER_A_PASSPHRASE,
+      tester_b:"a wrong test passphrase that is long enough"
+    },signing),
+    /Cloud QA login self-check failed/
+  );
 });
