@@ -1,8 +1,17 @@
 # Bridge — social discovery platform (working codename)
 
-**Current status (2026-11-14): internal M2 lab implementation with Flutter Android debug APK, local-only backend, PostgreSQL integration tests, and operator-reported Android ↔ Windows two-account chat. M2 physical-device acceptance is still open. No publicly deployed service, public signup, verified age assurance, or staffed moderation exists.**
+**Current status (2026-11-14): M2.5 private two-device cloud QA running on Render Free + a dedicated Neon Free database. Both invited synthetic accounts successfully signed in on Android phone and tablet, and two-device text messaging was operator-reported working. M2 safety/lifecycle device acceptance remains OPEN. The service is internet-reachable but restricts application login to the two synthetic accounts; it is NOT a public stranger-chat beta. There is no public registration, real age verification or staffed moderation.**
 
 Bridge is an adult-oriented, pseudonymous social discovery concept built around **Discover → Match → Talk → Mutually Connect → Reconnect**. Its purpose is engaging spontaneous conversations that may become ongoing relationships with both parties' consent.
+
+## Latest Bridge Cloud QA checkpoint (2026-11-14)
+
+- Cloud QA code [PR #9](https://github.com/rayadinaveen98-ship-it/bridge/pull/9), test APK delivery [PR #10](https://github.com/rayadinaveen98-ship-it/bridge/pull/10), and sign-in diagnostics [PR #11](https://github.com/rayadinaveen98-ship-it/bridge/pull/11) are merged.
+- A restricted internal API is deployed to Render Free in Singapore; its dedicated Neon Free PostgreSQL database has Bridge migrations and only two synthetic QA account credentials.
+- Android phone + tablet: user/operator-confirmed successful login and real two-way text messaging, reported 2026-11-14. Further fault-recovery, Keep, report, block and session-expiry acceptance tests remain unverified.
+- On changes to `apps/mobile/**`, the [cloud QA APK GitHub Actions workflow](.github/workflows/cloud-qa-android.yml) builds a debug APK with the exact approved hosted URL; downloadable artifacts expire after seven days. For backend-only changes, the service needs a separately approved Render deployment, because auto-deploy is OFF.
+- Existing CI debug builds may use changing debug signatures, preventing in-place install over an older APK. Stable internal signing and more convenient distribution are still future work.
+- [Two-device workflow and testing guide](docs/engineering/TWO_DEVICE_QA.md). Historical notes below reflect earlier milestones and should not be read as the current deployment status.
 
 ## What exists
 
