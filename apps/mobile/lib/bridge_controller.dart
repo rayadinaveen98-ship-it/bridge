@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'bridge_api.dart';
+import 'message_reconciliation.dart';
 
 /// M1 internal test flow: one session, one active conversation, no persisted JWT.
 class BridgeController extends ChangeNotifier {
@@ -245,14 +246,19 @@ class BridgeController extends ChangeNotifier {
         // API pages are capped at 50; drain until a short page arrives.
         while (client == api && cid == conversationId) {
           final result = await client.messages(cid, after: cursor);
-          final known = messages.map((m) => m['id']).toSet();
-          for (final msg in result) {
-            final seq = (msg['sequenceNumber'] as num).toInt();
-            if (seq > cursor) cursor = seq;
-            if (known.add(msg['id'])) messages.add(msg);
-          }
+          // A conversation may change while the request is in flight.
+          if (client != api || cid != conversationId) break;
+          final previousCursor = cursor;
+          final page = reconcileBridgeMessagePage(
+            existing: messages, incoming: result, after: cursor);
+          messages.addAll(page.fresh);
+          cursor = page.cursor;
           _notify();
           if (result.length < 50) break;
+          if (cursor == previousCursor) {
+            throw const FormatException(
+              'Replay page made no progress; retry refresh.');
+          }
         }
       } while (_refreshAgain && client == api && cid == conversationId);
     } catch (e) { _failure(e); }
