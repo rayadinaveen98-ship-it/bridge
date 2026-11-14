@@ -55,6 +55,11 @@ test("real PostgreSQL: matchmaking, durable messaging, votes and block", {
     const conversationId=qb.conversationId;
     assert.equal(conversationId,qaNow.conversationId);
     assert.ok(conversationId);
+    // Both participants can recover the active room after their in-memory
+    // mobile session is lost. An outsider cannot discover the room via bootstrap.
+    assert.equal((await service.bootstrap(a.subject)).activeConversationId,conversationId);
+    assert.equal((await service.bootstrap(b.subject)).activeConversationId,conversationId);
+    assert.equal((await service.bootstrap(c.subject)).activeConversationId,null);
 
     await assert.rejects(service.enqueue(a.subject,{topic:null,idempotencyKey:randomUUID()}),
       e=>e instanceof ApiError&&e.status===409);
@@ -181,6 +186,8 @@ test("real PostgreSQL: matchmaking, durable messaging, votes and block", {
     assert.equal(secondMatch.state,"connected");
     const closedRoom=secondMatch.conversationId;
     await service.closeConversation(a.subject,closedRoom);
+    assert.equal((await service.bootstrap(a.subject)).activeConversationId,null);
+    assert.equal((await service.bootstrap(c.subject)).activeConversationId,null);
     for(const who of [a.subject,c.subject]){
       await assert.rejects(service.castVote(who,closedRoom,"accept"),
         e=>e instanceof ApiError&&e.status===409&&e.code==="conversation_closed");
