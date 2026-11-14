@@ -19,6 +19,12 @@ This is a local synthetic-test-account checklist. No production service, public 
 
 CI PASS is not device PASS. Do not mark M2 complete until all required manual acceptance is logged, along with build identity and any failures.
 
+## Hosted Android phone + tablet acceptance status — 2026-11-14
+
+**New evidence:** The founder/operator reports successful login with `tester_a` on one Android device and `tester_b` on the second, with working two-way text messaging through the dedicated Render/Neon cloud QA environment. Both device types (Android phone and tablet) were used. This updates the manual evidence for initial matching/chat **only**. No independent recorded packet/device lifecycle traces were supplied.
+
+The older local USB/Windows test protocol below remains historical. For continuing validation use [TWO_DEVICE_QA.md](TWO_DEVICE_QA.md), with ordinary Wi-Fi/mobile network transitions instead of unplugging USB. **Still open:** two-sided Keep and persistence, ordered offline replay exactly once, report acknowledgment, block denial/no rematch, session expiry, Android lifecycle/background recovery, and reliable APK-update installation.
+
 ## Automated regression suite
 GitHub Actions Foundation checks runs PostgreSQL 16 transaction/integration tests for:
 - Mutual connection requires two independent accepts during an open chat.

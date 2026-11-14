@@ -92,3 +92,16 @@ Prototype complete ≠ production implementation. Unverified revenue figures and
 - Seven Flutter replay regression tests, static analysis, and Android debug compilation **passed** in [PR CI 43599109135](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43599109135). Backend/PostgreSQL CI **passed** on [main 43599576368](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43599576368).
 - **M2 acceptance remains OPEN:** confirm mutual Keep on Android, USB disconnect/replay with exactly-once display, report acknowledgment, block denial/no-rematch, and expired-session handling. Only the earlier synthetic Android ↔ Windows message exchange has operator-reported evidence.
 - **M3 remains unstarted**; do not confuse debug APK compilation with physical device acceptance or public launch.
+
+
+## M2.5 private cloud phone + tablet testing — operator acceptance (2026-11-14)
+
+- **IMPLEMENTED + MERGED:** Cloud QA hosted mode [PR #9](https://github.com/rayadinaveen98-ship-it/bridge/pull/9), cloud-targeted Android APK CI [PR #10](https://github.com/rayadinaveen98-ship-it/bridge/pull/10), sign-in correctness self-check and Android passphrase input guidance [PR #11](https://github.com/rayadinaveen98-ship-it/bridge/pull/11), latest source `cf093d33`.
+- **DEPLOYED:** Render Free Node service in Singapore with manually controlled deploys (auto-deploy OFF); dedicated Neon Free PostgreSQL 18 project with Bridge's 20 RLS-enabled tables. Hosted health + unauthenticated access-boundary smoke checks passed in cloud APK CI.
+- **DEVICE OPERATOR-REPORTED PASS:** Both Android phone and Android tablet installed the cloud build, signed in using the two synthetic accounts, and successfully exchanged messages. This is an initial functional confirmation, **not** full M2 acceptance.
+- **PENDING M2 DEVICE ACCEPTANCE:** Verify mutual Keep and reconnect, lost-network/replay ordering and no duplication, report acknowledgment, block denial/no re-match (last), and expired-session UX on the two Android devices. Record the exact tested build, date and devices.
+- **PENDING M3 RELIABILITY:** Automatic session renewal/revocation, secure persistence of message cursor, durable background recovery and predictable retries; do not claim these features implemented.
+- **PROPOSED product/quality gate following M2/M3:** Premium end-to-end UX visual consistency and accessibility review; trust & safety, age assurance and moderation operations must be designed and independently validated **before** any real users or public beta. No release date approved.
+- **DELIVERY PROCESS:** Mobile changes merged after CI yield the cloud APK artifact via [Bridge cloud QA debug APK workflow](https://github.com/rayadinaveen98-ship-it/bridge/actions/workflows/cloud-qa-android.yml) (7-day expiry). Backend-only changes require manual Render redeploy after checks; old app and new backend must be compatible. Distribution improvements and stable signing are pending; do not promise a permanently accessible install URL or silent updates.
+
+Read [two-device QA guide](engineering/TWO_DEVICE_QA.md) for repeatable operator steps and version recording. Existing local-lab QA remains an optional engineering fallback, not a required user testing step.
