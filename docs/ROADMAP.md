@@ -119,7 +119,7 @@ Read [two-device QA guide](engineering/TWO_DEVICE_QA.md) for repeatable operator
 
 ## Architecture V2 founder approval and proposed delivery program — 2026-11-15
 
-**ARCHITECTURE APPROVED FOR DOCUMENTATION AND IMPLEMENTATION PLANNING ONLY; NO V2 CODE APPROVED.** The authoritative prospective contracts are [Product Invariants V1](product/PRODUCT_INVARIANTS_V1.md) (BR-001–029, D-01–D-05), [Architecture V2](engineering/ARCHITECTURE_V2.md) (D-06/D-07/H-01/M-01 approved for planning), and [V2 Implementation Packages](engineering/V2_IMPLEMENTATION_PACKAGES.md) (PR scopes **PROPOSED / AWAITING FOUNDER APPROVAL**).
+**ARCHITECTURE APPROVED FOR DOCUMENTATION AND IMPLEMENTATION PLANNING ONLY; NO V2 CODE APPROVED.** The authoritative prospective contracts are [Product Invariants V1](product/PRODUCT_INVARIANTS_V1.md) (BR-001–029, D-01–D-05), [Architecture V2](engineering/ARCHITECTURE_V2.md) (D-06/D-07/H-01/M-01 approved for planning), and [V2 Implementation Packages](engineering/V2_IMPLEMENTATION_PACKAGES.md) (package sequence, dependencies, test criteria and rollback gates **FOUNDER-APPROVED FOR PLANNING; engineering execution NOT AUTHORIZED**).
 
 **Current technical reference:** `main@3578565a`, PR #14 merged, backend deployed to existing private Render QA and cloud QA debug APK CI passed. Earlier roadmap statements that the backend is not deployed or uses NestJS/Supabase are historical only. Flutter Android + Node.js service + Neon PostgreSQL + one-node SSE/outbox is the actual current baseline. Synthetic tester_a/tester_b earlier exchanged messages; **R0 physical-device acceptance remains OPEN**.
 
@@ -132,7 +132,7 @@ Read [two-device QA guide](engineering/TWO_DEVICE_QA.md) for repeatable operator
 
 **Non-negotiable rollback:** After V2 history read cutover, never revert to unrestricted `/v1/conversations/:id/messages` access. Fallback is **safe deny** or forward fix. Physical deletion requires distinct founder approval; it cannot be rolled back by exposing a backup.
 
-**This program is not approved for execution by documentation approval alone.** No application code, database data/schema, Render deployment, billing or payment settings or public-user privileges may be changed by this documentation PR.
+**The V2 package sequence and engineering gates are approved for planning only, not for code execution.** No application code, database data/schema, Render deployment, billing or payment settings or public-user privileges may be changed by this documentation PR.
 
 ## Deferred final milestone: V2-16 What If? user-journey and edge-case audit — founder sequence decision, 2026-11-15
 
@@ -147,4 +147,4 @@ The founder requested that the comprehensive What If? research, UX review and fo
 
 **Resumed immediate planning:** [V2-01 deterministic contract and migration inventory implementation brief](engineering/V2_01_IMPLEMENTATION_BRIEF.md) is prepared for separate founder approval. R0 hardware testing remains OPEN. No V2 test code has been written.
 
-**Change control:** Documentation branch only. No application changes, live Neon schema/data, Render deployment, test-account reset, billing, paid services or release authorized.
+**Change control:** DOC-00 documentation reconciliation and proposed implementation brief only. No application changes, live Neon schema/data, Render deployment, test-account reset, billing, paid services or release authorized.
