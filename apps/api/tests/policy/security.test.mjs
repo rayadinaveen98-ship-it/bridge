@@ -173,12 +173,20 @@ test("P-012 consent withdrawal, entitlement revocation and 90d deny immediately"
   denied(altered(O.HISTORY_READ,"entitlement",{expiresAt:NOW}));
   const revoked=fixture(O.HISTORY_READ);
   revoked.consents[1].revokedAt=NOW-1;denied(revoked);
-  allowed(altered(O.HISTORY_READ,"target",{
+  const justInside=altered(O.HISTORY_READ,"target",{
     acceptedAt:NOW-HISTORY_TTL_MS+1
+  });
+  justInside.consents=justInside.consents.map(c=>({
+    ...c,effectiveAt:NOW-HISTORY_TTL_MS
   }));
-  denied(altered(O.HISTORY_READ,"target",{
+  allowed(justInside);
+  const justExpired=altered(O.HISTORY_READ,"target",{
     acceptedAt:NOW-HISTORY_TTL_MS
+  });
+  justExpired.consents=justExpired.consents.map(c=>({
+    ...c,effectiveAt:NOW-HISTORY_TTL_MS-1
   }));
+  denied(justExpired);
   // A user can withdraw previously granted consent even after connection ends.
   const withdrawal=fixture(O.HISTORY_CONSENT_WITHDRAW);
   withdrawal.relation.state="revoked";allowed(withdrawal);
