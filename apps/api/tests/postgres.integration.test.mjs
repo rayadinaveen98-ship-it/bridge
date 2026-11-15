@@ -48,6 +48,8 @@ test("real PostgreSQL: matchmaking, durable messaging, votes and block", {
     const searchA=randomUUID(),searchB=randomUUID();
     const qa=await service.enqueue(a.subject,{topic:"cinema",idempotencyKey:searchA});
     assert.equal(qa.state,"waiting");
+    assert.equal((await service.bootstrap(a.subject)).activeSearchRequestId,searchA);
+    assert.equal((await service.bootstrap(b.subject)).activeSearchRequestId,null);
     const qb=await service.enqueue(b.subject,{topic:"cinema",idempotencyKey:searchB});
     assert.equal(qb.state,"connected");
     const qaNow=await service.queueStatus(a.subject,searchA);
@@ -59,6 +61,9 @@ test("real PostgreSQL: matchmaking, durable messaging, votes and block", {
     // mobile session is lost. An outsider cannot discover the room via bootstrap.
     assert.equal((await service.bootstrap(a.subject)).activeConversationId,conversationId);
     assert.equal((await service.bootstrap(b.subject)).activeConversationId,conversationId);
+    assert.equal((await service.bootstrap(a.subject)).activeSearchRequestId,null);
+    assert.equal((await service.bootstrap(b.subject)).activeSearchRequestId,null);
+    assert.equal((await service.conversationPeer(a.subject,conversationId)).conversationKind,"random");
     assert.equal((await service.bootstrap(c.subject)).activeConversationId,null);
 
     await assert.rejects(service.enqueue(a.subject,{topic:null,idempotencyKey:randomUUID()}),
@@ -160,6 +165,7 @@ test("real PostgreSQL: matchmaking, durable messaging, votes and block", {
     assert.equal((await service.connections(a.subject)).length,1);
     assert.equal((await service.connections(b.subject)).length,1);
     assert.equal((await service.connections(c.subject)).length,0);
+    assert.equal((await service.conversationPeer(a.subject,conversationId)).conversationKind,"connection");
     assert.equal((await service.castVote(a.subject,conversationId,"accept")).status,"connected");
     await assert.rejects(service.closeConversation(a.subject,conversationId),
       e=>e instanceof ApiError&&e.status===409);
