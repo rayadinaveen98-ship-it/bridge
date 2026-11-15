@@ -30,12 +30,25 @@
 
 Old `docs/engineering/ARCHITECTURE_V1.md` proposed NestJS/Supabase and older `docs/DECISIONS.md` says Android-first proposed, while deployed source is Node.js + Neon + Render. These are historical snapshots: **V2 and this plan supersede their current recommendations, not their historical record**.
 
+## V2-00 — What If? experience and scenario freeze (new proposed design gate)
+
+**Documentation-only next stage, not code authorization.** Read the [138-case founder Scenario Atlas](../product/WHAT_IF_SCENARIO_ATLAS_V1.md) and [Scenario Coverage & QA Strategy](WHAT_IF_QA_STRATEGY_V1.md). This is a required planning dependency before V2-01 tests or downstream user-facing implementation changes.
+
+**Deliverables:** Each `WF-` case has approved or explicitly blocked expected behavior, screen/error recovery, backend ownership and invariant, P0/P1 priority, negative test, Android phone/tablet test when appropriate, rollback and release gate. Product signoff is required for 13 **proposed** UX decisions including persistent login, foreground matchmaking lease, report-vs-exit-vs-block, consent, notification privacy and draft handling. Do not silently turn proposed interaction defaults into binding policy.
+
+**Existing policy is unchanged:** 30-minute random/direct inactivity; free mutually connected chat; no free historical transcript; 7d unread, 15m recovery, 24h random purge target, 90d consented future history, 90/180d evidence, `legacy_qa` exceptions. R0 device testing remains its own open G0.
+
+**Acceptance:** Reconcile at least all 138 scenario IDs to BR-policy IDs / test types / future V2 PRs; all P0 contract decisions settled or explicit STOP; controlled fault-injection and privacy-leak cases specified. No app/schema/deploy/billing/data changes.
+
+**Rollback:** Documentation-only revert or correction, with approval log preserved. No deployment to roll back.
+
 ## 1. Dependency graph (no implementation authorized)
 
 ```mermaid
 flowchart TD
  D["DOC-00 approved contract + proposed packages (documentation only)"] --> R["G0: R0 phone/tablet acceptance"]
- D --> P1["V2-01 repeatable contracts + policy test harness"]
+ D --> W["V2-00 scenario and UX policy freeze"]
+ W --> P1["V2-01 repeatable contracts + policy test harness"]
  R --> P1
  P1 --> P2["V2-02 central policy + SQL role isolation"]
  P2 --> P3["V2-03 additive schema / disposable migration rehearsal"]
@@ -219,7 +232,7 @@ Synthetic internal QA remains on **₹0 planned incremental cost** using existin
 
 ## 7. Founder approvals separated by scope
 
-1. **Now:** approve the proposed sequence, PR boundaries and evidence gates in this document. This does NOT authorize implementation automatically.
+1. **Now:** review DOC-00 plus the proposed **V2-00 What If? scenario/UX contract gate** and engineering sequence. This does NOT authorize implementation automatically.
 2. **Engineering stage:** explicitly approve each proposed implementation package (or defined bundle with clear scope), including any code writes.
 3. **Database:** independently approve migrations and write tests against dedicated QA only after backup/rehearsal.
 4. **Deployment:** approve exact backend SHA/Android build and protected cutover.
