@@ -1,6 +1,6 @@
 # Bridge V2 — exact implementation packages, dependency graph and release gates
 
-**Status: PROPOSED FOR FOUNDER APPROVAL — NOT APPROVED TO IMPLEMENT**  
+**Status: FOUNDER-APPROVED PR SEQUENCE, DEPENDENCIES, ACCEPTANCE AND ROLLBACK GATES — IMPLEMENTATION NOT AUTHORIZED**  
 **Prepared:** 2026-11-15  
 **Source baseline:** `main@3578565aa5542a52fdc2679829db6f938cc960d3`, current Render Free QA + Neon Free QA  
 **Governing approvals:** [BR-001–029 + D-01–D-07/H-01/M-01](../product/PRODUCT_INVARIANTS_V1.md); [Architecture V2](ARCHITECTURE_V2.md).  
@@ -69,9 +69,9 @@ flowchart TD
 
 ## 2. PR-level work packages
 
-All engineering package statuses are **PROPOSED**. Each gets its own branch, PR, acceptance evidence, migration/deploy checklist, and founder gate. PR numbers are assigned by GitHub only when created.
+The **package sequence and PR boundaries are approved for planning**, but every package remains **NOT APPROVED FOR IMPLEMENTATION**. Each future engineering package needs explicit founder authorization for its code scope, branch/PR, acceptance evidence, migration/deploy checklist and applicable release gate. PR numbers are assigned by GitHub only when created.
 
-### DOC-00 — Contract and roadmap reconciliation (current documentation-only PR)
+### DOC-00 — Contract and roadmap reconciliation (founder-authorized documentation PR #15)
 **Paths:** `docs/product/PRODUCT_INVARIANTS_V1.md`, `docs/engineering/ARCHITECTURE_V2.md`, this implementation package file, `docs/ROADMAP.md`, `docs/DECISIONS.md` and an historical supersession notice.  
 **Depends:** Founder approvals already supplied; latest repository reconciliation.  
 **Acceptance:** BR-001–BR-029, D-01–D-07, H-01/M-01 recorded, no new user-facing functionality asserted; historical evidence remains; old status tracked as such. **No source/database/deploy writes.**  
@@ -234,7 +234,7 @@ Synthetic internal QA remains on **₹0 planned incremental cost** using existin
 
 ## 7. Founder approvals separated by scope
 
-1. **Now:** review DOC-00 and the original V2-01 through V2-15 engineering sequence. The comprehensive What If? review is **V2-16 at the end**; critical per-package safety and privacy tests remain compulsory. This does NOT authorize implementation automatically.
+1. **Approved for documentation/planning:** DOC-00 and the V2-01 through V2-15 package sequence, dependencies, acceptance and rollback gates. The comprehensive What If? audit remains **V2-16 at the end**; critical per-package safety/privacy tests remain compulsory. No application implementation is automatically authorized.
 2. **Engineering stage:** explicitly approve each proposed implementation package (or defined bundle with clear scope), including any code writes.
 3. **Database:** independently approve migrations and write tests against dedicated QA only after backup/rehearsal.
 4. **Deployment:** approve exact backend SHA/Android build and protected cutover.
@@ -244,7 +244,7 @@ Synthetic internal QA remains on **₹0 planned incremental cost** using existin
 
 ## 8. Documentation acceptance ledger / next work
 
-- DOC-00 PR is documentation-only, **not merged until review**.
+- DOC-00 documentation-only PR #15 has been **approved for final review and merge**; consult GitHub for the current merge status.
 - After approval, reconcile stage tracking in `docs/ROADMAP.md` with the packet's IDs and maintain a permanent `docs/DECISIONS.md` status log.
 - Before starting V2-01, capture the latest branch SHA, full current API route inventory, stable R0 device result, current table privileges/roles, exact current schema baseline, and first prospective policy test vector fixtures.
 - Keep prior V1/R0 records as historical, identify superseded portions rather than deleting them.
