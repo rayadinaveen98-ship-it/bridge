@@ -79,7 +79,7 @@ const consentedHistory=ctx=>{
       t.connectionId!==ctx.relation.id || t.directMessage!==true ||
       t.prospectivelyRetained!==true ||
       !trustedIdentifier(t.retentionPolicyVersion) ||
-      !inWindow(ctx.now,t.acceptedAt,HISTORY_TTL) ||
+      !inWindow(ctx.now,t.acceptedAt,HISTORY_TTL_MS) ||
       !Array.isArray(ctx.consents))return false;
   if(!ctx.relation || ctx.consents.length!==2 ||
      ![ctx.relation.memberLow,ctx.relation.memberHigh].every(id=>
@@ -112,7 +112,7 @@ const allowedReport=ctx=>{
     token?.tokenVerified===true && token.scope==="report" &&
     token.reporterId===ctx.principal.accountId &&
     token.sessionId===t.sessionId &&
-    inWindow(ctx.now,token.endedAt,REPORT_TTL);
+    inWindow(ctx.now,token.endedAt,REPORT_TTL_MS);
 };
 
 function decide(ctx){
@@ -202,7 +202,7 @@ function decide(ctx){
          t.connectionId!==ctx.relation?.id ||
          t.recipientId!==p.accountId ||
          !relationshipActive(ctx) ||
-         !inWindow(now,t.acceptedAt,UNREAD_TTL))return safeResource();
+         !inWindow(now,t.acceptedAt,UNREAD_TTL_MS))return safeResource();
       if(op===OPERATIONS.UNREAD_DELIVER)
         return t.state==="unread"?permit:safeResource();
       return t.state==="acknowledged" &&
