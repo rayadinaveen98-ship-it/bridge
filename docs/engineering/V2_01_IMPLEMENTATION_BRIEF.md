@@ -1,6 +1,6 @@
 # Bridge V2-01 — Deterministic contract tests and migration inventory
 
-**Stage status:** PROPOSED — for founder approval of an exact future engineering PR.  
+**Stage status:** BRIEF PREPARED FOR SEPARATE FOUNDER APPROVAL; work-package order approved for planning, V2-01 test implementation NOT AUTHORIZED.  
 **Prepared:** 2026-11-15. **Target baseline:** `main@3578565aa5542a52fdc2679829db6f938cc960d3`.  
 **This is a planning brief, not authorization to implement source changes, run production tests, migrate data, alter deployments or create purchases.**  
 **Dependencies:** Founder-approved Product Invariants V1 + Architecture V2; existing R0 real-phone/tablet acceptance evidence G0. Full 138-case What If? audit intentionally **deferred to final V2-16** by founder, not a prerequisite to this stage.
@@ -10,6 +10,39 @@
 Provide deterministic automated contracts proving approved V2 session, permission and privacy rules **before changing any runtime architecture**. Preserve all existing M1/M2/R0 tests and lab account behavior. Package V2-01 is tests and read-only inventories only; it must not introduce a production behavior switch, schema migration, feature flags permitting unintended data, or new cost.
 
 **Success definition:** CI reliably demonstrates the V2 *expected outcomes* as executable specifications (models/fake adapters) even when the production implementation is not yet developed. Tests that are red because implementation is absent must be clearly classified as **future implementation expectations** and kept in an isolated non-blocking contract suite until the corresponding implementation package. Existing release CI must stay green; do not weaken assertions to manufacture green status.
+
+## One-PR acceptance contract for independent approval
+
+**Implementation classification if separately approved:** one **test-only and documentation** PR, tentatively titled `V2-01: deterministic contract harness and read-only legacy inventory`. It may add test modules and test-runner wiring only. It must not build a parallel production policy engine and then mark the future real backend as tested.
+
+The following are **contract assertions against isolated pure fixtures**, not proof that the current runtime enforces V2:
+
+| Test ID | Exact logical assertion | Why it matters |
+|---|---|---|
+| CT-001 | Ineligible, blocked, unsupported-language, outsider attempts never receive a match or another user's room ID | BR-001–003 |
+| CT-002 | Only one active random session per account; two simulated concurrent searches cannot produce two authorized slots | BR-003 |
+| CT-003 | At server `t=lastAccepted+29m59s`, random send is eligible; at exactly `+30m`, it is denied | BR-004, D-01 |
+| CT-004 | New unique accepted message extends idle clock; duplicate `clientMessageId`, typing, reading, polling and Keep do not | BR-004, D-01 |
+| CT-005 | Back/process-recovery may rejoin same unexpired random room; ended/expired room cannot reopen | BR-005–006 |
+| CT-006 | Only two active Keep votes before expiry grant one mutual relationship; withdraw/late/block/End races never create half-connections | BR-007–008 |
+| CT-007 | Mutual connection enables new free direct segment; original random messages are absent and old direct segments offer no free history | BR-009–014 |
+| CT-008 | Unread is **recipient only**, not generally queryable as history; access ends at seven-day expiry | D-02 |
+| CT-009 | The 15-minute acknowledged-delivery recovery window expires strictly; same message cannot reappear as open-ended pagination | D-06b |
+| CT-010 | Premium/test entitlement without bilateral consent at acceptance denies history; no retroactive random transcript; 90-day horizon | BR-015–018, H-01 |
+| CT-011 | Revoked consent/entitlement or block immediately denies history, even when physical purge is delayed | BR-011, BR-017, H-01 |
+| CT-012 | Seven-day post-end report token authorizes case intake, not ordinary transcript browsing; expired token and outsider denied | BR-019–021, D-07 |
+| CT-013 | An eligible safety case can preserve scoped evidence before ordinary-body purge; reviewer without case permission is denied | BR-020–021 |
+| CT-014 | Old `v1` message route, forged `premium`, guessed ID or stale token cannot bypass the intended V2 policy | BR-014, BR-024 |
+| CT-015 | Synthetic `legacy_qa` fixture remains intact across **hypothetical** V2 migration mapping: 2 test accounts, 1 open random room, 4 bodies, 2 slots | BR-026, M-01 |
+| CT-016 | With worker unavailable, read-time expiry/privacy policy still denies; no claim that timed deletion ran | BR-004, BR-021 |
+
+**Evidence required for each CT-ID:** (a) immutable policy ID, (b) preconditions and deterministic clock, (c) positive and negative expected decision, (d) isolated fixture used, (e) test runner output, and (f) future V2 PR responsible for proving it against real PostgreSQL/API behavior. Where a test cannot be expressed without implementing the feature, document a future **pending integration assertion** rather than fabricating a passing green test.
+
+**Minimum deliverable:** CT-001 through CT-016 specified in executable pure-model tests where meaningful; all remaining BR IDs mapped to future V2 implementation PRs in a machine-readable or Markdown matrix. For CT-014, the current old API is *known* to permit broad active-session message replay: record that mismatch as an explicit future V2-11 cutover blocker, not a false pass on current backend code.
+
+**CI approach:** Keep existing Node/Flutter/PostgreSQL checks unchanged. Add a separately named **V2 contract** command using an explicit test-file list or validated Node 22-compatible glob. Contract tests can be required to pass as model specifications; backend enforcement tests only become release gates when their actual feature PR is implemented. Avoid external paid test services and no hosted QA access is required.
+
+**Rollback/proof:** Revert the isolated test-only PR and CI command if its design is wrong; no server writes or migrations to unwind. A PASS is **CONTRACT SPEC VALIDATED**, never **V2 IMPLEMENTED / DEVICE TESTED**.
 
 ## Exact proposed PR boundaries
 
@@ -63,6 +96,10 @@ Future implementation PR title: `V2-01: deterministic contract harness and read-
 Approval covers only the test/doc paths above and optional test-script/CI addition explicitly reviewed.  
 Rollback: straightforward revert of test-only branch/CI script; no migrations, API behavior change, data reset or deployed service.  
 If tests report inconsistent assumptions, stop and bring a founder-visible product-decision issue, not a silent policy change.
+
+## Separate R0 acceptance requirement
+
+**G0 remains OPEN.** The founder must still physically validate the existing R0 QA APK on Android phone/tablet; no fake-clock contract test, GitHub merge, or lab fixture substitutes for those results. Test-only V2-01 scope can be *planned* now; actual implementation and stage sign-off remain subject to the package's separate approval and G0 acceptance path. Protect the original QA account data; any Block/End test on the two seeded accounts requires controlled fixture procedure and Block LAST.
 
 ## Immediate next review questions
 
