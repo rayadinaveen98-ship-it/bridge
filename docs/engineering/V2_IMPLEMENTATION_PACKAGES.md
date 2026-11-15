@@ -85,6 +85,8 @@ All engineering package statuses are **PROPOSED**. Each gets its own branch, PR,
 **Rollback:** No code; stop QA and record blockers. **Do not mark R0 device accepted without founder evidence.**
 
 ### V2-01 — Deterministic contract tests and migration inventory
+
+**Detailed first-stage approval brief:** [V2-01 implementation brief](V2_01_IMPLEMENTATION_BRIEF.md) — exact test paths, live-data exclusion, CI design, deterministic test vectors and rollback. Written for review only; no source-code implementation authorized.
 **Paths:** `apps/api/tests/v2/*`, test helper fake DB clock, `tests/*` as needed; test-only fixtures, API contract snapshots.  
 **Scope:** BR-ID to test-ID matrix; fake-clock threshold tests at 29:59, 30:00, 7 days, 15min, 24h, 90d/180d; fake payer, unconsenting peer, outsider, blocked/restricted member, two-device races; baseline row/schema/export inventory script in **read-only mode**.  
 **Acceptance:** CI runs Node/PostgreSQL tests against disposable database; no runtime behavior differences; source/fixture integrity clear.  
