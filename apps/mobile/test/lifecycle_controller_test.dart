@@ -18,6 +18,7 @@ class R0FakeApi extends BridgeApi {
   String? currentSearch;
   bool reportAlreadySearching = false;
   Completer<Map<String, dynamic>>? pendingStatus;
+  Completer<Map<String, dynamic>>? pendingPeer;
 
   @override
   Future<Map<String, dynamic>> bootstrap() async => {
@@ -31,6 +32,7 @@ class R0FakeApi extends BridgeApi {
   @override
   Future<Map<String, dynamic>> peer(String conversationId) async {
     peerReads++;
+    if (pendingPeer != null) return pendingPeer!.future;
     return {
       'accountId': 'peer-1',
       'pseudonym': 'Other tester',
@@ -181,6 +183,29 @@ void main() {
     expect(controller.conversationId, isNull);
     expect(controller.searching, false);
     expect(controller.requestId, isNull);
+  });
+
+  test('Late peer response cannot reopen a chat after Back', () async {
+    final api = R0FakeApi()..pendingPeer = Completer();
+    final controller = BridgeController()
+      ..api = api
+      ..connected = true;
+    addTearDown(controller.dispose);
+    final opening = controller.openConversation('slow-room');
+    await Future<void>.delayed(Duration.zero);
+    expect(controller.conversationId, 'slow-room');
+    await controller.leaveChat();
+    expect(controller.resumableConversationId, 'slow-room');
+    api.pendingPeer!.complete({
+      'accountId': 'peer-1',
+      'pseudonym': 'Delayed',
+      'conversationKind': 'random',
+    });
+    await opening;
+    expect(controller.conversationId, isNull);
+    expect(controller.peerId, isNull);
+    expect(controller.resumableConversationId, 'slow-room');
+    expect(api.closedRooms, 0);
   });
 
   test('Cancel surfaces match committed before server cancellation', () async {
