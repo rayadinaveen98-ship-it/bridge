@@ -72,7 +72,9 @@ test("policy context is normalized to immutable allowlisted facts, not raw secre
   assert.equal(Object.isFrozen(ctx.consents),true);
   assert.equal(Object.isFrozen(ctx.consents[0]),true);
   const serialized=JSON.stringify(ctx);
-  for(const v of Object.values(sensitive))assert.equal(serialized.includes(String(v)),false);
+  for(const v of [sensitive.body,sensitive.rawJwt,sensitive.password])
+    assert.equal(serialized.includes(v),false);
+  assert.equal(ctx.isPremium,undefined);
   assert.equal(serialized.includes("private conversation content"),false);
   assert.equal(serialized.includes("pay-secret"),false);
   expectAllow(original);
