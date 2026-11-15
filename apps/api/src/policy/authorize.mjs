@@ -207,6 +207,8 @@ function decide(ctx){
         return t.state==="unread"?permit:safeResource();
       return t.state==="acknowledged" &&
         t.recoveryTokenVerified===true &&
+        timestamp(t.acknowledgedAt) &&
+        t.acknowledgedAt>=t.acceptedAt &&
         inWindow(now,t.acknowledgedAt,ACK_RECOVERY_MS)
         ? permit:safeResource();
     }
