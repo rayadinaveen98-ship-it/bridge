@@ -30,3 +30,25 @@ _2026-10-23. Documented from project discussions and the latest offline artifact
 ## Reconciliation note
 
 Early planning explored a Telugu/English-focused pilot for liquidity. The **latest prototype and flow specification explicitly supersede any language-first product policy**: conversational language choice is unranked and user-controlled. Operational launch coverage and pilots still depend on actual staffing and evidence, not a hidden preference embedded in the matching system.
+
+## Latest authoritative decisions — 2026-11-15 (supersede older proposals)
+
+**Source:** Founder-approved [Product Invariants V1](product/PRODUCT_INVARIANTS_V1.md) and [Architecture V2](engineering/ARCHITECTURE_V2.md). This section updates **decision status**, not app implementation or device-test status.
+
+| Decision | Decision status | Implementation / constraint |
+|---|---|---|
+| Android-first | **APPROVED** | Public Android release NOT approved; iOS remains separate policy gate |
+| Existing Flutter Android + Node.js modular monolith + Neon/PostgreSQL | **APPROVED ARCHITECTURE** | Existing runtime deployed for private synthetic QA, not production |
+| Unranked, explicitly user-selected shared moderation-ready languages | **APPROVED** | No language/geography-first product roadmap or hidden preference |
+| Temporary stranger chat and 30-minute inactivity | **APPROVED** | Server 30m expiry **NOT IMPLEMENTED**, distinct from old 60s match reservation |
+| Mutual Keep creates durable revocable relationship | **APPROVED** | Current code in-place changes `random -> connection`; V2 needs immutable random source and new direct session |
+| Mutual connections can send new direct messages free | **APPROVED** | 30m direct-segment idle, 7d unread max, 15m ack recovery proposed then approved in D-06 |
+| Free no previous chat-history timeline | **APPROVED** | Current generic v1 replay endpoint remains a blocker until safe cutover |
+| Future optional premium history | **APPROVED** | Prospective only after two valid consents; 90d rolling and viewer entitlement; QA TEST grants at ₹0; NO REAL BILLING |
+| Random messages and case evidence | **APPROVED POLICY** | Normal 24h post-end body purge target; 7d report token; case evidence 90d normal/180d serious; **NOT IMPLEMENTED** and still subject to pre-beta legal review |
+| Existing four-message QA fixture protection | **APPROVED ARCHITECTURE** | Non-destructive migration and `legacy_qa` grandfathering only after separate migration authorization |
+| Central server authorizer and least-privilege runtime | **APPROVED ARCHITECTURE** | Current Neon inspection owner BYPASSRLS; actual Render runtime role needs verification |
+| Implementation packages V2-01 through V2-15 | **PROPOSED / NOT APPROVED TO EXECUTE** | See [V2 package plan](engineering/V2_IMPLEMENTATION_PACKAGES.md); each code/migration/deploy/destructive action needs separate approval |
+| Public stranger matching, real payments, paid services, iOS | **NOT APPROVED** | No real-user beta until actual adult verification, legal/compliance and staffed safety operations pass |
+
+**Historical conflict note:** Early records describing NestJS/Supabase, zero deployed backend or Android-first as only proposed are not the current design/operational baseline. Keep those entries for history, but always use the dated **2026-11-15 approved V2** decisions above when planning. No development or release was authorized by recording these decisions.
