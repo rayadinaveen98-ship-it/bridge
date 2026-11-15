@@ -110,9 +110,17 @@ export function createPostgresService(pool, onError = () => {}) {
           "WHERE slot.account_id=$1 AND ms.state='active' " +
           "AND conv.kind='random' AND conv.state='open' " +
           "AND part.left_at IS NULL LIMIT 1", [me.id]);
+        // Only a live waiting request can be resumed. An already-matched
+        // conversation takes precedence; expired or reserved queue rows are
+        // never mistaken for active matchmaking.
+        const waiting=active.rows.length ? {rows:[]} : await c.query(
+          "SELECT request_id FROM bridge_match_queue " +
+          "WHERE account_id=$1 AND state='waiting' AND expires_at>now() " +
+          "LIMIT 1", [me.id]);
         return {
           languages:q.rows.map(x=>({code:x.code,displayName:x.display_name})),
           activeConversationId:active.rows[0]?.id||null,
+          activeSearchRequestId:waiting.rows[0]?.request_id||null,
           featureFlags:{voice:false,video:false,publicChat:false}
         };
       } finally {c.release();}
@@ -243,12 +251,13 @@ export function createPostgresService(pool, onError = () => {}) {
     },
     async conversationPeer(subject,conversationId) {
       return transaction(pool,async c=>{
-        const {other}=await participants(c,conversationId,subject);
+        const {other,conv}=await participants(c,conversationId,subject);
         const peer=requireRows(await c.query(
           "SELECT a.id,p.pseudonym,p.avatar_key FROM bridge_accounts a " +
           "JOIN bridge_profiles p ON p.account_id=a.id WHERE a.id=$1",
           [other]),404);
-        return {accountId:peer.id,pseudonym:peer.pseudonym,avatarKey:peer.avatar_key};
+        return {accountId:peer.id,pseudonym:peer.pseudonym,
+          avatarKey:peer.avatar_key,conversationKind:conv.kind};
       });
     },
     async messages(subject,conversationId,afterSequence) {
