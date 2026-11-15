@@ -32,6 +32,8 @@ class BridgeController extends ChangeNotifier {
   bool _disposed = false;
   bool _refreshAgain = false;
   int _streamVersion = 0;
+  // Invalidate in-flight peer lookups when leaving or switching rooms.
+  int _conversationEpoch = 0;
   Timer? _queueTimer, _reconnectTimer;
   StreamSubscription<BridgeEvent>? _subscription;
   int _reconnectAttempt = 0;
@@ -90,6 +92,7 @@ class BridgeController extends ChangeNotifier {
   }
 
   Future<void> disconnect() async {
+    _conversationEpoch++;
     await _stopUpdates();
     api?.dispose();
     api = null;
@@ -283,7 +286,9 @@ class BridgeController extends ChangeNotifier {
   Future<void> openConversation(String id) async {
     final client = api;
     if (client == null) return;
+    final epoch = ++_conversationEpoch;
     await _stopUpdates();
+    if (epoch != _conversationEpoch || client != api) return;
     conversationId = id;
     resumableConversationId = null;
     conversationIsSaved = false;
@@ -299,7 +304,8 @@ class BridgeController extends ChangeNotifier {
     _notify();
     try {
       final profile = await client.peer(id);
-      if (conversationId != id || client != api) return;
+      if (epoch != _conversationEpoch ||
+          conversationId != id || client != api) return;
       peerId = profile['accountId']?.toString();
       peerName = profile['pseudonym']?.toString() ?? 'Someone new';
       conversationIsSaved = profile['conversationKind'] == 'connection';
@@ -308,7 +314,8 @@ class BridgeController extends ChangeNotifier {
       _listen(id);
       await refreshMessages();
     } catch (e) {
-      if (client == api && conversationId == id) {
+      if (client == api && epoch == _conversationEpoch &&
+          conversationId == id) {
         conversationId = null;
         resumableConversationId = null;
         conversationIsSaved = false;
@@ -429,7 +436,18 @@ class BridgeController extends ChangeNotifier {
       return;
     }
     try { await client.closeConversation(cid); }
-    catch (e) { _failure(e); return; }
+    catch (e) {
+      if (e is BridgeException &&
+          e.status == 409 && e.code == 'use_connection_controls') {
+        conversationIsSaved = true;
+        resumableConversationId = null;
+        info = 'Both users saved this connection. Open it from Connections.';
+        _notify();
+        return;
+      }
+      _failure(e);
+      return;
+    }
     await leaveChat(preserveActive: false);
     info = 'Random conversation ended. You may search again.';
     _notify();
@@ -439,6 +457,7 @@ class BridgeController extends ChangeNotifier {
   Future<void> leaveChat({bool preserveActive = true}) async {
     final ongoing = conversationId ?? resumableConversationId;
     final shouldResume = preserveActive && !conversationIsSaved;
+    _conversationEpoch++;
     await _stopUpdates();
     resumableConversationId = shouldResume ? ongoing : null;
     conversationId = null;
