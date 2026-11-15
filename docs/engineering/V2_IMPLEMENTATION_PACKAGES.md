@@ -93,6 +93,7 @@ The **package sequence and PR boundaries are approved for planning**, but every 
 **Rollback:** Revert tests/helpers. **Gate:** test designs approved.
 
 ### V2-02 — Server policy core, security-role verification and API deny contracts
+**Exact founder-approval brief:** [V2-02 Implementation Brief](V2_02_IMPLEMENTATION_BRIEF.md) — proposes disconnected pure policy kernel, 18 P-series security checks, trusted context model, SQL runtime role audit *design only*, allowed code paths, explicit no-live-wiring boundary and safe rollback. **DOCUMENTED / AWAITING SEPARATE CODE APPROVAL**. No existing API, schema, grants or deployment is altered by documenting it.
 **Paths:** `apps/api/src/policy/*` (new), narrow wrappers in `http.mjs`/`postgres.mjs` only if approved, policy unit/integration tests; separate reviewed DB role/grant specification.  
 **Scope:** pure policy results `allow/deny` with policy-version/decision code and no private payload; distinguish LIVE/UNREAD/HISTORY/REPORT/EVIDENCE; account/peer safety and block checks; audit Render runtime connection role **without publishing credentials**; determine least-privilege app role and migrator separation.  
 **Acceptance:** Complete access matrix denies stale/guessed/third-party IDs and spoofed client `premium` fields; no unintended privileges; older QA functionality remains behind declared compatibility policy.  
