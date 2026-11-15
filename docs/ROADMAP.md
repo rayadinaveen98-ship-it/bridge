@@ -145,4 +145,6 @@ The founder requested that the comprehensive What If? research, UX review and fo
 - Proposed, not approved: silent production login, foreground match presence lease, passive countdown, Report & Leave vs Block interaction, notifications, secure draft restoration and other proposed UX details; do not silently implement them as part of other packages.
 - Current QA still holds JWT only in memory; no production session refresh. R0 on actual phone/tablet remains OPEN.
 
+**Resumed immediate planning:** [V2-01 deterministic contract and migration inventory implementation brief](engineering/V2_01_IMPLEMENTATION_BRIEF.md) is prepared for separate founder approval. R0 hardware testing remains OPEN. No V2 test code has been written.
+
 **Change control:** Documentation branch only. No application changes, live Neon schema/data, Render deployment, test-account reset, billing, paid services or release authorized.
