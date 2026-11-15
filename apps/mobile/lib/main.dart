@@ -284,6 +284,30 @@ class _BridgeHomeState extends State<BridgeHome>
       const Text('A spontaneous conversation, with room to become more.',
         style: TextStyle(color: Color(0xFFB6B5CD))),
       const SizedBox(height: 26),
+      if (bridge.resumableConversationId != null) ...[
+        _panel(children: [
+          const Row(children: [
+            Icon(Icons.forum_outlined, color: Color(0xFFB4A3FF)),
+            SizedBox(width: 10),
+            Expanded(child: Text('Conversation in progress',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+          ]),
+          const SizedBox(height: 10),
+          const Text('Going back did not end your chat. You can return to it, '
+            'or explicitly end it before meeting someone new.',
+            style: TextStyle(color: Color(0xFFBBB9D1), height: 1.45)),
+          const SizedBox(height: 14),
+          SizedBox(width: double.infinity, child: FilledButton.icon(
+            onPressed: bridge.busy ? null : bridge.resumeOngoingChat,
+            icon: const Icon(Icons.arrow_forward),
+            label: const Text('Resume conversation'))),
+          const SizedBox(height: 6),
+          TextButton(
+            onPressed: bridge.busy ? null : _confirmEndChat,
+            child: const Text('End conversation and return to Discover')),
+        ]),
+        const SizedBox(height: 15),
+      ],
       _panel(children: [
         const Row(children: [
           Icon(Icons.translate, color: Color(0xFFB4A3FF)),
@@ -334,7 +358,7 @@ class _BridgeHomeState extends State<BridgeHome>
             onSelected: (_) => bridge.setTopic(topic))).toList()),
       ]),
       const SizedBox(height: 18),
-      _panel(children: [
+      if (bridge.resumableConversationId == null) _panel(children: [
         if (!bridge.searching) ...[
           const Text('Meet someone new',
             style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
@@ -439,7 +463,8 @@ class _BridgeHomeState extends State<BridgeHome>
     return Column(children: [
       Padding(padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
         child: Row(children: [
-          IconButton(tooltip: 'Leave conversation', onPressed: bridge.leaveChat,
+          IconButton(tooltip: 'Back to Discover (chat stays active)',
+            onPressed: bridge.leaveChat,
             icon: const Icon(Icons.arrow_back)),
           CircleAvatar(backgroundColor: const Color(0xFF504876),
             child: Text(bridge.peerName.isNotEmpty
@@ -466,17 +491,22 @@ class _BridgeHomeState extends State<BridgeHome>
               } else if (value == 'block') {
                 _confirmBlock();
               } else if (value == 'end') {
-                await bridge.endChat();
+                await _confirmEndChat();
               } else if (value == 'leave') {
                 await bridge.leaveChat();
               }
             },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'keep', child: Text('Keep connection')),
-              PopupMenuItem(value: 'report', child: Text('Report user')),
-              PopupMenuItem(value: 'block', child: Text('Block user')),
-              PopupMenuItem(value: 'end', child: Text('End random chat')),
-              PopupMenuItem(value: 'leave', child: Text('Back to Discover')),
+            itemBuilder: (_) => [
+              if (!bridge.conversationIsSaved)
+                const PopupMenuItem(value: 'keep',
+                  child: Text('Keep connection')),
+              const PopupMenuItem(value: 'report', child: Text('Report user')),
+              const PopupMenuItem(value: 'block', child: Text('Block user')),
+              if (!bridge.conversationIsSaved)
+                const PopupMenuItem(value: 'end',
+                  child: Text('End random chat')),
+              const PopupMenuItem(value: 'leave',
+                child: Text('Back to Discover (keep chat active)')),
             ],
           ),
         ])),
@@ -540,6 +570,25 @@ class _BridgeHomeState extends State<BridgeHome>
         ]),
       ),
     ]);
+  }
+
+  Future<void> _confirmEndChat() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('End this random chat?'),
+        content: const Text('This ends the conversation for both people. '
+          'You will no longer be able to resume this random chat. '
+          'To leave it open, choose Back to Discover instead.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(context, true),
+            child: const Text('End chat')),
+        ],
+      ),
+    );
+    if (confirmed == true) await bridge.endChat();
   }
 
   Future<void> _confirmBlock() async {
