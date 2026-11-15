@@ -121,3 +121,21 @@ Avoid outputting credentials, connection strings or private bodies. DBA/security
 - Any future **V2-03 schema migration rehearsal** requires its own founder approval and must not touch Neon until specifically authorized.
 
 **Change log:** Created on a V2-02 source branch. Test results/merge status should be recorded only after GitHub CI verifies the exact commit.
+
+## 7. CI evidence after authorized implementation (2026-11-15)
+
+**Implemented pure policy and tests:** Branch `feature/bridge-v2-02-policy-kernel-20261115`, PR #18, source/test head `5d322aa2a261c72448d5a5857ad3f5427169b88b`.
+
+**Verified successful GitHub Actions at that code head:**
+- [Push run #43742427289](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43742427289): `matching=success`, `postgres-integration=success`.
+- [PR run #43742432490](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43742432490): `matching=success`, `postgres-integration=success`.
+- Matching job includes original matching tests, original backend HTTP/auth fake-Postgres tests, V2-01 reference-only contracts, **V2-02 actual policy kernel tests**, and design-token validity.
+- Disposable PostgreSQL integration job passed on the existing migrations (0001–0003), with **no V2 DDL, no live Neon connection**.
+- Prior initial policy CI attempt failed on three mismatched millisecond constant names. These were corrected on this branch; no production logic/DB change and both later runs passed.
+- Source review also added explicit unknown-account-status fail-closed handling, covered by adversarial tests.
+
+**Scope verified before evidence update:** all nine changed paths were within the approved `apps/api/src/policy/**`, `apps/api/tests/policy/**`, test-runner package/CI, and this one security review document. No existing API route, PostgreSQL service, Flutter, SQL migration, Render or billing path modified.
+
+**Important:** The reference-contract oracle's passing tests and this pure-policy test suite do not prove **live V2 authorization**. The new module has no runtime caller. P-006 transactional Keep votes, P-014 case evidence/purge, P-015 legacy endpoint, P-016 live token/SSE, P-017 legacy migration and P-018 runtime DB role security remain outstanding. R0 physical device acceptance remains OPEN.
+
+**Final post-documentation-commit and post-merge CI** must be checked separately; this table certifies only the code head specified above. No V2-03 work is authorized.
