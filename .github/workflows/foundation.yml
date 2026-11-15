@@ -16,6 +16,8 @@ jobs:
         run: npm test --prefix apps/api
       - name: V2-01 reference-contract tests (NOT runtime enforcement)
         run: npm run test:v2:contracts --prefix apps/api
+      - name: V2-02 actual policy kernel tests (NOT route enforcement)
+        run: npm run test:policy --prefix apps/api
       - name: Validate design token JSON
         run: node -e "const t=require('./design/tokens/bridge.v1.json'); if (!t.color?.dark || !t.spacing) process.exit(1)"
 
