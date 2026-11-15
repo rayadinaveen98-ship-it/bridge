@@ -65,6 +65,15 @@ test("real PostgreSQL: matchmaking, durable messaging, votes and block", {
     assert.equal((await service.bootstrap(b.subject)).activeSearchRequestId,null);
     assert.equal((await service.conversationPeer(a.subject,conversationId)).conversationKind,"random");
     assert.equal((await service.bootstrap(c.subject)).activeConversationId,null);
+    // The initial reservation lease is NOT an active conversation timeout.
+    // An expired lease must never silently erase a legitimate open chat.
+    await pool.query(
+      "UPDATE bridge_match_sessions SET reserved_at=now()-interval '10 minutes', " +
+      "lease_expires_at=now()-interval '9 minutes' " +
+      "WHERE id=(SELECT match_session_id FROM bridge_conversations WHERE id=$1)",
+      [conversationId]);
+    assert.equal((await service.bootstrap(a.subject)).activeConversationId,conversationId);
+    assert.equal((await service.bootstrap(b.subject)).activeConversationId,conversationId);
 
     await assert.rejects(service.enqueue(a.subject,{topic:null,idempotencyKey:randomUUID()}),
       e=>e instanceof ApiError&&e.status===409);
