@@ -41,3 +41,10 @@
 - Public matching, operational moderation, monetization and redesign remain out of scope.
 - No data destruction or mass stale-state cleanup. That would require an audited policy distinguishing legitimate quiet conversations from orphaned state and explicit founder approval.
 - Real reconnect/recovery after process kills remains a device gate.
+
+## Verified post-merge status and V2 boundary — 2026-11-15
+
+- R0 corrective changes PR #14 **MERGED** on `main@3578565a`; source/backend/PostgreSQL/Flutter tests and matching cloud QA debug APK CI passed. Existing private Render QA backend deployed at that commit. **Operator phone+tablet acceptance remains OPEN**; no device PASS is inferred from CI.
+- R0 Back -> Resume permits recovery of an **active open** random room, but this baseline lacks the newly approved V2 30-minute idle expiry. It is not a grant of unlimited future/random history access. **Do not retrofit expiry to the existing seeded synthetic room without a separately approved legacy migration.**
+- The R0 baseline must be physically validated and recorded before V2 privacy cutover; see [V2 implementation package gates](V2_IMPLEMENTATION_PACKAGES.md).
+- New Architecture V2 policy is **APPROVED FOR PLANNING ONLY**, not implemented or released. Maintain the existing private synthetic QA and preserve user-owned data until authorized scope changes.
