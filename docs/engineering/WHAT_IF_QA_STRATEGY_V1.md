@@ -5,11 +5,11 @@
 **Policy authority:** [Approved Product Invariants V1](../product/PRODUCT_INVARIANTS_V1.md), [Approved Architecture V2](ARCHITECTURE_V2.md). New UX behavior marked proposed in atlas remains unapproved.  
 **Baseline:** `main@3578565a`; two synthetic cloud QA accounts only, R0 physical acceptance open. No public user, real age assurance, staffed moderation, payment processing or V2 schema deployed.
 
-## Recommended new planning gate: V2-00 — scenario and lifecycle contract freeze
+## Deferred final-review milestone: V2-16 — comprehensive scenario certification
 
-Insert **V2-00** after documentation DOC-00 and ahead of V2-01 contract tests. **G0 R0 physical acceptance is independent and must still finish** before privacy cutover.
+**Founder sequencing update (2026-11-15):** The comprehensive 138-case UX review is **deferred to V2-16 after V2-01 through V2-15**, immediately before any public beta authorization. **It does not block V2-01 planning or implementation approval.** G0 R0 physical acceptance remains an existing separate gate. Approved P0 policy/security tests MUST still run within their appropriate early PRs.
 
-### V2-00 documents (no code)
+### V2-16 documentation deliverables (no automatic code permission)
 1. Scenario Atlas, grouped by user-visible journey and critical backend failure.
 2. Exact proposed flow text for each P0 scenario; align with approved V1/V2 definitions.
 3. Separate **authentication session RFC**: sign-in vs logout vs app/background vs 30-minute chat expiry; per-device revocable credentials and token recovery; decisions UX-A01/A02/A03/UX-P01.
@@ -19,7 +19,7 @@ Insert **V2-00** after documentation DOC-00 and ahead of V2-01 contract tests. *
 7. Traceability matrix: WF-case -> approved/proposed -> V2 package -> automated test -> two-device test -> release gate.
 8. Founder signs off on **remaining proposed UX policies**, not silently through documentation merge.
 
-**V2-00 exit:** Each P0 has approved outcome or explicit hard gate blocking development, exact expected user feedback, server privacy policy, and runnable test specification. No P0 contradicts V1/V2; no unsupported public launch assumption.
+**V2-16 final review exit:** Each P0 has approved outcome or explicit hard gate blocking development, exact expected user feedback, server privacy policy, and runnable test specification. No P0 contradicts V1/V2; no unsupported public launch assumption.
 
 ## Five distinct kinds of identity and time state
 
@@ -132,17 +132,17 @@ Insert **V2-00** after documentation DOC-00 and ahead of V2-01 contract tests. *
 
 ## Suggested decision and review cadence
 
-### V2-00a: Founder UX policy freeze
+### V2-16a: Founder UX policy freeze
 Review 13 proposed UX decisions in atlas, with independent signoff on authentication, foreground matchmaking and report/exit semantics. This can be accepted without starting code.
 
-### V2-00b: Journey specs
+### V2-16b: Journey specs
 Prepare 8 full, auditable journey maps above and attach exact error/empty/recoverable screen content. Make a separate entry for each of the 18 planned product destinations and transient screens.
 
-### V2-00c: Acceptance coverage
+### V2-16c: Acceptance coverage
 Map every `WF-` card to `BR-` rule, tests and V2 PR; mark whether it's physically testable or requires controlled fake clock. Export a traceability spreadsheet/CSV only if founder asks.
 
-### V2-00d: Engineering approval handoff
-Only once founder approves V2-00 outcome, advance into V2-01 implementation brief. No separate backend/DB/cost/payment scopes are implied.
+### V2-16d: Final acceptance and issue handoff
+V2-01 planning and its independent approval proceed in the original roadmap order; **V2-16 does not postpone critical per-package security and privacy tests**. Any late issue requires a separately approved scoped fix. Final beta authorization remains blocked until V2-16 passes.
 
 ## Required source references (research, not implementation evidence)
 
