@@ -148,3 +148,11 @@ The founder requested that the comprehensive What If? research, UX review and fo
 **Resumed immediate planning:** [V2-01 deterministic contract and migration inventory implementation brief](engineering/V2_01_IMPLEMENTATION_BRIEF.md) is prepared for separate founder approval. R0 hardware testing remains OPEN. No V2 test code has been written.
 
 **Change control:** DOC-00 documentation reconciliation and proposed implementation brief only. No application changes, live Neon schema/data, Render deployment, test-account reset, billing, paid services or release authorized.
+
+## Post-V2-01 status / V2-02 authorization preparation — 2026-11-15
+
+- **V2-01 IMPLEMENTED / CI TESTED:** test-only PR [#16](https://github.com/rayadinaveen98-ship-it/bridge/pull/16) merged as `734240369205ed895c2e49824e75d8263ca4baef`; two successful PR checks and successful post-merge `Foundation checks` run [43735526322](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43735526322). The sixteen synthetic CT contract groups, policy access matrix and static source inventory validate **test models and checked-in SQL**, not actual V2 server enforcement. No V2 runtime/schema/deploy modifications from V2-01.
+- **V2-02 PLANNING DOCUMENT PREPARED (NOT AUTHORIZED TO IMPLEMENT):** [Exact Central Policy & Authorization Implementation Brief](engineering/V2_02_IMPLEMENTATION_BRIEF.md). The recommended first authorization PR introduces **disconnected** pure server policy functions, actual-function unit tests, a closed operation set and role/grant review *documentation*, without modifying `http.mjs`, `postgres.mjs`, DB roles, live account data or Render. The current V1 private synthetic QA continues unchanged until separately approved later cutover.
+- **R0 physical phone/tablet acceptance OPEN**; no statement of real-device V2 testing or production security certification.
+- 138-case end-to-end What If? audit remains **V2-16, after core stages**; critical privacy/safety checks still belong in each earlier stage.
+- Founder must separately authorize V2-02 source paths before any coding, live security inspection, migration, deploy, cost or payment operation. This DOC-ONLY update neither authorizes nor performs them.
