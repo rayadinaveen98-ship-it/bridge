@@ -30,7 +30,7 @@ const safeEvidence=()=>deny(CODES.EVIDENCE_NOT_AUTHORIZED);
 
 const validIdentity = p =>
   trustedIdentifier(p?.accountId) && p?.authenticationValid===true &&
-  p?.status!==undefined && p?.status!=="deleted";
+  ["active","restricted","suspended"].includes(p?.status);
 const currentUser = p =>
   validIdentity(p) && p.role==="user" &&
   p.status==="active" && p.adultEligible===true &&
