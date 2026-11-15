@@ -116,3 +116,20 @@ Read [two-device QA guide](engineering/TWO_DEVICE_QA.md) for repeatable operator
 - **Do not** treat the initial 60-second match reservation lease as a lifetime limit for an activated/open conversation; avoid destructive stale-slot cleanup until a separate inactivity policy is reviewed.
 - Run PostgreSQL, backend and Android regression CI; deploy the compatible backend only after all gates pass, then validate on both Android phone and tablet. Do not mark R0 complete based solely on CI.
 - No new infrastructure, paid plans, test-data wipes, public signup, premium redesign or release authorization.
+
+## Architecture V2 founder approval and proposed delivery program — 2026-11-15
+
+**ARCHITECTURE APPROVED FOR DOCUMENTATION AND IMPLEMENTATION PLANNING ONLY; NO V2 CODE APPROVED.** The authoritative prospective contracts are [Product Invariants V1](product/PRODUCT_INVARIANTS_V1.md) (BR-001–029, D-01–D-05), [Architecture V2](engineering/ARCHITECTURE_V2.md) (D-06/D-07/H-01/M-01 approved for planning), and [V2 Implementation Packages](engineering/V2_IMPLEMENTATION_PACKAGES.md) (PR scopes **PROPOSED / AWAITING FOUNDER APPROVAL**).
+
+**Current technical reference:** `main@3578565a`, PR #14 merged, backend deployed to existing private Render QA and cloud QA debug APK CI passed. Earlier roadmap statements that the backend is not deployed or uses NestJS/Supabase are historical only. Flutter Android + Node.js service + Neon PostgreSQL + one-node SSE/outbox is the actual current baseline. Synthetic tester_a/tester_b earlier exchanged messages; **R0 physical-device acceptance remains OPEN**.
+
+**Policy-critical V2 gaps:** current random room lacks server-side 30m idle expiry; current two Keep votes mutate the same random conversation to `kind=connection`; generic v1 message reads permit historical replay; no separately scoped delivery, premium bilateral retention, evidence snapshot or retention jobs. No production identity/age assurance, staffed moderation, real payments or public release authorization.
+
+**Approved business/privacy direction:** free perpetual mutual relationships; free new direct sessions; no previous-message timeline for free users; 7d max recipient-scoped unread; 30m random AND direct session accepted-message inactivity; joint prospective premium history 90d rolling; QA entitlements at ₹0 only; no payment gateway or product SKU approved. Separate 7d post-end report, 24h ordinary message purge target (not activated), 90/180d safety evidence policies, and an explicit `legacy_qa` migration exception that preserves existing data.
+
+**Proposed execution order:**
+`G0 R0 device QA -> V2-01 deterministic test contracts -> V2-02 policy/security -> V2-03 additive schema -> V2-04 random expiry + V2-05 connection split -> V2-06 live/unread -> V2-07 evidence -> V2-08 deletion dry-run + V2-09 consent/TEST entitlements -> V2-10 Android UX -> G1/V2-11 API privacy cutover -> G2 physical/privacy gate -> separately approved V2-12 actual retention -> V2-13 production identity/safety -> V2-15 beta decision`. V2-14 Play Billing sandbox remains OPTIONAL and separately gated. Full PR-level scopes and rollbacks are in the package plan.
+
+**Non-negotiable rollback:** After V2 history read cutover, never revert to unrestricted `/v1/conversations/:id/messages` access. Fallback is **safe deny** or forward fix. Physical deletion requires distinct founder approval; it cannot be rolled back by exposing a backup.
+
+**This program is not approved for execution by documentation approval alone.** No application code, database data/schema, Render deployment, billing or payment settings or public-user privileges may be changed by this documentation PR.
