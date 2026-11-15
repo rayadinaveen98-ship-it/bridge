@@ -116,3 +116,35 @@ Read [two-device QA guide](engineering/TWO_DEVICE_QA.md) for repeatable operator
 - **Do not** treat the initial 60-second match reservation lease as a lifetime limit for an activated/open conversation; avoid destructive stale-slot cleanup until a separate inactivity policy is reviewed.
 - Run PostgreSQL, backend and Android regression CI; deploy the compatible backend only after all gates pass, then validate on both Android phone and tablet. Do not mark R0 complete based solely on CI.
 - No new infrastructure, paid plans, test-data wipes, public signup, premium redesign or release authorization.
+
+## Architecture V2 founder approval and proposed delivery program — 2026-11-15
+
+**ARCHITECTURE APPROVED FOR DOCUMENTATION AND IMPLEMENTATION PLANNING ONLY; NO V2 CODE APPROVED.** The authoritative prospective contracts are [Product Invariants V1](product/PRODUCT_INVARIANTS_V1.md) (BR-001–029, D-01–D-05), [Architecture V2](engineering/ARCHITECTURE_V2.md) (D-06/D-07/H-01/M-01 approved for planning), and [V2 Implementation Packages](engineering/V2_IMPLEMENTATION_PACKAGES.md) (package sequence, dependencies, test criteria and rollback gates **FOUNDER-APPROVED FOR PLANNING; engineering execution NOT AUTHORIZED**).
+
+**Current technical reference:** `main@3578565a`, PR #14 merged, backend deployed to existing private Render QA and cloud QA debug APK CI passed. Earlier roadmap statements that the backend is not deployed or uses NestJS/Supabase are historical only. Flutter Android + Node.js service + Neon PostgreSQL + one-node SSE/outbox is the actual current baseline. Synthetic tester_a/tester_b earlier exchanged messages; **R0 physical-device acceptance remains OPEN**.
+
+**Policy-critical V2 gaps:** current random room lacks server-side 30m idle expiry; current two Keep votes mutate the same random conversation to `kind=connection`; generic v1 message reads permit historical replay; no separately scoped delivery, premium bilateral retention, evidence snapshot or retention jobs. No production identity/age assurance, staffed moderation, real payments or public release authorization.
+
+**Approved business/privacy direction:** free perpetual mutual relationships; free new direct sessions; no previous-message timeline for free users; 7d max recipient-scoped unread; 30m random AND direct session accepted-message inactivity; joint prospective premium history 90d rolling; QA entitlements at ₹0 only; no payment gateway or product SKU approved. Separate 7d post-end report, 24h ordinary message purge target (not activated), 90/180d safety evidence policies, and an explicit `legacy_qa` migration exception that preserves existing data.
+
+**Proposed execution order:**
+`G0 R0 device QA -> V2-01 deterministic test contracts -> V2-02 policy/security -> V2-03 additive schema -> V2-04 random expiry + V2-05 connection split -> V2-06 live/unread -> V2-07 evidence -> V2-08 deletion dry-run + V2-09 consent/TEST entitlements -> V2-10 Android UX -> G1/V2-11 API privacy cutover -> G2 physical/privacy gate -> separately approved V2-12 actual retention -> V2-13 production identity/safety -> V2-15 beta decision`. V2-14 Play Billing sandbox remains OPTIONAL and separately gated. Full PR-level scopes and rollbacks are in the package plan.
+
+**Non-negotiable rollback:** After V2 history read cutover, never revert to unrestricted `/v1/conversations/:id/messages` access. Fallback is **safe deny** or forward fix. Physical deletion requires distinct founder approval; it cannot be rolled back by exposing a backup.
+
+**The V2 package sequence and engineering gates are approved for planning only, not for code execution.** No application code, database data/schema, Render deployment, billing or payment settings or public-user privileges may be changed by this documentation PR.
+
+## Deferred final milestone: V2-16 What If? user-journey and edge-case audit — founder sequence decision, 2026-11-15
+
+The founder requested that the comprehensive What If? research, UX review and formal scenario certification be **placed at the end of the planned V2 roadmap**, rather than inserted as a new gate before V2-01. **The original implementation sequence remains: G0/R0 device acceptance -> V2-01 through V2-15 (with V2-14 optional).** V2-15 is a preliminary adult-beta readiness assessment, **not** permission to launch. After that, V2-16 performs the complete scenario audit and the final founder release go/no-go gate. No public beta launches before V2-16 is accepted.
+
+- [What If? Scenario Atlas V1](product/WHAT_IF_SCENARIO_ATLAS_V1.md): 138 *draft* cases across 12 experience domains; saved now for comprehensive final review.
+- [Scenario Coverage & QA Strategy V1](engineering/WHAT_IF_QA_STRATEGY_V1.md): existing eight journey examples and full future acceptance matrix.
+- [V2 implementation PR packages](engineering/V2_IMPLEMENTATION_PACKAGES.md): V2-00 prerequisite **withdrawn from the plan**; V2-16 final audit added after core work.
+- **Important boundary:** Approved V1/V2 safety, expiry, privacy, consent and authorization cases still require tests inside their relevant earlier engineering PRs. Only the *dedicated exhaustive 138-case UX review* is postponed.
+- Proposed, not approved: silent production login, foreground match presence lease, passive countdown, Report & Leave vs Block interaction, notifications, secure draft restoration and other proposed UX details; do not silently implement them as part of other packages.
+- Current QA still holds JWT only in memory; no production session refresh. R0 on actual phone/tablet remains OPEN.
+
+**Resumed immediate planning:** [V2-01 deterministic contract and migration inventory implementation brief](engineering/V2_01_IMPLEMENTATION_BRIEF.md) is prepared for separate founder approval. R0 hardware testing remains OPEN. No V2 test code has been written.
+
+**Change control:** DOC-00 documentation reconciliation and proposed implementation brief only. No application changes, live Neon schema/data, Render deployment, test-account reset, billing, paid services or release authorized.

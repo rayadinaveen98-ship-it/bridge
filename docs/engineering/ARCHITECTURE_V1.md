@@ -1,3 +1,5 @@
+> **HISTORICAL DESIGN PROPOSAL (superseded 2026-11-15):** This V1 document describes an early proposed NestJS/Supabase stack and pre-deployment status. The current implementation uses Flutter Android + Node.js + dedicated Neon PostgreSQL + Render private QA. The founder has approved [Architecture V2](ARCHITECTURE_V2.md) FOR DOCUMENTATION AND IMPLEMENTATION PLANNING ONLY, not V2 execution. See [V2 package plan](V2_IMPLEMENTATION_PACKAGES.md) for proposed PR boundaries and gates. Preserve this V1 file as an archival record.
+
 # Technical architecture proposal V1
 
 **Status: design proposal. No backend, infrastructure, accounts, APK or moderation service is deployed.**
