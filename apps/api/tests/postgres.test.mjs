@@ -102,6 +102,9 @@ test("bootstrap resumes only the authenticated account's active open random room
     if(sql.includes("FROM bridge_supported_languages"))return {rows:[{
       code:"en",display_name:"English"
     }]};
+    if(sql.includes("FROM bridge_match_queue") && sql.includes("expires_at>now()")) {
+      throw Error("Active conversation must take precedence over waiting queue.");
+    }
     if(sql.includes("FROM bridge_active_match_slots slot")) {
       assert.deepEqual(args,["account-a"]);
       assert.match(sql,/conv\.state='open'/);
@@ -112,6 +115,7 @@ test("bootstrap resumes only the authenticated account's active open random room
   });
   const result=await createPostgresService(d.pool).bootstrap("test-subject");
   assert.equal(result.activeConversationId,"room-id");
+  assert.equal(result.activeSearchRequestId,null);
   assert.deepEqual(result.languages,[{code:"en",displayName:"English"}]);
   assert.ok(d.seen.some(x=>x[0]==="RELEASE"));
 });
@@ -125,4 +129,23 @@ test("bootstrap returns null when no active match exists",async()=>{
   });
   const result=await createPostgresService(d.pool).bootstrap("test-subject");
   assert.equal(result.activeConversationId,null);
+});
+
+test("bootstrap returns only a still-waiting account-owned queue request",async()=>{
+  const d=stub(async(sql,args)=>{
+    if(sql.includes("FROM bridge_accounts WHERE auth_subject"))return {rows:[{
+      id:"account-a",status:"active",age_verified_at:new Date(),safety_eligible:true
+    }]};
+    if(sql.includes("FROM bridge_supported_languages"))return {rows:[]};
+    if(sql.includes("FROM bridge_active_match_slots slot"))return {rows:[]};
+    if(sql.includes("FROM bridge_match_queue") && sql.includes("expires_at>now()")){
+      assert.deepEqual(args,["account-a"]);
+      assert.match(sql,/state='waiting'/);
+      return {rows:[{request_id:"safe-request-id"}]};
+    }
+    throw Error("Unexpected SQL: "+sql);
+  });
+  const status=await createPostgresService(d.pool).bootstrap("test-subject");
+  assert.equal(status.activeConversationId,null);
+  assert.equal(status.activeSearchRequestId,"safe-request-id");
 });

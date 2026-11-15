@@ -105,3 +105,14 @@ Prototype complete ≠ production implementation. Unverified revenue figures and
 - **DELIVERY PROCESS:** Mobile changes merged after CI yield the cloud APK artifact via [Bridge cloud QA debug APK workflow](https://github.com/rayadinaveen98-ship-it/bridge/actions/workflows/cloud-qa-android.yml) (7-day expiry). Backend-only changes require manual Render redeploy after checks; old app and new backend must be compatible. Distribution improvements and stable signing are pending; do not promise a permanently accessible install URL or silent updates.
 
 Read [two-device QA guide](engineering/TWO_DEVICE_QA.md) for repeatable operator steps and version recording. Existing local-lab QA remains an optional engineering fallback, not a required user testing step.
+
+## R0 — Lifecycle stabilization (approved to start 2026-11-15; current development)
+
+**Scope-approved R0, implementation under review; device sign-off remains OPEN.** See [R0 lifecycle acceptance](engineering/R0_LIFECYCLE_ACCEPTANCE.md).
+
+- Existing active random chats need an explicit `Resume conversation` action after Back to Discover. Back must not silently terminate or erase a conversation; End is deliberately confirmed and server-authoritative.
+- Bootstrap should restore a still-valid authenticated waiting search when no active random chat exists. Expired waiting requests must not be resurrected. Duplicate searches and cancellation races should recover the server state.
+- Saved connections remain separate from random-chat End; use server conversation kind, not assumptions about local UI.
+- **Do not** treat the initial 60-second match reservation lease as a lifetime limit for an activated/open conversation; avoid destructive stale-slot cleanup until a separate inactivity policy is reviewed.
+- Run PostgreSQL, backend and Android regression CI; deploy the compatible backend only after all gates pass, then validate on both Android phone and tablet. Do not mark R0 complete based solely on CI.
+- No new infrastructure, paid plans, test-data wipes, public signup, premium redesign or release authorization.
