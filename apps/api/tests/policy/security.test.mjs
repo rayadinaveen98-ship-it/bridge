@@ -51,6 +51,12 @@ test("P-002 eligibility and account status must be server-verified, never UI fla
     denied(altered(O.RANDOM_LIVE_SEND,"principal",patch));
     denied(altered(O.RANDOM_KEEP,"principal",patch));
   }
+  // A fabricated/unknown account status must not receive even privacy/safety
+  // account permissions based only on a truthy JWT marker.
+  denied(altered(O.BLOCK,"principal",{status:"unknown"}),
+    CODES.UNAUTHENTICATED);
+  denied(altered(O.PRIVACY_DELETE,"principal",{status:"unknown"}),
+    CODES.UNAUTHENTICATED);
   const x=fixture(O.DISCOVERY_SEARCH);
   x.target.hasModeratedLanguage=false;denied(x);
   x.target.hasModeratedLanguage=true;x.target.activeSlotFree=false;denied(x);
