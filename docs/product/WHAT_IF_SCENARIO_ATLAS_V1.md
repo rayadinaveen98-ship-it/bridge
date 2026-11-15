@@ -1,13 +1,14 @@
 # Bridge — What If? Scenario Atlas V1
 **Status:** PROPOSED scenario and experience contract — founder review required for behavior not already in the approved V1/V2 invariants.  
 **Prepared:** 2026-11-15. **Scope:** Documentation and research planning ONLY. No app/database/deployment/billing changes.  
+**Roadmap placement:** FINAL proposed V2-16 stage; not blocking V2-01. No public beta before final audit.  
 **Baseline:** `main@3578565a`; current R0 synthetic QA not physically accepted on phone/tablet.  
 **Controlling specifications:** [Product Invariants V1](PRODUCT_INVARIANTS_V1.md), [Architecture V2](../engineering/ARCHITECTURE_V2.md), [V2 PR packages](../engineering/V2_IMPLEMENTATION_PACKAGES.md).  
 **Companion test plan:** [Scenario Coverage & QA Strategy V1](../engineering/WHAT_IF_QA_STRATEGY_V1.md).
 
-## Why this is a new gate
+## Why these cases are preserved for the final V2-16 audit
 
-A successful **happy-path** chat is not adequate. State restoration, failure containment, privacy, consent, notifications, billing, reporting, accessibility and multi-device races must be specified before implementation PRs. Android can destroy a background process without a user-initiated logout. Remote account status, chat expiry and delivery acknowledgment must therefore be server-authoritative, not inferred from the foreground screen.
+A successful **happy-path** chat is not adequate. This atlas is saved now for the **deferred V2-16 comprehensive review**, after the core roadmap. Critical approved privacy/security/session invariants must still be specified and tested by their earlier engineering PRs; full scenario-by-scenario UX certification is not a prerequisite to V2-01. Android can destroy a background process without a user-initiated logout. Remote account status, chat expiry and delivery acknowledgment must therefore be server-authoritative, not inferred from the foreground screen.
 
 **Interpretation of statuses:** `Locked` = outcome follows an existing founder-approved invariant or established R0 behavior, though it may NOT be implemented yet. `Proposed UX` / `Proposed auth UX` / `Review needed` = requires founder ratification before behavior becomes a product rule. `Pre-beta gate` = mandatory operational/safety work but not yet delivered. `Existing baseline` = behavior supported by current source; physical QA may still be pending. `Deferred billing` = no payment activation authorized.
 
@@ -53,7 +54,7 @@ Every scenario gets: **trigger -> visible, understandable state -> immediate use
 
 ## Scenario atlas
 
-Each expected behavior must turn into a UX flow, backend rule/test assertion, and where relevant Android device evidence. P0 = security/data/consent/core session blocker; P1 = reliability/accessibility/day-to-day; P2 = lower-priority convenience. This is **not** an implementation report.
+At the final V2-16 review each expected behavior must have a UX flow, backend rule/test assertion and, where relevant, Android device evidence. P0 = security/data/consent/core session blocker; P1 = reliability/accessibility/day-to-day; P2 = lower-priority convenience. This is **not** an implementation report or a new early-stage approval gate.
 
 ### A. First launch, onboarding and eligibility
 
@@ -298,4 +299,4 @@ Critical state races are not just unit tests:
 
 **Total scenario cards: 138.** A card is not complete until it has (1) decision owner and approved outcome, (2) journey/mock screen and exact text where needed, (3) API/DB rule and negative test, (4) required phone/tablet test, (5) status/evidence/commit, (6) recovery/rollback behavior.
 
-No current source file, schema, hosted environment or billing setting changes are authorized. Existing `legacy_qa` data must not be destroyed to satisfy an unimplemented scenario. Add coverage requirements to future V2 packages only **after founder approves this scenario track and its unresolved UX proposals**.
+No current source file, schema, hosted environment or billing setting changes are authorized. Existing `legacy_qa` data must not be destroyed to satisfy an unimplemented scenario. Carry the existing approved policy/security tests in their native V2 implementation packages; defer the **exhaustive 138-case cross-functional certification** to final V2-16. Unapproved UX proposals must not be silently implemented in earlier work.
