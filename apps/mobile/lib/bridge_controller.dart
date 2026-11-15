@@ -15,6 +15,9 @@ class BridgeController extends ChangeNotifier {
   String? info;
   String? requestId;
   String? conversationId;
+  // Leaving the view never silently ends an open random conversation.
+  String? resumableConversationId;
+  bool conversationIsSaved = false;
   String? peerId;
   String peerName = 'Someone new';
   int cursor = 0;
@@ -41,6 +44,7 @@ class BridgeController extends ChangeNotifier {
   }
 
   Future<void> connect(String endpoint, String handle, String passphrase) async {
+    if (busy) return;
     busy = true;
     error = null;
     _notify();
@@ -57,14 +61,22 @@ class BridgeController extends ChangeNotifier {
         };
       }).toList()..sort((a, b) => a['name']!.compareTo(b['name']!));
       await disconnect();
+      busy = true;
       api = candidate;
       languages..clear()..addAll(catalog);
       chosenLanguages.clear(); // Language choice is never preselected.
       connected = true;
       final activeId = result['activeConversationId'];
+      final pendingRequest = result['activeSearchRequestId'];
       if (activeId is String && activeId.isNotEmpty) {
         info = 'Restoring your existing conversation.';
         await openConversation(activeId);
+      } else if (pendingRequest is String && pendingRequest.isNotEmpty) {
+        requestId = pendingRequest;
+        searching = true;
+        info = 'Restoring your existing search.';
+        _startQueuePolling();
+        await pollSearch();
       } else {
         info = 'Test account connected. Choose your languages.';
       }
@@ -86,12 +98,17 @@ class BridgeController extends ChangeNotifier {
     searching = false;
     requestId = null;
     conversationId = null;
+    resumableConversationId = null;
+    conversationIsSaved = false;
     peerId = null;
+    peerName = 'Someone new';
     messages.clear();
     connections.clear();
     cursor = 0;
     pendingMessageId = null;
     pendingText = null;
+    info = null;
+    error = null;
     _notify();
   }
 
@@ -112,7 +129,12 @@ class BridgeController extends ChangeNotifier {
 
   Future<void> startSearch() async {
     final client = api;
-    if (client == null) return;
+    if (client == null || busy || searching || conversationId != null) return;
+    if (resumableConversationId != null) {
+      error = 'You have a conversation in progress. Resume or end it first.';
+      _notify();
+      return;
+    }
     if (chosenLanguages.isEmpty) {
       error = 'Select at least one language to find a match.';
       _notify();
@@ -129,32 +151,32 @@ class BridgeController extends ChangeNotifier {
       final result = await client.search(requestId: rid, topic: topic);
       requestId = rid;
       searching = true;
+      if (client != api) return;
       if (result['state'] == 'connected' && result['conversationId'] is String) {
         searching = false;
         await openConversation(result['conversationId'] as String);
       } else {
-        _queueTimer?.cancel();
-        _queueTimer = Timer.periodic(const Duration(seconds: 2),
-            (_) => pollSearch());
+        _startQueuePolling();
         info = 'Looking for a compatible person...';
       }
     } catch (e) {
+      if (client != api) return;
       if (e is BridgeException && e.status == 409 &&
-          e.code == 'active_match') {
-        // Recover rather than delete/replace an active conversation.
+          (e.code == 'active_match' || e.code == 'already_searching')) {
         try {
-          final existing = await client.bootstrap();
-          final activeId = existing['activeConversationId'];
-          if (activeId is String && activeId.isNotEmpty) {
-            await openConversation(activeId);
-            info = 'Resumed your existing conversation.';
-          } else {
+          if (!await _recoverServerState(client)) {
+            searching = false;
+            requestId = null;
             _failure(e);
           }
         } catch (recoveryError) {
+          searching = false;
+          requestId = null;
           _failure(recoveryError);
         }
       } else {
+        searching = false;
+        requestId = null;
         _failure(e);
       }
     } finally {
@@ -164,12 +186,50 @@ class BridgeController extends ChangeNotifier {
   }
 
   bool _polling = false;
+  void _startQueuePolling() {
+    _queueTimer?.cancel();
+    _queueTimer = Timer.periodic(const Duration(seconds: 2), (_) => pollSearch());
+  }
+
+  /// Restores only state supplied by an authenticated, server-owned bootstrap.
+  Future<bool> _recoverServerState(BridgeApi client) async {
+    final state = await client.bootstrap();
+    if (client != api) return false;
+    final active = state['activeConversationId'];
+    if (active is String && active.isNotEmpty) {
+      await openConversation(active);
+      if (conversationId == active) {
+        info = 'Resumed your ongoing conversation.';
+        _notify();
+        return true;
+      }
+      return false;
+    }
+    final waiting = state['activeSearchRequestId'];
+    if (waiting is String && waiting.isNotEmpty) {
+      requestId = waiting;
+      searching = true;
+      _startQueuePolling();
+      info = 'Continuing your existing search.';
+      _notify();
+      await pollSearch();
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> resumeOngoingChat() async {
+    final id = resumableConversationId;
+    if (id != null && !busy) await openConversation(id);
+  }
+
   Future<void> pollSearch() async {
     final client = api, rid = requestId;
     if (_polling || !searching || client == null || rid == null) return;
     _polling = true;
     try {
       final state = await client.searchStatus(rid);
+      if (client != api || rid != requestId || !searching) return;
       final status = state['state']?.toString();
       if (status == 'connected' && state['conversationId'] is String) {
         searching = false;
@@ -177,12 +237,13 @@ class BridgeController extends ChangeNotifier {
         await openConversation(state['conversationId'] as String);
       } else if (['expired', 'cancelled', 'unmatched'].contains(status)) {
         searching = false;
+        requestId = null;
         _queueTimer?.cancel();
         info = 'No match yet. You can try again.';
         _notify();
       }
     } catch (e) {
-      _failure(e);
+      if (client == api && rid == requestId && searching) _failure(e);
     } finally {
       _polling = false;
     }
@@ -190,20 +251,42 @@ class BridgeController extends ChangeNotifier {
 
   Future<void> cancelSearch() async {
     final client = api, rid = requestId;
+    if (client == null || rid == null || busy) return;
+    busy = true;
     searching = false;
     _queueTimer?.cancel();
     requestId = null;
-    info = 'Search cancelled.';
+    info = 'Cancelling search...';
     _notify();
-    if (client != null && rid != null) {
-      try { await client.cancelSearch(rid); }
-      catch (e) { _failure(e); }
+    try {
+      await client.cancelSearch(rid);
+      if (client != api) return;
+      // A match may have committed just before cancellation. Never discard
+      // that active room or create a second session.
+      final status = await client.bootstrap();
+      if (client != api) return;
+      final active = status['activeConversationId'];
+      if (active is String && active.isNotEmpty) {
+        resumableConversationId = active;
+        info = 'A conversation began before cancellation. You can resume it.';
+      } else {
+        info = 'Search cancelled.';
+      }
+    } catch (e) {
+      if (client == api) _failure(e);
+    } finally {
+      busy = false;
+      _notify();
     }
   }
 
   Future<void> openConversation(String id) async {
+    final client = api;
+    if (client == null) return;
     await _stopUpdates();
     conversationId = id;
+    resumableConversationId = null;
+    conversationIsSaved = false;
     peerId = null;
     peerName = 'Someone new';
     messages.clear();
@@ -215,13 +298,26 @@ class BridgeController extends ChangeNotifier {
     _queueTimer?.cancel();
     _notify();
     try {
-      final profile = await api!.peer(id);
-      if (conversationId != id) return;
+      final profile = await client.peer(id);
+      if (conversationId != id || client != api) return;
       peerId = profile['accountId']?.toString();
       peerName = profile['pseudonym']?.toString() ?? 'Someone new';
-      // Subscribe then read history on ready to avoid the replay/stream race.
+      conversationIsSaved = profile['conversationKind'] == 'connection';
+      // Subscribe first, then reconcile. A ready event can request another
+      // refresh; concurrent refreshes are coalesced by refreshMessages.
       _listen(id);
-    } catch (e) { _failure(e); }
+      await refreshMessages();
+    } catch (e) {
+      if (client == api && conversationId == id) {
+        conversationId = null;
+        resumableConversationId = null;
+        conversationIsSaved = false;
+        peerId = null;
+        messages.clear();
+        cursor = 0;
+        _failure(e);
+      }
+    }
     _notify();
   }
 
@@ -313,6 +409,10 @@ class BridgeController extends ChangeNotifier {
     if (client == null || cid == null) return null;
     try {
       final result = await client.vote(cid, 'accept');
+      if (result['status'] == 'connected') {
+        conversationIsSaved = true;
+        resumableConversationId = null;
+      }
       info = result['status'] == 'connected'
           ? 'You are mutually connected.' : 'Request saved privately until both agree.';
       _notify();
@@ -321,20 +421,37 @@ class BridgeController extends ChangeNotifier {
   }
 
   Future<void> endChat() async {
-    final client = api, cid = conversationId;
-    if (client != null && cid != null) {
-      try { await client.closeConversation(cid); }
-      catch (e) { _failure(e); return; }
+    final client = api, cid = conversationId ?? resumableConversationId;
+    if (client == null || cid == null) return;
+    if (conversationIsSaved) {
+      error = 'This is a saved connection, not a random chat.';
+      _notify();
+      return;
     }
-    await leaveChat();
+    try { await client.closeConversation(cid); }
+    catch (e) { _failure(e); return; }
+    await leaveChat(preserveActive: false);
+    info = 'Random conversation ended. You may search again.';
+    _notify();
   }
 
-  Future<void> leaveChat() async {
+  /// "Back" only hides the chat; ending it must be explicit.
+  Future<void> leaveChat({bool preserveActive = true}) async {
+    final ongoing = conversationId ?? resumableConversationId;
+    final shouldResume = preserveActive && !conversationIsSaved;
     await _stopUpdates();
+    resumableConversationId = shouldResume ? ongoing : null;
     conversationId = null;
+    conversationIsSaved = false;
     peerId = null;
+    peerName = 'Someone new';
     messages.clear();
     cursor = 0;
+    pendingText = null;
+    pendingMessageId = null;
+    if (resumableConversationId != null) {
+      info = 'Your chat is still active. Resume or end it before searching again.';
+    }
     _notify();
   }
 
@@ -343,7 +460,7 @@ class BridgeController extends ChangeNotifier {
     if (client == null || target == null) return false;
     try {
       await client.block(target);
-      await leaveChat();
+      await leaveChat(preserveActive: false);
       info = 'Account blocked.';
       _notify();
       return true;
