@@ -133,3 +133,14 @@ Read [two-device QA guide](engineering/TWO_DEVICE_QA.md) for repeatable operator
 **Non-negotiable rollback:** After V2 history read cutover, never revert to unrestricted `/v1/conversations/:id/messages` access. Fallback is **safe deny** or forward fix. Physical deletion requires distinct founder approval; it cannot be rolled back by exposing a backup.
 
 **This program is not approved for execution by documentation approval alone.** No application code, database data/schema, Render deployment, billing or payment settings or public-user privileges may be changed by this documentation PR.
+
+## Proposed V2-00 what-if coverage gate — 2026-11-15 (NOT IMPLEMENTED)
+
+The founder requested research and explicit behavior documentation for abrupt app close/reopen, sign-in persistence, report/block, 30-minute inactivity, deliberate End, delivery, multi-device, failure, privacy, payment/entitlements and other user journeys.
+
+- [What If? Scenario Atlas V1](product/WHAT_IF_SCENARIO_ATLAS_V1.md): **138 proposed/locked scenario cards** with stable `WF-` IDs across twelve families.
+- [Scenario Coverage & QA Strategy V1](engineering/WHAT_IF_QA_STRATEGY_V1.md): proposed test disciplines, eight detailed user journeys, P0 release blockers, Android process-death and server fail-closed behavior.
+- [Implementation Packages](engineering/V2_IMPLEMENTATION_PACKAGES.md): new proposed **V2-00 UX/behavior decision freeze** ahead of V2-01 testing; R0 device acceptance **still OPEN**.
+- **Proposed, not approved for behavior change:** stay-signed-in UX with secure per-device credentials, optional re-lock after background, 45s matchmaking foreground presence lease, 5-minute passive timeout warning, Report & Leave vs Block semantics, offline report retries, local draft policy and notifications. These details need founder approval; they are not in the existing QA APK.
+- **Current QA reality:** JWT held only in memory, 30-minute lab token expiry, no production token refresh; a force-killed app generally prompts lab sign-in again. That is separate from V2's 30-minute **chat** inactivity timeout.
+- No application code, schema/data, Render deployment, billing, payment or real-user rollout changes were approved. Documentation remains an unmerged DRAFT PR.
