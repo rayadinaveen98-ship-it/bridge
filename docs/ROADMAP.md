@@ -134,13 +134,15 @@ Read [two-device QA guide](engineering/TWO_DEVICE_QA.md) for repeatable operator
 
 **This program is not approved for execution by documentation approval alone.** No application code, database data/schema, Render deployment, billing or payment settings or public-user privileges may be changed by this documentation PR.
 
-## Proposed V2-00 what-if coverage gate — 2026-11-15 (NOT IMPLEMENTED)
+## Deferred final milestone: V2-16 What If? user-journey and edge-case audit — founder sequence decision, 2026-11-15
 
-The founder requested research and explicit behavior documentation for abrupt app close/reopen, sign-in persistence, report/block, 30-minute inactivity, deliberate End, delivery, multi-device, failure, privacy, payment/entitlements and other user journeys.
+The founder requested that the comprehensive What If? research, UX review and formal scenario certification be **placed at the end of the planned V2 roadmap**, rather than inserted as a new gate before V2-01. **The original implementation sequence remains: G0/R0 device acceptance -> V2-01 through V2-15 (with V2-14 optional).** V2-15 is a preliminary adult-beta readiness assessment, **not** permission to launch. After that, V2-16 performs the complete scenario audit and the final founder release go/no-go gate. No public beta launches before V2-16 is accepted.
 
-- [What If? Scenario Atlas V1](product/WHAT_IF_SCENARIO_ATLAS_V1.md): **138 proposed/locked scenario cards** with stable `WF-` IDs across twelve families.
-- [Scenario Coverage & QA Strategy V1](engineering/WHAT_IF_QA_STRATEGY_V1.md): proposed test disciplines, eight detailed user journeys, P0 release blockers, Android process-death and server fail-closed behavior.
-- [Implementation Packages](engineering/V2_IMPLEMENTATION_PACKAGES.md): new proposed **V2-00 UX/behavior decision freeze** ahead of V2-01 testing; R0 device acceptance **still OPEN**.
-- **Proposed, not approved for behavior change:** stay-signed-in UX with secure per-device credentials, optional re-lock after background, 45s matchmaking foreground presence lease, 5-minute passive timeout warning, Report & Leave vs Block semantics, offline report retries, local draft policy and notifications. These details need founder approval; they are not in the existing QA APK.
-- **Current QA reality:** JWT held only in memory, 30-minute lab token expiry, no production token refresh; a force-killed app generally prompts lab sign-in again. That is separate from V2's 30-minute **chat** inactivity timeout.
-- No application code, schema/data, Render deployment, billing, payment or real-user rollout changes were approved. Documentation remains an unmerged DRAFT PR.
+- [What If? Scenario Atlas V1](product/WHAT_IF_SCENARIO_ATLAS_V1.md): 138 *draft* cases across 12 experience domains; saved now for comprehensive final review.
+- [Scenario Coverage & QA Strategy V1](engineering/WHAT_IF_QA_STRATEGY_V1.md): existing eight journey examples and full future acceptance matrix.
+- [V2 implementation PR packages](engineering/V2_IMPLEMENTATION_PACKAGES.md): V2-00 prerequisite **withdrawn from the plan**; V2-16 final audit added after core work.
+- **Important boundary:** Approved V1/V2 safety, expiry, privacy, consent and authorization cases still require tests inside their relevant earlier engineering PRs. Only the *dedicated exhaustive 138-case UX review* is postponed.
+- Proposed, not approved: silent production login, foreground match presence lease, passive countdown, Report & Leave vs Block interaction, notifications, secure draft restoration and other proposed UX details; do not silently implement them as part of other packages.
+- Current QA still holds JWT only in memory; no production session refresh. R0 on actual phone/tablet remains OPEN.
+
+**Change control:** Documentation branch only. No application changes, live Neon schema/data, Render deployment, test-account reset, billing, paid services or release authorized.
