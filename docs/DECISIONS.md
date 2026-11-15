@@ -48,7 +48,9 @@ Early planning explored a Telugu/English-focused pilot for liquidity. The **late
 | Random messages and case evidence | **APPROVED POLICY** | Normal 24h post-end body purge target; 7d report token; case evidence 90d normal/180d serious; **NOT IMPLEMENTED** and still subject to pre-beta legal review |
 | Existing four-message QA fixture protection | **APPROVED ARCHITECTURE** | Non-destructive migration and `legacy_qa` grandfathering only after separate migration authorization |
 | Central server authorizer and least-privilege runtime | **APPROVED ARCHITECTURE** | Current Neon inspection owner BYPASSRLS; actual Render runtime role needs verification |
-| Implementation packages V2-01 through V2-15 | **PROPOSED / NOT APPROVED TO EXECUTE** | See [V2 package plan](engineering/V2_IMPLEMENTATION_PACKAGES.md); each code/migration/deploy/destructive action needs separate approval |
+| Implementation packages V2-01 through V2-15 | **ORDER / PR BOUNDARIES / TEST AND ROLLBACK GATES APPROVED FOR PLANNING — NOT APPROVED TO EXECUTE** | See [V2 package plan](engineering/V2_IMPLEMENTATION_PACKAGES.md); every code/migration/deploy/destructive action needs separate approval |
 | Public stranger matching, real payments, paid services, iOS | **NOT APPROVED** | No real-user beta until actual adult verification, legal/compliance and staffed safety operations pass |
+
+**2026-11-15 documentation approval:** The founder approved DOC-00 draft PR #15 for a docs-only review/merge and the package sequence and boundaries. Full 138-case What If? review remains proposed **V2-16 at the end**. R0 device acceptance remains OPEN. No application source, database, cloud deployment, billing or public beta authorization accompanies these approvals.
 
 **Historical conflict note:** Early records describing NestJS/Supabase, zero deployed backend or Android-first as only proposed are not the current design/operational baseline. Keep those entries for history, but always use the dated **2026-11-15 approved V2** decisions above when planning. No development or release was authorized by recording these decisions.
