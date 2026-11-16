@@ -1,6 +1,6 @@
 # Bridge V2-03 — Migration evidence and safety certification
 
-**Status:** IMPLEMENTATION BRANCH / CI EVIDENCE PENDING — not a live Neon migration.  
+**Status:** IMPLEMENTED / DISPOSABLE CI VERIFIED — NOT APPLIED TO NEON. Final commit and merge validation recorded separately.  
 **Source brief:** [Founder-approved V2-03 implementation scope](V2_03_IMPLEMENTATION_BRIEF.md), documentation [PR #19](https://github.com/rayadinaveen98-ship-it/bridge/pull/19).  
 **Base:** `main@81c4c9373e3b088f908edd20ea7f697b8c5106eb` (documentation-only PR #19 merged).  
 **User authorization:** Four expand-only SQL migrations, guarded disposable `bridge_test` runner, synthetic preservation/integrity tests, CI and documentation; **no live Neon SQL or reads, no Render deployment, no billing, no app changes**.
@@ -56,16 +56,24 @@
 
 | Check | Current status |
 |---|---|
-| Source build / migration static review | PENDING |
-| Migration transactional rollback and source fixture | PENDING |
-| PostgreSQL constraints, FKs and RLS | PENDING |
-| Second disposable database backup/restore | PENDING |
-| Original API compatibility regression | PENDING |
-| Original V2-01 contract and V2-02 policy tests | PENDING |
-| PR file scope / main branch SHA | PENDING |
-| Live Neon, Render, Android, billing touched | **NO — NOT AUTHORIZED** |
+| Source build / migration static review | PASS — all nine paths reviewed at tested code head |
+| Migration transactional rollback and source fixture | PASS — 15/15 Node migration tests |
+| PostgreSQL constraints, FKs and RLS | PASS — disposable PG16, M03-06 through M03-10 |
+| Second disposable database backup/restore | PASS — PostgreSQL 16 matched client tools; 34 tables, four receipts, four original fixture bodies, two active slots |
+| Original API compatibility regression | PASS — after all V2 migrations on same disposable PG16 |
+| Original V2-01 contract and V2-02 policy tests | PASS — matching 12, backend 34 (+4 skipped), V2-01 20, V2-02 68 |
+| PR file scope / main branch SHA | Scope PASS: nine approved paths; pre-merge main `81c4c937` |
+| Live Neon, Render, Android, billing touched | **NO — no live writes, reads, deployments or charges** |
 
 A failing CI gate blocks merge. On a successful test-only PR, the honest status is **V2-03 MIGRATIONS IMPLEMENTED / DISPOSABLE CI VERIFIED / LIVE NEON NOT APPLIED**. No V2-04, live-schema grant, backend activation, user data deletion or release follows automatically.
+
+### Verified CI runs (code head `2b8cc1f91b9ea34365dad27ad4c02c270e38e48f`)
+
+- [PR Foundation run 43802991189](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43802991189): **success**; both `matching` and `postgres-integration` jobs succeeded.
+- [Push Foundation run 43802986610](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43802986610): **success**; both jobs succeeded.
+- PostgreSQL job confirms 15 new disposable migration tests passed, migration receipt/transaction rollback, PG16 `pg_dump`/`pg_restore` verification and existing API regression tests.
+- **CI correction:** the initial run failed only in backup restore because a newer runner `pg_restore` emitted unsupported `transaction_timeout` on PostgreSQL 16. The final job uses the PostgreSQL 16 client utilities inside the same disposable database container; all tests passed after that correction.
+- A subsequent documentation commit changes the PR head. **Revalidate the final head and post-merge CI before asserting complete certification**.
 
 ## 5. Rollback
 
