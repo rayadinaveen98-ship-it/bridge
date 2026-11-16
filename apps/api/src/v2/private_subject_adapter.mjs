@@ -94,7 +94,10 @@ export function createDisposableSubjectAdapter(pool,{authentication}={}){
           );
           if(result.rows.length!==1)deny();
           const a=result.rows[0];
+          // B3b-1 synthetic subjects are permanently bound to their UUID.
+          // This is a TEST contract; production needs immutable identity binding.
           if(!UUID.test(a.id)||a.auth_subject!==admitted.subject||
+             admitted.subject!=="b3b-disposable:"+a.id||
              a.status!=="active"||a.age_verified_at==null||
              a.safety_eligible!==true||a.deleted_at!==null)deny();
           // Sample actual DB wall-clock AFTER acquiring advisory + account
