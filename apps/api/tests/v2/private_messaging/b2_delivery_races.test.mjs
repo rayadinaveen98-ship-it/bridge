@@ -111,10 +111,10 @@ test("B2b disposable recovery boundaries, two-device ACK and concurrency",{
           actorId:f.people[1],recoveryToken:ack.recoveryToken}),denied);
         await pool.query(
           "UPDATE bridge_v2_secure_unread SET first_acknowledged_at=$2 WHERE id=$1",
-          [item.envelopeId,first]
+          [item.envelopeId,within]
         );
-        // Force original finite hard expiration BEFORE now; keep constraint
-        // firstAck < expiry and accepted < expiry in this synthetic fixture.
+        // Expire the envelope while honoring both database CHECK constraints:
+        // firstAck < expiresAt and acceptedAt < expiresAt. Never extend TTL.
         await pool.query(
           "UPDATE bridge_v2_secure_unread SET expires_at=$2 WHERE id=$1",
           [item.envelopeId,new Date(Date.now()-1000)]
