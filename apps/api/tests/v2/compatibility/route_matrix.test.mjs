@@ -65,8 +65,8 @@ test("G03-06: NULL/ambiguous/mixed room markers always fail closed",()=>{
   ];
   for(const value of variants){
     assert.equal(classifyStoredConversation(value),V1_SCOPE.UNKNOWN);
-    assert.equal(decide("GET",route("messages"),value).decision,"deny");
-    assert.equal(decide("POST",route("messages"),value).decision,"deny");
+    assert.equal(decide("GET",route("messages"),value??null).decision,"deny");
+    assert.equal(decide("POST",route("messages"),value??null).decision,"deny");
   }
 });
 test("G03-07: classification comes from stored metadata, not client version/UA/actor",()=>{
