@@ -1,6 +1,6 @@
 # Bridge V2-06A — Disconnected Scoped Messaging / Unread Evidence Register
 
-**Status:** IMPLEMENTED ON ISOLATED FEATURE BRANCH; CI AND CODE REVIEW **PENDING**.
+**Status:** IMPLEMENTED ON ISOLATED FEATURE BRANCH; CODE-HEAD PR CI PASSED; FINAL DOCUMENT-HEAD AND POST-MERGE VERIFICATION PENDING.
 **Authorized activity:** Disconnected new messaging modules, synthetic disposable PostgreSQL tests, test-only scripts/CI and evidence. User-visible V2 messaging, crypto, deployment, real data, Neon schema, billing, Android and retention are **NOT** activated.
 **Baseline:** docs PR #25 merged to main@18c80daa13881f012e816636234a5ee5128cd03b, with its post-merge [Foundation run #43824321563](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43824321563) PASS (matching and postgres). The [implementation brief](V2_06_IMPLEMENTATION_BRIEF.md) remains the governing scope.
 **Previous stage:** V2-05A merged as PR #24, exact head CI and post-merge CI verified in [V2-05 evidence](V2_05_EVIDENCE.md).
@@ -54,3 +54,18 @@
 - Revert the isolated feature PR and discard disposable bridge_test test rows to roll back; no live data rollback or deployment is needed.
 - Future V2-06B live integration requires a separate founder-reviewed plan resolving legacy body storage, real encryption/key management, trusted identity/policy/runtime role, old-v1 read safe-deny and Android protocol. Never roll back a completed privacy cutover to unsafe historical replay.
 - Comprehensive 138-scenario What If? final review remains deferred to V2-16.
+
+
+## Code-head review and initial CI verification — 2026-11-16
+
+**Tested code head (before this evidence update):** 8c6fb6af510f99609c7931f98c6aff38269bb588.
+
+- [Foundation PR run #43825689701](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43825689701): **matching SUCCESS** and **postgres-integration SUCCESS** on the code head. Current isolated V2-06A pure script recorded **7/7 passing tests**; disposable PostgreSQL script recorded **17/17 passing tests** (nested tests plus parent, zero failures/skips).
+- Baseline V1 HTTP/auth tests, V2-01 contracts, V2-02 policy, V2-03 migration/PG16 restore, V2-04A random, V2-05A Keep/direct, and design token validation remained in successful jobs.
+- Explicitly covered: millisecond 30m/7d/15m boundaries in pure tests; role, mutual, eligible participant, blocked, outsider and source marker denial; HMAC cursor rejects wrong actor/room/scope; 2-device concurrent synthetic message sequence, duplicate/conflicting client ID, matching match-slot validation, atomic outbox metadata, recipient-only unopened/acknowledged inbox, repeated ack, one 15m recovery grant, previous D1 read denial, 7d finite envelope, simulated payload tombstone, synthetic failure rollback, source legacy QA fixture SHA preservation, and deliberate global mutex wait across expiry.
+- Reviewed PR changed filenames: **9 paths** only — four new source modules, two synthetic tests, apps/api/package.json test scripts, .github/workflows/foundation.yml test steps and this evidence doc; forbidden existing V1/V2-04A/V2-05A/SQL/Flutter/Neon/Render paths unchanged.
+- The synthetic adapter binds its injected pg.Pool connection string to exactly the acknowledged loopback database and refuses non-bridge_test URLs; **this is a test isolation guard, not a claim of runtime production access control**.
+- **No real message confidentiality:** fixed dummy body in legacy NOT NULL text column; "ciphertext" fields contain raw synthetic fixture bytes and are **NOT encrypted**. There is no body delivery, human-device UI, live SSE, production key management, consented history, 7d purge worker, Neon migration or Render integration.
+- **Unresolved live-stage gates:** V2 encrypted storage and keys, HTTP trusted identity/policy binding, scoped authorization and DB role/RLS on hosted service, stale v1 read safe-deny, actual Android client flow and hardware R0 acceptance, abuse/throttling, load/incident tests. Real 30-case end-to-end certification cannot be asserted by isolated CI; the specific 06A model cases above were exercised.
+
+**Governance:** The test evidence update creates a new PR head. Only if BOTH matching/postgres CI pass again at that exact final SHA, with no changed file outside the 9 path allowlist, may V2-06A be merged as **INACTIVE ISOLATED ENGINE**. Verify post-merge main CI and record it. If any check fails, DO NOT MERGE. Do not automatically begin V2-06B, apply live migration or deploy.
