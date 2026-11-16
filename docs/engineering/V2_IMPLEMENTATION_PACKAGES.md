@@ -114,6 +114,7 @@ The **package sequence and PR boundaries are approved for planning**, but every 
 **Rollback:** New policy OFF for synthetic canary prior cutover; safe-deny new rooms if clock state uncertain; **never** roll back to unrestricted expiry after privacy cutover. **Gate:** founder approves activation scope.
 
 ### V2-05 — Immutable stranger source and free mutual direct-session creation
+**Exact implementation brief:** [V2-05 Immutable Random Source, Mutual Keep & Free Direct Sessions](V2_05_IMPLEMENTATION_BRIEF.md). **DOCUMENTED / AWAITING SEPARATE CODE APPROVAL**. Recommends **V2-05A** disconnected transaction engine and PostgreSQL 16 synthetic tests (C05-01–C05-30), with **V2-05B hosted activation** independently gated on the live additive migration and safe old-message API cutover. No original random transcript conversion or copying, no payment for free mutual recontact, no R0 hardware PASS inferred.
 **Paths:** `apps/api/src/connections/*`, `sessions/*`, service and PostgreSQL tests.  
 **Scope:** replace in-place `kind=random -> connection` conversion for **new V2 rooms only**; atomically create connection and close source as `converted`; create NEW empty direct session with fresh sequence; strict dual Keep and withdrawal/block; one concurrent direct session per connection, 30m direct idle; relationship itself persists.  
 **Acceptance:** old random text absent from new direct transcript; one-sided Keep cannot message later; 2 accepts create one relationship; direct free reopens next day as *new* session; block/unmatch revokes access.  
