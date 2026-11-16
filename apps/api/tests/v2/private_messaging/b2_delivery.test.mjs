@@ -38,7 +38,8 @@ test("B2b LIVE and UNREAD secure scoped delivery (synthetic PG16 only)",{skip:!u
         const first=await r.readCurrent({conversationId:f.conversationId,actorId:f.people[1]});
         await assert.rejects(r.readCurrent({conversationId:f.conversationId,
           actorId:f.people[0],cursor:first.cursor}),denied);
-        const forged=first.cursor.slice(0,-1)+(first.cursor.at(-1)==="A"?"B":"A");
+        const parts=first.cursor.split(".");
+        const forged=parts[0]+"."+(parts[1][0]==="A"?"B":"A")+parts[1].slice(1);
         await assert.rejects(r.readCurrent({conversationId:f.conversationId,
           actorId:f.people[1],cursor:forged}),denied);
         const outsider=(await accounts(pool,1))[0];
