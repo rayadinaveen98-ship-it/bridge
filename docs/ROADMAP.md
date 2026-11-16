@@ -156,3 +156,12 @@ The founder requested that the comprehensive What If? research, UX review and fo
 - **R0 physical phone/tablet acceptance OPEN**; no statement of real-device V2 testing or production security certification.
 - 138-case end-to-end What If? audit remains **V2-16, after core stages**; critical privacy/safety checks still belong in each earlier stage.
 - Founder must separately authorize V2-02 source paths before any coding, live security inspection, migration, deploy, cost or payment operation. This DOC-ONLY update neither authorizes nor performs them.
+
+## Verified V2-02 completion / V2-03 additive-schema planning — 2026-11-16
+
+- **V2-02 IMPLEMENTED / CI VERIFIED within disconnected policy-kernel scope:** [PR #18](https://github.com/rayadinaveen98-ship-it/bridge/pull/18) merged to `main@7721afbb608edcad2a71b888bcb90ec1fc251a1b`. [Post-merge CI run 43742699492](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43742699492) passed matching, backend, V2-01 reference contracts, 68 pure V2-02 policy tests and disposable PostgreSQL. This **does NOT activate the V2 policy in existing HTTP/PG runtime**.
+- **Current stage: V2-03 — DOCUMENTED, NOT AUTHORIZED TO IMPLEMENT:** [exact additive schema implementation brief](engineering/V2_03_IMPLEMENTATION_BRIEF.md). Four proposed migration layers (0004 metadata, 0005 sessions/live/unread, 0006 consent/history/QA entitlements, 0007 evidence/retention), synthetic preservation tests and one-way rollback. This stage is **strictly disposable/test database only** if separately approved.
+- **No live Neon schema writes or read-only role inspections** are authorized by this planning stage. No API/Flutter source, Render deploy, real-data copy, message purge, billing or payment changes.
+- **Legacy message body boundary:** `bridge_messages.body NOT NULL` remains unchanged through V2-03. Future body-null relaxation is a distinct V2-06/V2-11 data-access cutover decision, not a hidden additive migration.
+- **R0 physical Android phone/tablet acceptance remains OPEN.** Comprehensive 138-case What If? review remains V2-16. Existing privacy/safety tests still belong in each engineering package.
+- **Next decision:** founder reviews the V2-03 migration-code/test-only package. A separate approval is required to create SQL/test files; any later live Neon DDL requires its own independent approval and backup/rehearsal evidence.
