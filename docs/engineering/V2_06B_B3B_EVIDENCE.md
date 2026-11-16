@@ -1,6 +1,6 @@
 # Bridge B3b-1 — Synthetic Signed-Identity Boundary Evidence
 
-**Status:** SOURCE IMPLEMENTED ON ISOLATED BRANCH; CI NOT YET VERIFIED; NOT LIVE.  
+**Status:** IMPLEMENTED IN DRAFT PR / INITIAL CODE-HEAD CI PASSED / FINAL EVIDENCE-HEAD + MERGE CI PENDING / NOT LIVE.  
 **Approved:** founder's exact eight-file B3b-1 scope in [implementation brief](V2_06B_B3B_IMPLEMENTATION_BRIEF.md), 2026-11-16.  
 **Baseline:** verified `main@4bdfa482cad1f6c61558c47e0a42e7c53b8bfc06`; [main Foundation #43869197431](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43869197431) matching and postgres-integration SUCCESS.  
 **Reference:** [B3b trust/race matrix](V2_06B_B3B_TRUST_RACE_MATRIX.md), [B3a final evidence](V2_06B_B3_EVIDENCE.md).
@@ -47,3 +47,16 @@
 - No commercial/KMS spending or hosted retention/delete permissions granted. Future B3b-2 requires separate founder approval; final **138-case What If? remains LAST at V2-16**.
 
 **Rollback:** revert exactly the B3b-1 isolated eight-file PR and discard disposable synthetic PG16 rows. Real Render/Neon/Android data remain untouched.
+
+
+## 2026-11-16 actual B3b-1 code-head CI and findings
+
+- **Tested code head:** `0d28aace196f5024eb4799ef564e7222a5460e25`, [draft implementation PR #44](https://github.com/rayadinaveen98-ship-it/bridge/pull/44), changed files **exactly eight** (the approved allowlist above).
+- **First complete Foundation push #43871038402:** [workflow link](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43871038402). **matching SUCCESS, postgres-integration SUCCESS.** The PR event run #43871132431 was still executing at the first evidence inspection; final PR-head verification is a separate merge gate.
+- **Actual named Node TAP results (disposable/synthetic only):** `test:v2:identity` (pure JWT tests) **10/10 PASS, 0 FAILED, 0 SKIPPED**. `test:v2:identity:db` executes `postgres_subject.test.mjs` **10/10 PASS** (9 child cases + 1 parent suite) followed by `race_subject.test.mjs` **8/8 PASS** (7 child cases + 1 parent suite). All 18 PostgreSQL TAP results **0 FAILED, 0 SKIPPED**. Total **28 passing TAP results / 26 distinct test cases**. Earlier matching, B3a 25 pure checks and B1/B2 PostgreSQL regressions ran inside the unchanged Foundation jobs.
+- **Specific verified negative outcomes:** forged/malformed/HS256/none/expired/early/wrong-signer/audience/issuer JWT denied; exact signed synthetic `sub` to DB `auth_subject` mapping; untrusted actor/role/premium fields rejected; restricted/suspended/deleted/age/safety-ineligible account denied; same-transaction callback throws and rolls back; actual DB principal and 0008 receipt guards deny; account restriction and subject change committed while waiting for 714411 mutex win; account row FOR UPDATE blocks concurrent status UPDATE; stale synthetic token cannot alias B after A's subject reassignment; JWT `exp` crossed while lock held denies before callback; original disposable four-message legacy QA checksum unchanged; no hosted route imports or secret/SQL subject disclosures.
+- **Synthetic-specific caveat:** The test-only identity format requires `b3b-disposable:<accountUUID>` matching the locked account UUID, preventing reassignment in test fixtures. **This is NOT a proposed general production subject format**; production will need issuer-controlled immutable binding, lifecycle/rotation and stable account-subject identity design before B3b-2/G1.
+- **Atomicity caveat remains CRITICAL:** B3b-1 runs only a test-owned internal callback in the same locked transaction. Existing B2a/B2b encrypted write/read, unread, ACK and recovery modules still open their **own** independent transactions with synthetic `actorId`. Do NOT compose a prior B3b-1 preflight with a separate B2a/b call and claim authorization linearizability. B3b-2 exact new scope and founder approval remain necessary.
+- **All hosted gates still OPEN:** actual V1 old-client read/write firewall (B3a is pure/disconnected), actual Render runtime PostgreSQL principal/RLS, key custody, real adult/policy assurance, full Block/unblock/account writer races, Android V2-10, G1/V2-11 private cutover, R0 two-device physical acceptance and final V2-16 138-case What If?. No Neon/Render/Flutter or original four-message hosted QA operation was run.
+
+**Evidence update changes Git head:** rerun final PR/push matching and postgres-integration and inspect eight-file scope at that new SHA before merge. Only then verify independently on merged main.
