@@ -52,3 +52,9 @@
 - **Critical non-claims:** No real hosted `/v2` endpoint, production role/RLS enforcement, real key management, real adult/policy assurance, V1 old-client GET **and POST** read/write firewall, Render service integration, Android V2-10 or physical R0 acceptance. Because V1 `unblock()` and other hosted account/policy writers are not uniformly integrated, B3b-2 PG16 locks do NOT certify all hosted revocation races. A recipient may retain already-viewed text; encryption here is SERVER-SIDE test AEAD and **NOT E2EE**. Five-minute presentation proof TTL remains test-only; do not advertise it as public UX policy. R0 physical phone/tablet acceptance **OPEN**, full 138-case What If? stays V2-16 FINAL.
 - **Remaining merge gate:** this evidence update changes the PR HEAD. Recheck final **push + pull-request** Foundation matching+PG16 SUCCESS (and 29/29 new TAP) on exact new head, exact ten-file diff, then merge and independently verify postmerge main CI. Do not start B3c/G1/Android or paid/hosted work.
 
+
+
+### Additional final evidence-head push check (before PR synchronize)
+
+- Evidence-updated implementation head `b9f7dc9a5fe14de06aa62f9d8f3ff2d30f82d92e`: [Foundation branch push #43895532227](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43895532227) **matching SUCCESS, postgres-integration SUCCESS**; named B3b-2 tests remain 29/29 passing (10 write, 9 delivery, 10 races; zero skipped/failed). Original V1/B1/B2/B3 regressions likewise green.
+- Draft PR #47 was made ready only after exact ten-file diff inspection. GitHub had not generated a `pull_request` workflow run for its prior draft HEAD. This documentation sync will generate a new final PR HEAD; **merge remains blocked until both push and pull-request CI at that same final commit, and a final ten-file security diff inspection, pass**. Do not infer a PR check from the branch push.
