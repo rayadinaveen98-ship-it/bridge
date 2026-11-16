@@ -1,6 +1,6 @@
 # Bridge B3c-2R2 — disposable actual-0008 PostgreSQL 18 evidence
 
-**Status: IMPLEMENTED / PG18 ACTUAL-0008 AND PREDECESSOR MATRIX CI VERIFIED / FINAL EVIDENCE-HEAD CI PENDING / NOT HOSTED.**  
+**Status: B3c-2R2 IMPLEMENTED / 16/16 PG18 TAP PASS / FINAL PR-HEAD CI VERIFIED / MERGED / NOT HOSTED. Independent postmerge main CI NOT VERIFIED.**  
 Founder approved continuation from B3c-2R for disposable actual 0008 + signed actor/nonowner proof.  
 Pinned previous main: `2fd4ec5a0303c260284e38ad6fdfa059cc950508`.
 
@@ -23,8 +23,8 @@ Pinned previous main: `2fd4ec5a0303c260284e38ad6fdfa059cc950508`.
 - [x] Cross-user SELECT/INSERT, old plaintext, account, case/history, private key and role/DDL escalation denied
 - [x] Tampered JWT, forged/changed GUC, cross-transaction replay, expired valid-HMAC context denied
 - [x] Test-only policies/privileges/private signer/schema/roles explicitly torn down and CI fails on teardown residue; database/container disposed
-- [x] Code-head [PG18 signed proof #43942617769](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43942617769) **16/16 TAP PASS, 0 failed/skipped**; [B3c-2R PG16/18 matrix #43942617909](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43942617909) **2/2 jobs PASS**; [Foundation matching+PG16 #43942618087](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43942618087) **2/2 jobs PASS**. Final evidence-edit PR-head CI remains to reverify.
-- [ ] Separate post-merge CI explicitly checked before certifying independent main; no hosted actions
+- [x] Code-head [PG18 signed proof #43942617769](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43942617769) **16/16 TAP PASS, 0 failed/skipped**; [B3c-2R PG16/18 matrix #43942617909](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43942617909) **2/2 jobs PASS**; [Foundation matching+PG16 #43942618087](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43942618087) **2/2 jobs PASS**. Final PR-head CI VERIFIED on [PG18 #43943002296](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43943002296), [B3c-2R PG16+18 #43943002126](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43943002126) and [Foundation #43943002205](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43943002205), all successful.
+- [ ] Independent postmerge `main` Actions run remains UNVERIFIED (connector's commit workflow lookup exposes PR-linked runs only); no hosted actions. Final PR-head CI and merge verified.
 
 **Unresolved intentionally:** this is a standalone signed-actor SQL demo, not the B3b-2 encrypted-transaction integration, real persistent key management, age proof, actual user/Block lock races, approved prod RLS or an authenticated hosted API. SQL function is a synthetic trust experiment, NOT a recommended live design without deeper security review. V2 activation blocked pending real hosted nonowner role and broader gates.
 
@@ -43,3 +43,10 @@ Pinned previous main: `2fd4ec5a0303c260284e38ad6fdfa059cc950508`.
 - The function and RLS policy only demonstrate a signed transaction-scoped claim. They do **not** verify a real runtime user against locked account/Block state inside the production B3b-2 single transaction, so **do not deploy or reuse the proof policies**. Real provider/custody, key rotation, R0 physical QA and safe old-client firewall remain release blockers.
 - Prior initial failed [run #43941926838](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43941926838) was a fixture `URL` constant shadowing Node's constructor; failure occurred before any DB connection, fixed without weakening preflight. The next [run #43942178822](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43942178822) passed 15/15; final amended code-head #43942617769 passed 16/16.
 - **Next gate:** production-suitable actor binding, account/Block/peer revocation races and safe nonowner transaction integration design, separately approved. Hosted Neon/Render remediation requires distinct founder approval and remains **HOLD V2**.
+
+## Final implementation merge certificate
+
+- [Implementation PR #56](https://github.com/rayadinaveen98-ship-it/bridge/pull/56) exact seven-file final HEAD `a2ff51e2ace1be6d3f400da7e2d30f4970df4989`, matching baseline `2fd4ec5a0303c260284e38ad6fdfa059cc950508`. PR merge at `27dbb6dc84bfecce4bc94f8f3509c5857455e7c3`. Code/test scope was unchanged except test-only repair and hardening inside the approved paths.
+- Final **actual-0008 PG18 test** [#43943002296](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43943002296) succeeded with **16/16 Node TAP passes**. The same HEAD's [prior PG16/18 role matrix #43943002126](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43943002126) passed both jobs and [Foundation #43943002205](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43943002205) passed matching and disposable PG16 integration. These are PR CI, NOT independently observed postmerge push events.
+- The old V1 API, Android source/build, Render deployment, Neon database/schema/roles/grants/data, public users, KMS and payments were not changed. V2 remains **HOLD** due to real Render owner/BYPASSRLS. No production AEAD ciphertext or E2EE was created.
+- Further work requires a separately approved exact scope for a production-grade actor binding to locked account/participants/Block state and nonowner B3b-2 transaction path. The test-only HMAC/SECURITY DEFINER verifier is **not approved for production reuse**. R0 physical acceptance remains open; V2-16 final 138-case What If? audit remains last.
