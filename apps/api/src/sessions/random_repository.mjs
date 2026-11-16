@@ -122,7 +122,7 @@ export function createRandomSessionRepository(pool,{failureHook=null}={}) {
         const r=await c.query(
           "INSERT INTO bridge_conversations(match_session_id,kind,state,policy_version,"+
           "v2_session_role,legacy_qa,last_accepted_at,idle_expires_at) "+
-          "VALUES($1,'random','open',$2,'random',false,$3,$3+interval '30 minutes') "+
+          "VALUES($1,'random','open',$2,'random',false,$3::timestamptz,($3::timestamptz)+interval '30 minutes') "+
           "RETURNING id,last_accepted_at,idle_expires_at",
           [matchId,RANDOM_POLICY,instant]);
         await c.query("UPDATE bridge_match_sessions SET activated_at=$2 WHERE id=$1",
