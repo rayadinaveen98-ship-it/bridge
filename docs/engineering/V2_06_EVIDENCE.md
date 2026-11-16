@@ -1,6 +1,6 @@
 # Bridge V2-06A — Disconnected Scoped Messaging / Unread Evidence Register
 
-**Status:** IMPLEMENTED ON ISOLATED FEATURE BRANCH; CODE-HEAD PR CI PASSED; FINAL DOCUMENT-HEAD AND POST-MERGE VERIFICATION PENDING.
+**Status:** V2-06A ISOLATED SYNTHETIC ENGINE IMPLEMENTED / CI VERIFIED / MERGED; LIVE NOT ACTIVATED.
 **Authorized activity:** Disconnected new messaging modules, synthetic disposable PostgreSQL tests, test-only scripts/CI and evidence. User-visible V2 messaging, crypto, deployment, real data, Neon schema, billing, Android and retention are **NOT** activated.
 **Baseline:** docs PR #25 merged to main@18c80daa13881f012e816636234a5ee5128cd03b, with its post-merge [Foundation run #43824321563](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43824321563) PASS (matching and postgres). The [implementation brief](V2_06_IMPLEMENTATION_BRIEF.md) remains the governing scope.
 **Previous stage:** V2-05A merged as PR #24, exact head CI and post-merge CI verified in [V2-05 evidence](V2_05_EVIDENCE.md).
@@ -69,3 +69,12 @@
 - **Unresolved live-stage gates:** V2 encrypted storage and keys, HTTP trusted identity/policy binding, scoped authorization and DB role/RLS on hosted service, stale v1 read safe-deny, actual Android client flow and hardware R0 acceptance, abuse/throttling, load/incident tests. Real 30-case end-to-end certification cannot be asserted by isolated CI; the specific 06A model cases above were exercised.
 
 **Governance:** The test evidence update creates a new PR head. Only if BOTH matching/postgres CI pass again at that exact final SHA, with no changed file outside the 9 path allowlist, may V2-06A be merged as **INACTIVE ISOLATED ENGINE**. Verify post-merge main CI and record it. If any check fails, DO NOT MERGE. Do not automatically begin V2-06B, apply live migration or deploy.
+
+
+## Final PR, exact merged main and post-merge CI certification — 2026-11-16
+
+**Final implementation PR:** [#26](https://github.com/rayadinaveen98-ship-it/bridge/pull/26) merged at main **4bb43266c53436fbe6dc7c4707c76ae2903cf367**. Final PR head **fe4d7a766a069852efa0c3e23563b3229bc3212b**; [final PR-head run #43825963819](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43825963819) completed **SUCCESS**, with matching and postgres-integration **SUCCESS**; the matching branch push run #43825958279 also SUCCESS.
+- **Post-merge Foundation run #43826103264:** [GitHub Actions](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43826103264) completed **SUCCESS** at exact merge SHA. Both **matching** and **postgres-integration** job conclusions SUCCESS. New pure messaging/unread step and disposable PostgreSQL messaging step both SUCCESS.
+- Verified **9 approved paths only** in final PR diff; four new disconnected source modules, two new synthetic test files, package test scripts, additive CI steps, and scoped evidence document. Original V1 runtime HTTP/PG, V2-04A, V2-05A, all SQL migrations, mobile client, live infrastructure/data/roles and billing untouched.
+- Final V2-06A classification: **ISOLATED SYNTHETIC ENGINE IMPLEMENTED / CI VERIFIED / MERGED / NOT LIVE**. Test fixture body is a fixed dummy marker; bytea copies are **not encrypted**; no live content access, no Android UX, no Neon V2 migration, no Render deploy.
+- **R0 physical QA remains OPEN**, full M06 live-message/crypto/recovery integration is NOT certified, and final 138-case What If? audit is still scheduled for V2-16. Future integration V2-06B and V2-11 privacy cutover require a separate approved brief and cannot unmask generic V1 historic reads.
