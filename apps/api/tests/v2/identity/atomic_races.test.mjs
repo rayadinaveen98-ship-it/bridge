@@ -168,6 +168,18 @@ test("B3b-2 signed identity, Block, peer lock, expiry and rollback PG16 races",{
         assert.equal((await a.unread(who)).length,1);
       }finally{a.destroy();}
     });
+    await t.test("AT03-28 source import fence: no hosted HTTP/PG/start/SSE/outbox wiring",async()=>{
+      const {readFile}=await import("node:fs/promises");
+      const root=new URL("../../../src/",import.meta.url);
+      for(const name of ["http.mjs","postgres.mjs","start.mjs",
+        "live.mjs","outbox.mjs","auth.mjs"]){
+        const content=await readFile(new URL(name,root),"utf8");
+        assert.doesNotMatch(content,/private_atomic_facade\.mjs|private_subject_adapter\.mjs/);
+      }
+      const atomic=await readFile(new URL("v2/private_atomic_facade.mjs",root),"utf8");
+      assert.doesNotMatch(atomic,/\bBRIDGE_DATABASE_URL\b|NEON_DATABASE_URL|RENDER_API_KEY/);
+      assert.doesNotMatch(atomic,/\/v1\/conversations|\/v2\/conversations/);
+    });
     await t.test("AT03-27 signed LIVE+UNREAD+ACK+recover all same client per call",async()=>{
       const spy=guardedPoolSpy(pool);
       const a=await makeAtomic(pool,{facadePool:spy.pool});
