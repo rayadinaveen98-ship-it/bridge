@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import pg from "pg";
 import {
   b2SchemaReady,disposableUrl,makeAtomic,blocked,perRoomState,
-  repos,secureCounts,uuid
+  repos,secureCounts,uuid,ageUnread
 } from "./atomic_fixtures.mjs";
 
 const local=!!process.env.BRIDGE_TEST_DATABASE_URL;
@@ -85,7 +85,10 @@ test("B3b-2 signed actor current LIVE / direct UNREAD / bounded ACK and recovery
     await t.test("AT03-21/22 first ACK immutable, 15-minute recovery cap",async()=>{
       const a=await makeAtomic(pool);
       try{
-        await a.send(a.f.people[0]);
+        const body="historical unread for bounded recovery";
+        const sent=await a.send(a.f.people[0],body);
+        // Test-only: keep accepted-at/AAD and SQL CHECK constraints coherent.
+        await ageUnread(pool,a,sent.id,new Date(Date.now()-30*60000),body);
         const who=a.f.people[1],item=(await a.unread(who))[0];
         const first=await a.ack(who,item.envelopeId,item.presentationProof);
         const original=(await pool.query(
@@ -100,6 +103,11 @@ test("B3b-2 signed actor current LIVE / direct UNREAD / bounded ACK and recovery
         assert.equal(after.getTime(),original.getTime());
         await pool.query(
           "UPDATE bridge_v2_secure_unread SET first_acknowledged_at="+
+          "clock_timestamp()-interval '14 minutes' WHERE id=$1",
+          [item.envelopeId]);
+        assert.equal((await a.recover(who,item.envelopeId,first.recoveryToken)).text,body);
+        await pool.query(
+          "UPDATE bridge_v2_secure_unread SET first_acknowledged_at="+
           "clock_timestamp()-interval '16 minutes' WHERE id=$1",
           [item.envelopeId]);
         await assert.rejects(a.recover(who,item.envelopeId,first.recoveryToken),blocked);
@@ -109,12 +117,11 @@ test("B3b-2 signed actor current LIVE / direct UNREAD / bounded ACK and recovery
     await t.test("AT03-23 original seven-day UNREAD expiry never becomes history",async()=>{
       const a=await makeAtomic(pool);
       try{
-        await a.send(a.f.people[0],"expired unread");
+        const body="expired unread";
+        const sent=await a.send(a.f.people[0],body);
         const who=a.f.people[1],item=(await a.unread(who))[0];
-        await pool.query(
-          "UPDATE bridge_v2_secure_unread SET expires_at=clock_timestamp()-"+
-          "interval '1 second' WHERE id=$1",[item.envelopeId]
-        );
+        await ageUnread(pool,a,sent.id,
+          new Date(Date.now()-7*86400000-2000),body);
         assert.deepEqual(await a.unread(who),[]);
         await assert.rejects(a.ack(who,item.envelopeId,item.presentationProof),blocked);
         assert.equal((await secureCounts(pool,a.room)).messages,1,
