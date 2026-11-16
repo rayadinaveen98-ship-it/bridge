@@ -32,6 +32,8 @@ jobs:
         run: npm run test:v2:compatibility --prefix apps/api
       - name: B3b-1 isolated ephemeral RS256 JWT negative tests (NO HOSTED IDENTITY)
         run: npm run test:v2:identity --prefix apps/api
+      - name: B3c-2 isolated runtime-role redaction tests (NO HOSTED ACCESS)
+        run: npm run test:v2:runtime-role --prefix apps/api
       - name: Validate design token JSON
         run: node -e "const t=require('./design/tokens/bridge.v1.json'); if (!t.color?.dark || !t.spacing) process.exit(1)"
 
