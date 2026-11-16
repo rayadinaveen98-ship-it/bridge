@@ -91,3 +91,17 @@
 - No Neon, Render, Android, billing, retention or live QA operations were executed in this implementation. **A successful integration test in disposable PostgreSQL is NOT a physical Android pass or live server proof.**
 
 **Governance:** The evidence-document update changes the PR HEAD. The last-mile CI must rerun successfully at the new exact HEAD, followed by merge and main-branch CI verification. If either fails, do not certify V2-05A complete. R0 remains OPEN and V2-06 remains NOT STARTED.
+
+
+## 7. FINAL PR HEAD AND POST-MERGE CERTIFICATION — 2026-11-16
+
+**Classification:** V2-05A IMPLEMENTED / DISCONNECTED ENGINE CI VERIFIED / MERGED, with **NO live activation**.
+
+- Final exact PR #24 head: **0ed67b3dd186fbd801ccc9d7f18d8f33f15dbf32**.
+- [Final PR-head Foundation run #43820598492](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43820598492): **completed / SUCCESS**. Both **matching** and **postgres-integration** jobs SUCCESS, including the V2-05A pure Keep/direct and PostgreSQL Keep/withdraw/race/direct lifecycle steps.
+- [PR #24](https://github.com/rayadinaveen98-ship-it/bridge/pull/24) merged at **d50a4d00d7545c555e99f1f09283145520960a01** (2026-11-16T07:00:50Z), with the exact approved **12 changed paths**: four disconnected source modules, five synthetic tests/fixtures, one npm test-script file, one CI workflow and this evidence document.
+- [Post-merge main Foundation run #43820774828](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43820774828): **push event / completed / SUCCESS** at the exact merge commit d50a4d00d7545c555e99f1f09283145520960a01 (2026-11-16T07:00:52Z). Its **matching** and **postgres-integration** jobs both SUCCESS; V2-03 disposable migration, PG16 backup/restore, V2-04A lifecycle and V2-05A mutual/direct steps also SUCCESS.
+- Certification source: GitHub Actions workflow-run and job/step records, GitHub PR metadata and changed-path list. No local-device, Neon runtime-role, crypto key or production environment tests were performed as part of this certification.
+- The previous section's "rerun after evidence edit" requirement is **satisfied by exact final head and post-merge evidence above**. Earlier evidence and failure correction remain preserved as history.
+
+**Non-negotiable outstanding gates:** R0 physical phone/tablet sign-off OPEN; V2-03 schema not applied to live Neon; V2-04A/V2-05A not wired into hosted v1 API; v1 broad historical message reader not privacy-cut over; no V2 messages, payload encryption or unread delivery; no Render/Android deploy. [V2-06 implementation brief](V2_06_IMPLEMENTATION_BRIEF.md) is **proposed documentation only**, not V2-06 coding approval. Comprehensive What If? remains final V2-16.
