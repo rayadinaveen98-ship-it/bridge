@@ -103,6 +103,8 @@ Use purpose-specific LIVE KEKs and a UNIQUE (kek_id, kek_version, wrap_iv) const
 7. accepted_at = immutable UTC epoch milliseconds with strict integer canonicalization
 8. payload_version = "1"
 
+**Precision rule (future B2):** PostgreSQL timestamps can represent microseconds, while JavaScript Date and this AAD format use integer milliseconds. Sample the authoritative PostgreSQL clock after locks, normalize it exactly once to a canonical integer millisecond timestamp, write that same normalized value to immutable message and recipient-envelope accepted_at fields, and encrypt using that same value. Reject fractional, differently rounded or client-originated accepted times. A nonce must remain unique for its particular key across retries/restarts; the tests must not mistake random generation alone for a guaranteed global uniqueness proof.
+
 The **data AEAD** binds all eight fields, so ciphertext swapping across account/room/purpose/time must fail. The **DEK-wrap AEAD** binds the above bytes plus a separate purpose "wrap", KEK id and KEK version. Encode no untrusted keys, no arbitrary field order, and no plaintext content in AAD. Current session closure or retention_due_at is mutable and **not** AAD-bound.
 
 **Key interface:** `testKeyProvider.getKek({purpose,keyId,version})` injected as an in-memory stub; throw on missing/retired key. This does **not** imply real cloud key isolation. No provider/network calls in B1. Use cryptographically secure randomBytes() for DEKs/nonces, never Math.random() or UUID as symmetric key. Protect against known nonce reuse for the same KEK with per-key counter or test-only uniqueness registry plus DB unique constraint; later B2 must review multi-node/key volume bounds.
