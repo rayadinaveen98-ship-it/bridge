@@ -71,8 +71,7 @@ test("B3b-1 synthetic PG16 advisory/row-lock and JWT expiration races",{
     await t.test("ID03-26: synthetic UUID-bound sub cannot be reassigned to B",async()=>{
       const a=await syntheticAccount(pool),b=await syntheticAccount(pool);
       const token=signedToken(keys,{sub:a.subject});
-      await pool.query("BEGIN");
-      // The transaction belongs to the SAME pooled single client below.
+      // Subject reassignment happens only in this disposable fixture.
       const c=await pool.connect();
       try{
         await c.query("BEGIN");
