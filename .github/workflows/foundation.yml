@@ -105,3 +105,8 @@ jobs:
         env:
           BRIDGE_TEST_MIGRATION_ACK: disposable-bridge_test-only
         run: npm run test:v2:private-schema --prefix apps/api
+
+      - name: B2a disconnected encrypted atomic accepts, lock races, rollback (PG16 synthetic ONLY)
+        env:
+          BRIDGE_TEST_MIGRATION_ACK: disposable-bridge_test-only
+        run: npm run test:v2:private-accept:db --prefix apps/api
