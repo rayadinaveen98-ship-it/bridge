@@ -107,6 +107,7 @@ The **package sequence and PR boundaries are approved for planning**, but every 
 **Rollback:** On test DB, restore disposable snapshot. When later authorized in live QA, **leave additive tables untouched and disable new feature routes**; no destructive down-migration. **Gate:** founder separately authorizes any live Neon DDL.
 
 ### V2-04 — Random session 30-minute expiry and slot-safe cleanup
+**Exact code-approval brief:** [V2-04 Random Lifecycle & Expiry Implementation Brief](V2_04_IMPLEMENTATION_BRIEF.md). This is **DOCUMENTATION ONLY / AWAITING SEPARATE ENGINEERING APPROVAL**. The first proposed PR (**V2-04A**) builds a disconnected session adapter plus disposable PostgreSQL race tests, without importing it into live `postgres.mjs` or `http.mjs`; expiry activation remains a distinct permission after Neon migration and R0/legacy safety gates. Includes 24 numbered R04 test cases and a fresh-DB-clock-after-lock contract.
 **Paths:** `apps/api/src/sessions/*`, matching/service integration tests, bounded inactive-sweeper code (disabled by default for QA legacy).  
 **Scope:** add DB-clock `idle_expires_at`, accepted-unique-message timer reset, no extension from Keep, read, typing or idempotent retry, expiry transaction vs matching/Keep/block, terminal `expired/ended/converted/safety_closed`; release slots exactly once; preserve legacy.  
 **Acceptance:** t=29:59 allowed, t=30:00 denied even if worker down; two-device/cross-transaction races no duplicate slots and no resurrection; legacy fixture untouched.  

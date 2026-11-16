@@ -61,3 +61,11 @@ Early planning explored a Telugu/English-focused pilot for liquidity. The **late
 - **V2-03:** [Database expansion implementation brief](engineering/V2_03_IMPLEMENTATION_BRIEF.md) PREPARED FOR REVIEW. No SQL schema implementation, live migration, change to message bodies, data deletion, server integration or infrastructure privilege change authorized.
 - **Recommended technical policy (proposed, not yet approved as implementation):** retain original random source conversations and FKs; create new direct-session records; introduce scoped unread/history/evidence tables without backfilling old records; preserve original `bridge_messages.body NOT NULL` until separately authorized safe read/retention cutover.
 - **Existing approval preserved:** R0 hardware verification still OPEN; exhaustive What If? audit final V2-16; no payment, moderation vendor, public beta or production release authorized.
+
+## V2-04 random lifecycle — planning-only decision register, 2026-11-16
+
+- **V2-03 completed (disposable):** PR #20 merged at `a922f63d`, 0004–0007 SQL files and migration/backup tests passed CI. SQL not applied to live Neon and existing tester records untouched.
+- **V2-04 plan drafted:** [V2-04 exact implementation brief](engineering/V2_04_IMPLEMENTATION_BRIEF.md) outlines exclusive 30-minute DB-clock expiry, atomic terminal/slot cleanup, current-room-only recovery, zero revival and duplicate-idempotency no-reset semantics.
+- **New proposed implementation boundary, not yet founder-approved:** V2-04A session module under `apps/api/src/sessions/**`, synthetic PostgreSQL 16 tests, isolated CI and evidence, **disconnected from current routes**. Separate live migration and API activation are required; no direct relationship conversion in V2-04.
+- **No new product rule:** all decisions retain BR-004–008 and D-01 from approved V1/V2. No new device/session-auth behavior, feature monetization, paid service or public beta authorized.
+- **R0 real phone/tablet acceptance still OPEN;** 138-case comprehensive audit remains final V2-16.
