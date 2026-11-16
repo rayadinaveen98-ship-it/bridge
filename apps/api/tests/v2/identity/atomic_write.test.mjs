@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import pg from "pg";
 import {randomUUID} from "node:crypto";
+import {setRoomDeadline} from "../private_messaging/b2_fixtures.mjs";
 import {
   b2SchemaReady,disposableUrl,makeAtomic,blocked,secureCounts,
   perRoomState,uuid,guardedPoolSpy,actualLegacySnapshot,legacySnapshot
@@ -45,6 +46,28 @@ test("B3b-2 signed actor + AES-GCM write in ONE disposable transaction",{
         assert.deepEqual((await a.live(a.f.people[1])).messages.map(x=>x.text),
           ["Random no history"]);
         assert.deepEqual(await a.unread(a.f.people[1]),[]);
+      }finally{a.destroy();}
+    });
+    await t.test("AT03-11 signed 30-minute clock boundary; only unique accepted extends",async()=>{
+      const a=await makeAtomic(pool,{kind:"random"});
+      try{
+        const who=a.f.people[0];
+        // 2 seconds before server idle expiry: unique new accepted content
+        // is authorized and resets clock from authoritative DB time.
+        await setRoomDeadline(pool,a.room,2000);
+        const before=await perRoomState(pool,a.room);
+        const accepted=await a.send(who,"unique at late idle boundary");
+        const after=await perRoomState(pool,a.room);
+        assert.equal(accepted.sequenceNumber,1);
+        assert.ok(after.last_accepted_at>before.last_accepted_at);
+        assert.equal(after.idle_expires_at.getTime()-
+          after.last_accepted_at.getTime(),30*60000);
+        // 2 seconds past expiry: no new message/clock mutation allowed.
+        await setRoomDeadline(pool,a.room,-2000);
+        const alreadyExpired=await perRoomState(pool,a.room);
+        await assert.rejects(a.send(who,"too late"),blocked);
+        assert.deepEqual(await perRoomState(pool,a.room),alreadyExpired);
+        assert.equal((await secureCounts(pool,a.room)).messages,1);
       }finally{a.destroy();}
     });
     await t.test("AT03-02/03 modified actor, role, premium, wrong signed token denied",async()=>{
