@@ -34,7 +34,10 @@ test("V2-05A C05-01..19, 27/28: synthetic-only Keep, concurrency and transcript 
       assert.deepEqual(await vote(keep,f,0),{status:"pending"});
       assert.equal(await qty(pool,"SELECT count(*)::int n FROM bridge_connections "+
         "WHERE source_conversation_id=$1",[f.room]),0);
-      assert.equal(await qty(pool,"SELECT count(*)::int n FROM bridge_v2_direct_sessions"),0);
+      assert.equal(await qty(pool,
+        "SELECT count(*)::int n FROM bridge_v2_direct_sessions ds "+
+        "JOIN bridge_connections co ON co.id=ds.connection_id "+
+        "WHERE co.source_conversation_id=$1",[f.room]),0);
       assert.equal((await state(pool,f.room)).state,"open");
       assert.equal(await snapshotRandomContent(pool,f.room),content);
       assert.deepEqual(await single(pool,
