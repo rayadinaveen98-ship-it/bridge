@@ -74,7 +74,7 @@ Revert B2a implementation PR and discard disposable PG16 database, with no real 
 
 ## B2b implemented on isolated branch — delivery, ack and recovery (2026-11-16)
 
-**Status: B2b CODE-HEAD PG16/CI VERIFIED / EVIDENCE-HEAD AND MERGE GATES PENDING. NOT LIVE.**
+**Status: B2b IMPLEMENTED / DISPOSABLE PG16 TESTED / PR AND MAIN CI VERIFIED / MERGED; NOT LIVE OR DEPLOYED.**
 
 **Approved scope:** [B2 Implementation Brief](V2_06B_B2_IMPLEMENTATION_BRIEF.md), **exactly six allowed files**:
 1. `apps/api/src/messaging/private_delivery_repository.mjs` — NEW disconnected synthetic-only, scope-checked encrypted LIVE/UNREAD reader, ACK/recover.
@@ -108,3 +108,14 @@ Revert B2a implementation PR and discard disposable PG16 database, with no real 
 - **Critical remaining limits:** Actor IDs remain *caller-supplied synthetic fixtures*, not signed live bearer identities. PostgreSQL test owner bypasses production RLS; actual Render runtime DB role unverified. V2 advisory mutex does not integrate existing V1 Block/account update operations, so a real Block-versus-read linearizability guarantee is **not proven**. Ephemeral HMAC and AES keyring is not operational secret custody/restart recovery. Five-minute presentation-proof TTL is a test-only protocol choice needing B3 client review, **not** a founder-approved public product policy. No production encrypted delivery, end-to-end encryption, Android/device test or safe old-V1-reader cutover.
 - **Merge gate still OPEN:** This evidence edit changes the PR HEAD. Confirm both matching + PG16 jobs SUCCESS at the new exact head and diff still six files; only then merge and verify post-merge main CI separately. Do not declare B2b complete on prior code-head proof alone.
 
+
+
+### B2b final PR-head and post-merge certification — 2026-11-16
+
+- **Implementation PR #38:** [GitHub](https://github.com/rayadinaveen98-ship-it/bridge/pull/38), final SHA `8d7aeb6fd55ff9de4f69b4b96689fd0d7ed5b9c9`. Exact [PR Foundation #43853932621](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43853932621) and [branch push Foundation #43853923645](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43853923645): BOTH matching and PostgreSQL-integration jobs **SUCCESS** on each final evidence-updated code head.
+- **Merged main implementation:** `1a9ae0ba529981ff7dfe11cb77d50398ccd1838d`. Exact [post-merge main Foundation #43854181665](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43854181665): **matching SUCCESS / postgres-integration SUCCESS**.
+- **Code/testing:** New B2b `b2_delivery.test.mjs` **12/12 TAP PASS** (11 nested + one parent) and `b2_delivery_races.test.mjs` **9/9 TAP PASS** (8 nested + one parent); **21 passing TAP results / 19 nested tests**, zero failures or skips. Existing B2a write/Block/expiry, B1a 0008 schema/backup-restore, B1b cryptography and older V1/V2 suites all passed final CI. No actual physical Android/real user test.
+- **Enforced exact six-file implementation scope:** new `private_delivery_repository.mjs`, new 2 named synthetic PG16 test files, `apps/api/package.json` named test-only script, additive Foundation PG16 step and this existing evidence document; no other source/SQL/Android/hosted-data changes.
+- **Qualifying gates remain:** signed LIVE cursor and unread proof/HMAC methods are **synthetic-only**; caller actor IDs do not originate from verified bearer tokens. Original 7d cap and firstAck+15m intersection are enforced in disconnected tests but the precise live protocol, including a **test-only 5-minute presentation-proof freshness policy**, still needs B3 client/security decision. V1 Block/account update races are not fully serialized with the disconnected V2 mutex, production PostgreSQL role/RLS is unverified, test keys are not durable, no independent security review or paid KMS approved, and old V1 endpoint privacy firewall is not implemented. No hosted B2b read, ack, recovery or E2EE feature exists.
+- **Product/release:** B2b now classified **IMPLEMENTED / TESTED IN DISPOSABLE PG16 / MERGED / POSTMERGE CI VERIFIED / NOT DEPLOYED**. Mutual Keep/free direct reconnect and free no-history invariant preserved. B3 backend interface/old route design, V2-07/09 secure-case/history linkage, Android V2-10, G1/V2-11 privacy-safe cutover and runtime role/key decisions remain separately authorized. R0 physical devices acceptance OPEN. Final V2-16 138-case What If? audit LAST.
+- **Follow-up document step:** This entry is a one-file documentation-only certification; it does not reauthorize B2b implementation changes or begin B3. Its own PR-head and post-merge main CI must also pass before it is marked documentation-closed.
