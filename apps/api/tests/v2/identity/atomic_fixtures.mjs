@@ -3,6 +3,8 @@
  * All fixtures live in acknowledged localhost PG16 bridge_test, never Neon.
  */
 import {randomBytes} from "node:crypto";
+import {encryptSyntheticPrivate}
+  from "../../../src/messaging/private_crypto.mjs";
 import {createDisposablePrivateAtomicFacade}
   from "../../../src/v2/private_atomic_facade.mjs";
 import {
@@ -89,4 +91,45 @@ export async function actualLegacySnapshot(pool){
     fixture:legacy,
     before:await legacySnapshot(pool,legacy)
   };
+}
+
+/**
+ * Synthetic-only historical UNREAD fixture. New AAD is authenticated under a
+ * fresh test nonce/DEK; adjust BOTH source and envelope accepted timestamps.
+ * Preserve database CHECKs, original 7-day cap and no live/Neon access.
+ */
+export async function ageUnread(pool,a,messageId,acceptedAt,plaintext){
+  const at=acceptedAt instanceof Date?acceptedAt:new Date(acceptedAt);
+  const f=a.f;
+  const blob=encryptSyntheticPrivate({
+    plaintext,
+    metadata:{
+      policyVersion:"bridge-v2",payloadVersion:1,purpose:"unread",
+      messageId,conversationId:a.room,
+      senderId:f.people[0],recipientId:f.people[1],
+      acceptedAtMs:at.getTime()
+    },
+    keyProvider:a.w.keyProvider,wrapNonceRegistry:a.w.wrapNonceRegistry,
+    keyId:a.w.keyRefs.unread.keyId,keyVersion:a.w.keyRefs.unread.version
+  });
+  const c=await pool.connect();
+  try{
+    await c.query("BEGIN");
+    await c.query("UPDATE bridge_v2_secure_messages SET accepted_at=$2 WHERE id=$1",
+      [messageId,at]);
+    const updated=await c.query(
+      "UPDATE bridge_v2_secure_unread SET accepted_at=$2,expires_at=$3,"+
+      "ciphertext=$4,data_iv=$5,data_tag=$6,wrapped_dek=$7,wrap_iv=$8,"+
+      "wrap_tag=$9,kek_id=$10,kek_version=$11,cipher_suite=$12,"+
+      "aad_version=$13 WHERE message_id=$1 RETURNING id",
+      [messageId,at,new Date(at.getTime()+7*86400000),
+       blob.ciphertext,blob.dataIv,blob.dataTag,blob.wrappedDek,
+       blob.wrapIv,blob.wrapTag,blob.kekId,blob.kekVersion,
+       blob.cipherSuite,blob.aadVersion]
+    );
+    if(updated.rows.length!==1)throw Error("synthetic aged envelope absent");
+    await c.query("COMMIT");
+    return updated.rows[0].id;
+  }catch(e){await c.query("ROLLBACK");throw e;}
+  finally{c.release();}
 }
