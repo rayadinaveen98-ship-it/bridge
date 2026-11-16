@@ -102,7 +102,7 @@ export function classifyContractRoute({method,pathname}={}){
 export function trustedSubjectMatches({verifiedSubject,account}={}){
   return typeof verifiedSubject==="string"&&verifiedSubject.length>0&&
     verifiedSubject.length<=256&&
-    account&&typeof account==="object"&&!Array.isArray(account)&&
+    !!account&&typeof account==="object"&&!Array.isArray(account)&&
     isId(account.id)&&account.auth_subject===verifiedSubject&&
     account.status==="active";
 }
