@@ -42,10 +42,7 @@ test("V2-05A C05-01..19, 27/28: synthetic-only Keep, concurrency and transcript 
         [f.room]),before);
     });
     await t.test("C05-02 Keep pending never extends 30-minute random idle clock",async()=>{
-      const f=await randomRoom(pool),before=await single(pool,
-        "SELECT last_accepted_at,idle_expires_at FROM bridge_conversations WHERE id=$1",
-        [(await randomRoom(pool)).room]);
-      // The observed other-room clock is irrelevant: check this one precisely.
+      const f=await randomRoom(pool);
       const self=await single(pool,
         "SELECT last_accepted_at,idle_expires_at FROM bridge_conversations WHERE id=$1",[f.room]);
       await vote(keep,f,0);
