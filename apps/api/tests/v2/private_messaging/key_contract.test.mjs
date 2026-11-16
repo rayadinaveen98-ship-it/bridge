@@ -88,6 +88,9 @@ test("C08-16 separate purpose KEKs, no aliasing or exposed keyring serialization
   assert.throws(()=>t.provider.registerKey({
     purpose:"live",keyId:"b1b-live-v1",version:1,key:Buffer.from(raw)
   }),denied,"same KEK bytes cannot be reused in a different purpose");
+  assert.throws(()=>t.provider.registerKey({
+    purpose:"unread",keyId:"b1b-unread-v2",version:2,key:Buffer.from(raw)
+  }),denied,"same KEK bytes cannot be relabelled as a new version");
   assert.throws(()=>t.provider.getKek({...REF,purpose:"cursor"}),denied);
   assert.throws(()=>t.provider.getKek({...REF,purpose:"recovery"}),denied);
   assert.equal(JSON.stringify(t.provider),"{}");
