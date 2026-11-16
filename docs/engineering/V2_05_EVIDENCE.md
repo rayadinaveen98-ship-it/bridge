@@ -69,7 +69,7 @@
 
 1. New V2-05A pure Keep/direct tests and PostgreSQL-16 tests pass.
 2. Original matching, backend HTTP/auth, V2-01 contracts, V2-02 policy, V2-03 migration+restore, V2-04A clock and PostgreSQL tests all pass.
-3. Nine changed paths (the four new source modules, fixture plus 4 test files, npm+workflow and this document = **11 exact paths**) are within founder-authorized areas; no existing V1/V2-04A/SQL/Flutter source changes. Confirm actual paths from diff rather than relying on this count.
+3. Twelve changed paths (four new source modules, five test/fixture files, npm script, CI workflow and this evidence document) must remain within founder-authorized areas; no existing V1/V2-04A/SQL/Flutter source changes. Confirm the exact paths from the PR diff.
 4. Tests create only disposable synthetic rows; no live Neon connection or private real test accounts used.
 5. If any test or source-diff gate fails, **DO NOT MERGE**; update branch, rerun CI and record actual evidence.
 6. Rollback of the disconnected source is a PR revert. No live data reverse migration or release is needed.
