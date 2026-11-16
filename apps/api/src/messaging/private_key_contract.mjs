@@ -102,9 +102,11 @@ export function createInMemoryTestKeyProvider() {
       live();validateKeyRef(ref);
       const raw=ref?.key;
       if(!Buffer.isBuffer(raw)||raw.length!==DATA_KEY_BYTES||keys.has(id(ref)))cryptoDeny();
-      // Explicitly reject sharing identical KEK bytes across LIVE and UNREAD.
+      // Refuse duplicate KEK bytes under ANY ID, version or purpose. A
+      // rotated key must be genuinely new so a fresh IV namespace cannot
+      // accidentally reuse the same AES-GCM key material.
       for(const old of keys.values()) {
-        if(old.purpose!==ref.purpose&&timingSafeEqual(old.key,raw))cryptoDeny();
+        if(timingSafeEqual(old.key,raw))cryptoDeny();
       }
       keys.set(id(ref),{purpose:ref.purpose,key:Buffer.from(raw),retired:false});
       return true;
