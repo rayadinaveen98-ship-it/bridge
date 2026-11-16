@@ -53,5 +53,21 @@ jobs:
           psql "$BRIDGE_TEST_DATABASE_URL" -X -v ON_ERROR_STOP=1 -f database/migrations/0003_lab_credentials.sql
       - name: Install server database driver
         run: npm install --prefix apps/api --no-package-lock --no-audit --no-fund
+      - name: V2-03 expand-only migration rehearsal (disposable bridge_test)
+        env:
+          BRIDGE_TEST_MIGRATION_ACK: disposable-bridge_test-only
+        run: npm run test:v2:migrations --prefix apps/api
+      - name: V2-03 disposable database backup and restore certification
+        run: |
+          set -euo pipefail
+          pg_dump "$BRIDGE_TEST_DATABASE_URL" -Fc -f "$RUNNER_TEMP/bridge_v2_disposable.dump"
+          psql "$BRIDGE_TEST_DATABASE_URL" -X -v ON_ERROR_STOP=1 -c "CREATE DATABASE bridge_restore_test"
+          RESTORE_URL="postgresql://bridge_test:bridge_test_only@127.0.0.1:5432/bridge_restore_test"
+          pg_restore --dbname "$RESTORE_URL" --no-owner --no-acl "$RUNNER_TEMP/bridge_v2_disposable.dump"
+          test "$(psql "$RESTORE_URL" -X -Atc "SELECT count(*) FROM bridge_schema_migrations")" = "4"
+          test "$(psql "$RESTORE_URL" -X -Atc "SELECT count(*) FROM pg_tables WHERE schemaname='public' AND tablename LIKE 'bridge_%'")" = "34"
+          test "$(psql "$RESTORE_URL" -X -Atc "SELECT count(*) FROM bridge_messages WHERE body LIKE 'Synthetic fixture %'")" = "4"
+          test "$(psql "$RESTORE_URL" -X -Atc "SELECT count(*) FROM bridge_active_match_slots")" = "2"
+          psql "$BRIDGE_TEST_DATABASE_URL" -X -v ON_ERROR_STOP=1 -c "DROP DATABASE bridge_restore_test"
       - name: Run full API suite against disposable PostgreSQL
         run: npm test --prefix apps/api
