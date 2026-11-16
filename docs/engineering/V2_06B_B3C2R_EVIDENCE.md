@@ -1,6 +1,6 @@
 # Bridge B3c-2R — Disposable PG16/PG18 evidence ledger
 
-**Status: TESTED on disposable PG16 and PG18 / final exact-head PR and postmerge CI pending / NOT HOSTED.**  
+**Status: B3c-2R TESTED / MERGED / FINAL PR-HEAD CI VERIFIED on PG16+PG18 and Foundation; POSTMERGE MAIN CI INDEPENDENTLY UNVERIFIED; NOT HOSTED.**  
 Founder-approved scope: design/docs + disposable 16/18 tests only; no Neon/Render/Android/tester data changes.  
 Pinned baseline: `main@ad01d815ef1cd407ba50cb0b15df68412abf6b8e`.
 
@@ -22,7 +22,7 @@ Pinned baseline: `main@ad01d815ef1cd407ba50cb0b15df68412abf6b8e`.
 - [x] Strict loopback, DB/user/password, CI/GitHub Actions and role ACK guarded before DDL; independent Docker service cluster ID and PostgreSQL major 16/18 attested; no hosted connection.
 - [x] Five independently authenticated synthetic roles tested for permission denial, default-deny RLS, canary scoped row, invoker view, arbitrary actor GUC, SET ROLE/DDL denial and FORCE RLS.
 - [x] Teardown drops the generated role/schema and checks no generated role/schema remains; both disposable containers terminated on success. Only synthetic rows were created.
-- [ ] Final code SHA/review and main CI independently verified before marking certified.
+- [x] Final PR-HEAD exact seven-file diff verified at `064703fbd3bc65698e7888ead9b0b82fd102763e`, matrix/PG16+PG18 both jobs SUCCESS in [#43937594699](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43937594699), Foundation matching+PG16 both SUCCESS in [#43937594478](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43937594478). PR [#54](https://github.com/rayadinaveen98-ship-it/bridge/pull/54) merged at `d6e1c9133969a82a26584e8706c63407163d6c00`. **Separate postmerge `main` Actions-run result not independently available through the connector and is NOT claimed.**
 
 No B3c-2R hosted deployment is authorized. This cannot prove the real Neon API runtime role was remediated: **HOLD V2 remains in effect**. B3c-3, V2-07..V2-16, R0 phone/tablet QA remain open.
 
@@ -31,4 +31,12 @@ No B3c-2R hosted deployment is authorized. This cannot prove the real Neon API r
 - [Initial matrix run #43937063679](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43937063679) failed in both disposable jobs because a cleanup-state variable was declared `const` before being set to true after schema creation. The `finally` block correctly refused to certify incomplete cleanup. The containers were disposable and destroyed; no hosted database or existing QA fixture was touched.
 - A **one-file** guarded fixture repair at `e10a5ad3fe229bb8b97b13e3be158a54baaaefb5` changed the cleanup tracking to mutable. The subsequent separate [PG16/18 matrix #43937238128](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43937238128) passed both jobs with **11/11 TAP each**. The [Foundation regression #43937238009](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43937238009) passed both jobs.
 - These PASS results certify the narrow **synthetic canary permission model**; they DO NOT certify the real 0008 SQL against PG18, user-specific RLS or actual hosted Neon privilege remediation. Actual Render V2 privileges remain **HOLD_V2**.
-- **Final paperwork pending:** verify the exact amended docs SHA on both PR jobs and branch jobs, then mark ready for review; merge only on independently verified CI. Postmerge main CI requires its own verification; never infer that from a PR run.
+- **Verified closeout:** the final PR-head matrix and Foundation jobs all passed on head `064703f`; implementation PR #54 merged at `d6e1c91` after CI. The GitHub connector does not expose a separate postmerge main workflow run through its PR-only lookup; mark that particular evidence requirement OPEN, do not invent a PASS.
+
+## Founder-facing closeout and next role gate (2026-11-17)
+
+**Proved:** PostgreSQL 16 and PostgreSQL 18 disposable independent LOGIN-role boundary behavior for V1, V2, case and retention canaries; 11/11 TAP on each. The one-row positive policy is deliberately synthetic and must not be adapted as a user authorization policy. No hosted role, database schema, permissions, keys or Android changes were performed.
+
+**Not proved:** production actor-specific RLS, the real 0008 schema on PG18 with a nonowner writer, running Render role remediation, Neon table/sequence grants or V1/V2 HTTP client firewall. Hosted `HOLD_V2` from B3c-2 stands.
+
+**Next separate design approval:** prepare actual 0008 PG18 disposable, trusted JWT actor current-transaction policy and least-privilege data-path proof, then propose an exact non-destructive hosted role change package for independent founder approval. Do not spend on KMS, apply live DDL, deploy code or modify Render environment in this stage.
