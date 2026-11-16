@@ -41,21 +41,27 @@ export function validateEnvironment({
     !["","5432"].includes(parsed.port)||parsed.search||parsed.hash)throw refused();
   return Object.freeze({url,hostname:parsed.hostname});
 }
-function confirmedCiDockerServiceAddress(host){
-  if(typeof host!=="string"||!host||host.length>48)return false;
-  // Docker port publishing maps caller 127.0.0.1 to a PG service with a
-  // distinct bridge IP. Authenticate the actual server IP against the single
-  // GitHub Actions postgres:16 service container instead of trusting RFC1918.
+async function confirmedCiDockerServiceCluster(admin,host){
+  if(typeof host!=="string"||host.length===0)return false;
+  // CI maps 127.0.0.1:5432 to a docker bridge IP, not necessarily loopback
+  // from the server's perspective. Identify the SAME PostgreSQL cluster by
+  // the immutable cluster system identifier using two independent routes:
+  // the guarded TCP PG client and the single postgres:16 service container.
+  // Never display a system identifier, hostname, password or remote DSN.
   try{
     const ids=execFileSync("docker",
       ["ps","--filter","ancestor=postgres:16","--format","{{.ID}}"],
       {encoding:"utf8",timeout:4000}).trim().split(/\s+/).filter(Boolean);
     if(ids.length!==1||!/^[a-f0-9]{12,64}$/.test(ids[0]))return false;
-    const ips=execFileSync("docker",
-      ["inspect","--format",
-       "{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}",ids[0]],
-      {encoding:"utf8",timeout:4000}).trim().split(/\s+/).filter(Boolean);
-    return ips.length>=1&&ips.includes(host);
+    const byContainer=execFileSync("docker",
+      ["exec",ids[0],"psql","-U","bridge_test","-d","bridge_test",
+       "-X","-A","-t","-c",
+       "SELECT system_identifier::text FROM pg_control_system()"],
+      {encoding:"utf8",timeout:4000}).trim();
+    const byClient=(await admin.query(
+      "SELECT system_identifier::text AS sid FROM pg_control_system()"
+    )).rows[0]?.sid;
+    return /^[0-9]{15,22}$/.test(byContainer)&&byClient===byContainer;
   }catch{return false;}
 }
 async function assertConnectedOwner(admin,conf){
@@ -69,7 +75,7 @@ async function assertConnectedOwner(admin,conf){
   )).rows[0];
   if(v?.db!=="bridge_test"||v.usr!=="bridge_test"||v.sess!=="bridge_test")
     throw Error("b3c1_preflight_identity_mismatch");
-  if(!confirmedCiDockerServiceAddress(v.host))
+  if(!(await confirmedCiDockerServiceCluster(admin,v.host)))
     throw Error("b3c1_preflight_pg16_service_attestation_failed");
   if(Math.floor(v.version/10000)!==16||v.recovery!==false)
     throw Error("b3c1_preflight_pg16_or_recovery_mismatch");
