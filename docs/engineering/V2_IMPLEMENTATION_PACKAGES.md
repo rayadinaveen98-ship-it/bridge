@@ -174,6 +174,18 @@ The **package sequence and PR boundaries are approved for planning**, but every 
 
 **Release/rollback:** no hosted V2 ID until G1 firewall and key/RLS audit. A future privacy cutover is one-way safe-deny/forward-fix; never roll back to broad V1 history. R0 physical device acceptance OPEN. Final complete 138-case What If? remains **V2-16 LAST**.
 
+### Bridge V2-06B / B3c-1 — Independent PostgreSQL16 role/RLS security proof (SCOPE PROPOSED ONLY)
+
+**Planning baseline:** `main@fbbea78bca3ce8ca5f2c48152bc4008f723e089d`, [Foundation #43903076373](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43903076373) matching and PG16 SUCCESS; B3c-0 [documentation PR #49](https://github.com/rayadinaveen98-ship-it/bridge/pull/49) merged and independently verified. B3c-1 has NO approved/implemented source work yet.
+
+**Exact planned SEVEN-path test-only package:** [B3c-1 implementation brief](V2_06B_B3C1_IMPLEMENTATION_BRIEF.md), [24-case RLS attack matrix](V2_06B_B3C1_RLS_ATTACK_MATRIX.md). NEW `apps/api/tests/v2/privileges/fixtures.mjs`; NEW `rls_nonowner.test.mjs`, `privilege_inheritance.test.mjs`, `view_function_boundary.test.mjs` in same directory; add only `test:v2:privileges:db` in `apps/api/package.json`; add one PostgreSQL16 integration step in `.github/workflows/foundation.yml`; NEW `docs/engineering/V2_06B_B3C1_EVIDENCE.md`. **Implementation requires separate founder authorization.** This documentation PR changes only two new docs, `docs/ROADMAP.md` and this package plan.
+
+**Boundary:** acknowledge loopback `bridge_test` PostgreSQL16 before creating any synthetic login/group role or canary object; require separate role-DDL acknowledgement; use independently authenticated NONOWNER sessions, not `SET ROLE` by disposable superuser. Prove existing 0008 three tables remain default-deny under granted SELECT; non-superuser owner and FORCE RLS canary, inherited privileges and PUBLIC effective grants, normal owner-view/`security_invoker` and SECURITY DEFINER hazards on synthetic canary; verify complete teardown, original test-only four-message QA integrity and all previous CI regression jobs. No policies/FORCE on existing V2 tables, no source migrations.
+
+**STOP if** any remotely reachable DB, unforeseen role/group leak, privilege drift, view/function leak outside canary, security-test skip, original test regression or >7 file diff. Test result cannot be promoted to claim actual Neon grants or Render runtime safety.
+
+**Next independent gates:** B3c-2 founder-approved redacted read-only real hosted runtime role/grants audit; B3c-3 provider/cost/key rotation/nonce/recovery selection and separate development. G1/V2-11 firewall, V2-10 Android, R0 physical acceptance and V2-16 final What If? remain mandatory. **No paid/hosted service action authorized by this planning.**
+
 ### V2-07 — Report tokens and case evidence isolation
 **Paths:** `apps/api/src/safety/*`, restricted case evidence data access, tests; reviewer role/RBAC defined but no real-staff claim.  
 **Scope:** hashed 7d reporter-bound opaque post-end token; report action validates participation; capture minimum needed messages/metadata **transactionally** while content exists; encrypted scoped case snapshot, reviewer-only logged access; late reports can include user details but cannot invent purged evidence.  
