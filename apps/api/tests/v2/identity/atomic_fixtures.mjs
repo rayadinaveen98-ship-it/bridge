@@ -23,7 +23,7 @@ export async function bindSyntheticSubjects(pool,people){
   }
 }
 export async function makeAtomic(pool,{
-  kind="direct",testGate=null
+  kind="direct",testGate=null,facadePool=pool
 }={}){
   const keep=repos(pool).keep;
   const f=kind==="direct"?await connected(pool,keep):await randomRoom(pool);
@@ -32,7 +32,7 @@ export async function makeAtomic(pool,{
   const cursorKey=randomBytes(32);
   const presentationKey=randomBytes(32);
   const recoveryKey=randomBytes(32);
-  const facade=createDisposablePrivateAtomicFacade(pool,{
+  const facade=createDisposablePrivateAtomicFacade(facadePool,{
     authentication:keys.authentication,keyProvider:w.keyProvider,
     wrapNonceRegistry:w.wrapNonceRegistry,keyRefs:w.keyRefs,
     cursorKey,presentationKey,recoveryKey,testGate
