@@ -1,6 +1,6 @@
 # Bridge V2-05A — Mutual Keep and Free Direct Session Evidence
 
-**Status:** IMPLEMENTED ON ISOLATED BRANCH — CI VERIFICATION PENDING.  
+**Status:** V2-05A DISCONNECTED ENGINE IMPLEMENTED / DISPOSABLE PG16 CI VERIFIED. Final PR-head and post-merge verification tracked independently; LIVE NOT ACTIVATED.  
 **Founder authority:** Scope approved from [V2-05 brief](V2_05_IMPLEMENTATION_BRIEF.md), docs PR #23, **disconnected source and synthetic PostgreSQL CI only**.  
 **Base:** `main@47d938f492c7377bffd7163c8c7920582db5cadc` (documentation-only PR #23 merged).  
 **Non-authorizations:** No live Neon queries, migrations, data, role changes; no Render/Android API integration, paid services, billing, message deletion, public beta or V2-06. R0 real Android acceptance remains OPEN. Comprehensive What If? remains at final V2-16.
@@ -35,20 +35,20 @@
 
 | Requirement | Evidence route | Current status |
 |---|---|---|
-| C05-01/02 | First Keep remains pending and does not advance source clock | Test written |
-| C05-03/04 | Withdraw before second Keep; re-Keep requires two current votes | Test written |
-| C05-05/06 | Concurrency and idempotent replay produce one relation+D1 | Test written |
-| C05-07/08 | Expiry and delayed advisory lock deny second Keep, DB authoritative | Test written |
-| C05-09/10 | End/expiry wins, late Keep cannot revive source | Test written |
-| C05-11/12/13 | Block, sanction, outsider and missing/legacy marker deny | Test written |
-| C05-14/15/16 | Original kind/message bytes/source pointer preserved; direct fresh UUID, sequence 1 | Test written |
-| C05-17/18/19 | Own match cleanup, body-free replay metadata, repeated pair uses same relation | Test written |
-| C05-20/21 | One OPEN segment, exact direct idle boundary; free relationship survives | Test written |
-| C05-22/23 | Direct End doesn't unmatch; new free D2 without previous timeline | Test written |
-| C05-24/25/26 | Block/unmatch/eligibility, correct two-member FK mapping | Test written |
-| C05-27/28 | Five injected transaction failures roll back fully; original 4-message fixture unchanged | Test written |
-| C05-29 | All baseline V1 API, V2-01..04, PostgreSQL migration/restore CI still green | **PENDING CI** |
-| C05-30 | Only approved disconnected source/tests/CI/docs, no live server/DB | **PENDING final diff** |
+| C05-01/02 | First Keep remains pending and does not advance source clock | PASS in tested PR/push CI |
+| C05-03/04 | Withdraw before second Keep; re-Keep requires two current votes | PASS in tested PR/push CI |
+| C05-05/06 | Concurrency and idempotent replay produce one relation+D1 | PASS in tested PR/push CI |
+| C05-07/08 | Expiry and delayed advisory lock deny second Keep, DB authoritative | PASS in tested PR/push CI |
+| C05-09/10 | End/expiry wins, late Keep cannot revive source | PASS in tested PR/push CI |
+| C05-11/12/13 | Block, sanction, outsider and missing/legacy marker deny | PASS in tested PR/push CI |
+| C05-14/15/16 | Original kind/message bytes/source pointer preserved; direct fresh UUID, sequence 1 | PASS in tested PR/push CI |
+| C05-17/18/19 | Own match cleanup, body-free replay metadata, repeated pair uses same relation | PASS in tested PR/push CI |
+| C05-20/21 | One OPEN segment, exact direct idle boundary; free relationship survives | PASS in tested PR/push CI |
+| C05-22/23 | Direct End doesn't unmatch; new free D2 without previous timeline | PASS in tested PR/push CI |
+| C05-24/25/26 | Block/unmatch/eligibility, correct two-member FK mapping | PASS in tested PR/push CI |
+| C05-27/28 | Five injected transaction failures roll back fully; original 4-message fixture unchanged | PASS in tested PR/push CI |
+| C05-29 | All baseline V1 API, V2-01..04, PostgreSQL migration/restore CI still green | PASS in tested PR/push CI |
+| C05-30 | Only approved disconnected source/tests/CI/docs, no live server/DB | PASS: only 12 approved paths in reviewed diff |
 
 **Limitations:** tests of the direct 30-minute exact millisecond threshold are pure deterministic tests; PG16 tests use explicit past/future time travel and row locks. Real HTTP requests, SSE authorization, encryption, 7-day unread, 90-day bilateral history, physical-device resume and live-user messaging **are not implemented or certified by these tests**.
 
@@ -75,3 +75,19 @@
 6. Rollback of the disconnected source is a PR revert. No live data reverse migration or release is needed.
 
 **Exit classification if CI succeeds and PR merges:** `V2-05A IMPLEMENTED / DISPOSABLE CI VERIFIED / HOSTED MUTUAL-DIRECT V2 NOT ACTIVATED`. R0 OPEN; V2-06 not started. Live Neon schema application, trusted policy integration, Android flow, old-message-history endpoint cutover and Render deployment all require distinct founder decisions.
+
+
+## 6. Verified CI evidence on initial successful code head — 2026-11-16
+
+**Tested code head:** `80805e36925792883cdf13b91549d2ad8192bc14` (before this evidence-document update).
+
+- [GitHub Actions PR run 43820315626](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43820315626): **matching SUCCESS, postgres-integration SUCCESS**.
+- [GitHub Actions push run 43820308990](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43820308990): **matching SUCCESS, postgres-integration SUCCESS**.
+- V2-05A new pure tests: 1 Keep decision test and 2 direct-session-clock tests PASS.
+- V2-05A new PostgreSQL tests: **22/22** Keep/withdraw/source/rollback suite checks PASS (21 nested cases + successful parent); **13/13** free-direct-session/expiry/unmatch checks PASS (12 nested + successful parent).
+- Existing matching 12 PASS; backend API 34 PASS, 4 SKIP; V2-01 contracts 20 PASS; V2-02 actual policy 68 PASS; V2-04A pure session clocks 6 PASS. Original V2-03 disposable schema rehearsal (15 checks), PG16 backup/restore, full API PostgreSQL regression and V2-04A PostgreSQL session test step all PASS.
+- A first CI run **failed one C05-01 test-only assertion**, because the earlier V2-03 migration rehearsal intentionally left unrelated synthetic direct-session rows in the disposable DB. Corrected to count only D1 rows sourced from the **specific** test room; all remaining 20 Keep cases were already passing. No application policy, schema or live data was changed for this fix.
+- Diff inspected before evidence update: **12 paths**, exclusively four new disconnected source files, five synthetic test/fixture files, named npm test scripts, existing CI workflow test additions and this evidence document. No V1 backend or V2-04A implementation file modified.
+- No Neon, Render, Android, billing, retention or live QA operations were executed in this implementation. **A successful integration test in disposable PostgreSQL is NOT a physical Android pass or live server proof.**
+
+**Governance:** The evidence-document update changes the PR HEAD. The last-mile CI must rerun successfully at the new exact HEAD, followed by merge and main-branch CI verification. If either fails, do not certify V2-05A complete. R0 remains OPEN and V2-06 remains NOT STARTED.
