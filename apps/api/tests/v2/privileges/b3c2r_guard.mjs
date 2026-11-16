@@ -111,7 +111,8 @@ export async function withDisposableRoleLab(run) {
   const keys=Object.fromEntries(["migrator","v1","v2","reviewer","retention"].map(k=>
     [k,randomBytes(24).toString("hex")]
   ));
-  const opened={},created=[],schemaCreated=false;
+  const opened={},created=[];
+  let schemaCreated=false;
   let before,cleanupFailed=false;
   try {
     await attestDisposableCluster(admin,env.major);
