@@ -114,8 +114,8 @@ test("V2-06A M06 disconnected synthetic PG16 metadata/unread proofs",{
         actorId:f.people[0],clientMessageId:uuid(),opaqueFixture:fixture()});
       const id=(await repo.unreadMetadata({actorId:f.people[1]})).at(-1).id;
       await pool.query("UPDATE bridge_unread_deliveries SET "+
-        "accepted_at=clock_timestamp()-interval '8 days',"+
-        "expires_at=clock_timestamp()-interval '1 day' WHERE id=$1",[id]);
+        "accepted_at=now()-interval '8 days',"+
+        "expires_at=now()-interval '1 day' WHERE id=$1",[id]);
       assert.equal((await repo.unreadMetadata({actorId:f.people[1]}))
         .some(x=>x.id===id),false);
       await assert.rejects(repo.acknowledge({envelopeId:id,actorId:f.people[1]}),denied);
