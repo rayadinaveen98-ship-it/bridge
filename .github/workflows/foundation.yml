@@ -110,3 +110,7 @@ jobs:
         env:
           BRIDGE_TEST_MIGRATION_ACK: disposable-bridge_test-only
         run: npm run test:v2:private-accept:db --prefix apps/api
+      - name: B2b disconnected current LIVE, recipient UNREAD, bounded ack and recovery PG16 tests (NOT LIVE)
+        env:
+          BRIDGE_TEST_MIGRATION_ACK: disposable-bridge_test-only
+        run: npm run test:v2:private-delivery:db --prefix apps/api
