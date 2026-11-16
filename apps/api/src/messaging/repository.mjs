@@ -42,7 +42,7 @@ async function accountsAndBlocks(c,members) {
 async function lockRoom(c,conversationId,actorId) {
   const q=await c.query(
     "SELECT id,kind,state,policy_version,v2_session_role,legacy_qa,connection_id,"+
-    "last_accepted_at,idle_expires_at,next_message_sequence "+
+    "match_session_id,last_accepted_at,idle_expires_at,next_message_sequence "+
     "FROM bridge_conversations WHERE id=$1 FOR UPDATE",[conversationId]);
   const room=q.rows[0];
   if(!room||!checkId(actorId))deny();
@@ -52,6 +52,21 @@ async function lockRoom(c,conversationId,actorId) {
   if(participants.length!==2||participants.some(p=>p.left_at!==null))deny();
   const members=participants.map(p=>p.account_id);
   let relation=null,segment=null;
+  if(room.kind==="random"){
+    if(!room.match_session_id)deny();
+    const match=(await c.query(
+      "SELECT state,member_low,member_high FROM bridge_match_sessions "+
+      "WHERE id=$1 FOR UPDATE",[room.match_session_id])).rows[0];
+    const membersSorted=[...members].sort();
+    if(!match||match.state!=="active"||match.member_low!==membersSorted[0]||
+       match.member_high!==membersSorted[1])deny();
+    const slots=(await c.query(
+      "SELECT account_id FROM bridge_active_match_slots "+
+      "WHERE match_session_id=$1 ORDER BY account_id FOR UPDATE",
+      [room.match_session_id])).rows;
+    if(slots.length!==2||slots[0].account_id!==membersSorted[0]||
+       slots[1].account_id!==membersSorted[1])deny();
+  }
   if(room.kind==="connection"){
     if(!room.connection_id)deny();
     relation=await lockV2Relationship(c,room.connection_id,actorId);
