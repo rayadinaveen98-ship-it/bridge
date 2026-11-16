@@ -108,7 +108,7 @@ Authoritative design aids: OWASP Cryptographic Storage Cheat Sheet; NIST SP 800-
 | C08-07 | Key wrapping/unwrapping uses independent KEK, distinct purpose-AAD, nonce and integrity tag |
 | C08-08 | Reused wrap nonce or invalid nonce size rejected by key-contract guard (not merely assumed improbable) |
 | C08-09 | CSPRNG random nonce generator and safe per-key volume/rotation plan documented and testable |
-| C08-10 | Deterministic length-prefixed AAD codec rejects ambiguity, empty required values and illegal versions |
+| C08-10 | Deterministic length-prefixed AAD codec rejects ambiguity, empty required values, illegal versions and noncanonical accepted-at timestamps; exactly one DB-derived millisecond representation must be used by all scopes |
 | C08-11 | Cryptographic integrity fails if encrypted data is relabeled to another message/recipient/scope |
 | C08-12 | Missing/retired-version provider simulation fail-closes; key ID is metadata, never key bytes |
 | C08-13 | Encrypt/decrypt input validation: malformed UTF-8, empty/oversized message, invalid Buffer/tag |
