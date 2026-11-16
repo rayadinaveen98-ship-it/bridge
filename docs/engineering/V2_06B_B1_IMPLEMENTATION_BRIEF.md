@@ -84,7 +84,7 @@ Authoritative design aids: OWASP Cryptographic Storage Cheat Sheet; NIST SP 800-
 | S08-06 | Existing 4-message/1-room/2-slot synthetic fixture SHA preserved across apply, rollback and reapply |
 | S08-07 | New message ID, client ID and per-room sequence unique; sender must be a participant by composite FK |
 | S08-08 | Secure-live row bound 1-to-1 with secure-message; missing/invalid FK rejected |
-| S08-09 | Unread one recipient per message, relation/account/message references valid; outsider/duplicate invalid rows denied |
+| S08-09 | Unread UNIQUE(message_id,recipient_id) and required relation/account/message foreign keys reject structural duplicates and missing references; **pair-membership/outsider authorization is explicitly a future B2 transactional test**, not a claim of B1 SQL enforcement |
 | S08-10 | Seven-day accepted-to-expiry maximum enforced by PG CHECK; malformed ack and state rejected |
 | S08-11 | AEAD structural fields (12-byte IV,16-byte tag, nonempty ciphertext, key/version) constrained at SQL level; structural checks do not prove actual encryption |
 | S08-12 | RLS flags ON on three new tables; no public grants/DB policies; non-owner default-deny verified under disposable role |
