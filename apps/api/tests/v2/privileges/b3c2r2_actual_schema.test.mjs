@@ -202,6 +202,14 @@ test("R2-02 actual 0008 PG18 signed-user/nonowner RLS boundaries",async t=>{
         assert.equal(await count(appClient,"bridge_v2_secure_messages"),0);
       }finally{await appClient.query("ROLLBACK");}
     });
+    await t.test("R2-14a expired context with a VALID HMAC still denies metadata",async()=>{
+      const token=signedToken(keys,{sub:subject(a)});
+      await signedTransaction(a,async client=>{
+        assert.equal((await client.query(
+          "SELECT "+names.schema+".verified_actor() actor")).rows[0].actor,null);
+        assert.equal(await count(client,"bridge_v2_secure_messages"),0);
+      },token,{expiredForTest:true});
+    });
     await t.test("R2-15 a mismatched/tampered JWT is denied BEFORE SQL context",async()=>{
       const signedA=signedToken(keys,{sub:subject(a)});
       await assert.rejects(signedTransaction(b,async()=>{},signedA),/jwt_subject_mismatch/);

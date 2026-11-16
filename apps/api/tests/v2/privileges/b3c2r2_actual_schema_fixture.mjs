@@ -151,7 +151,7 @@ function verifierFunction(schema){
   // own private schema; never give it user-data write authority or other access.
   return [
     "CREATE FUNCTION "+schema+".verified_actor() RETURNS uuid",
-    "LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog AS $rpr$",
+    "LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $rpr$",
     "DECLARE a text; e text; m text; k bytea; raw text; expected text;",
     "BEGIN",
     " a:=pg_catalog.current_setting('bridge.proof.actor',true);",
@@ -272,7 +272,7 @@ export async function withActualPg18SignedProof(work){
       names.schema+".verified_actor() AND "+own+")");
     appClient=await login(names.app,credentials.app);
     const keys=syntheticSigning();
-    async function signedTransaction(actor,callback,token=signedToken(keys,{sub:subject(actor)})){
+    async function signedTransaction(actor,callback,token=signedToken(keys,{sub:subject(actor)}),options={}){
       let auth;
       try{auth=verifyBearer(token,keys.authentication);}
       catch{throw testOnlyFailure("invalid_jwt");}
@@ -284,7 +284,8 @@ export async function withActualPg18SignedProof(work){
           "floor(extract(epoch from clock_timestamp()))::bigint epoch,current_user usr"
         )).rows[0];
         assert.equal(tx.usr,names.app);
-        const exp=String(Math.min(auth.expiresAt,Number(tx.epoch)+25));
+        const exp=String(options.expiredForTest?Number(tx.epoch)-1:
+          Math.min(auth.expiresAt,Number(tx.epoch)+25));
         const payload=actor+"|"+tx.tx+"|"+exp+"|"+names.app;
         const mac=createHmac("sha256",secret).update(payload).digest("hex");
         await appClient.query(
