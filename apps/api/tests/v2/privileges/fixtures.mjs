@@ -4,6 +4,7 @@
  * All role/schema DDL is guarded by two explicit ACKs and GitHub Actions CI.
  */
 import {createHash,randomBytes} from "node:crypto";
+import {execFileSync} from "node:child_process";
 import {readFile} from "node:fs/promises";
 import pg from "pg";
 import {digestSql} from "../migrations/runner.mjs";
@@ -40,8 +41,22 @@ export function validateEnvironment({
     !["","5432"].includes(parsed.port)||parsed.search||parsed.hash)throw refused();
   return Object.freeze({url,hostname:parsed.hostname});
 }
-function localAddress(address){
-  return address==="127.0.0.1"||address==="::1"||address==="::ffff:127.0.0.1";
+function confirmedCiDockerServiceAddress(host){
+  if(typeof host!=="string"||!host||host.length>48)return false;
+  // Docker port publishing maps caller 127.0.0.1 to a PG service with a
+  // distinct bridge IP. Authenticate the actual server IP against the single
+  // GitHub Actions postgres:16 service container instead of trusting RFC1918.
+  try{
+    const ids=execFileSync("docker",
+      ["ps","--filter","ancestor=postgres:16","--format","{{.ID}}"],
+      {encoding:"utf8",timeout:4000}).trim().split(/\s+/).filter(Boolean);
+    if(ids.length!==1||!/^[a-f0-9]{12,64}$/.test(ids[0]))return false;
+    const ips=execFileSync("docker",
+      ["inspect","--format",
+       "{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}",ids[0]],
+      {encoding:"utf8",timeout:4000}).trim().split(/\s+/).filter(Boolean);
+    return ips.length>=1&&ips.includes(host);
+  }catch{return false;}
 }
 async function assertConnectedOwner(admin,conf){
   const v=(await admin.query(
@@ -53,7 +68,7 @@ async function assertConnectedOwner(admin,conf){
     "SELECT rolsuper,rolbypassrls FROM pg_roles WHERE rolname=current_user"
   )).rows[0];
   if(v?.db!=="bridge_test"||v.usr!=="bridge_test"||
-    v.sess!=="bridge_test"||!localAddress(v.host)||
+    v.sess!=="bridge_test"||!confirmedCiDockerServiceAddress(v.host)||
     Math.floor(v.version/10000)!==16||v.recovery!==false||
     role?.rolsuper!==true)throw refused();
   const source=await readFile(SQL_SRC,"utf8");
