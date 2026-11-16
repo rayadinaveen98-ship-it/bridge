@@ -173,5 +173,105 @@ test("V2-06A M06 disconnected synthetic PG16 metadata/unread proofs",{
       await assert.rejects(repo.liveMetadata({
         conversationId:old.room,actorId:old.people[0]}),denied);
     });
+    await t.test("M06-14 deterministic tombstone advances LIVE sequence without exposing bytes",async()=>{
+      const f=await connected(pool,keep);
+      const msg=await repo.acceptSynthetic({conversationId:f.conversationId,
+        actorId:f.people[0],clientMessageId:uuid(),opaqueFixture:fixture()});
+      const before=await repo.liveMetadata({
+        conversationId:f.conversationId,actorId:f.people[1]});
+      assert.equal(before.messages[0].state,"present");
+      await pool.query("UPDATE bridge_message_payloads SET purged_at=now() WHERE message_id=$1",
+        [msg.id]); // test-only simulated prior data removal; NO retention service is activated
+      const after=await repo.liveMetadata({
+        conversationId:f.conversationId,actorId:f.people[1]});
+      assert.equal(after.messages[0].state,"tombstone");
+      assert.equal(after.messages[0].sequenceNumber,1);
+      assert.equal(JSON.stringify(after).includes("opaque-fixture"),false);
+      assert.deepEqual((await repo.liveMetadata({
+        conversationId:f.conversationId,actorId:f.people[1],cursor:after.cursor
+      })).messages,[]);
+    });
+    await t.test("M06-19..24 blocked inbox/ack race is denied; restored access cannot revive ended relation",async()=>{
+      const f=await connected(pool,keep);
+      await repo.acceptSynthetic({conversationId:f.conversationId,
+        actorId:f.people[0],clientMessageId:uuid(),opaqueFixture:fixture()});
+      const id=(await repo.unreadMetadata({actorId:f.people[1]})).at(-1).id;
+      await pool.query("INSERT INTO bridge_blocks(blocker_id,blocked_id) VALUES($1,$2)",
+        [f.people[0],f.people[1]]);
+      assert.equal((await repo.unreadMetadata({actorId:f.people[1]}))
+        .some(x=>x.id===id),false);
+      await assert.rejects(repo.acknowledge({envelopeId:id,actorId:f.people[1]}),denied);
+      assert.equal((await single(pool,
+        "SELECT state FROM bridge_unread_deliveries WHERE id=$1",[id])).state,"unread");
+      await direct.endRelationship({connectionId:f.connectionId,actorId:f.people[0]});
+      await pool.query("DELETE FROM bridge_blocks WHERE blocker_id=$1 AND blocked_id=$2",
+        [f.people[0],f.people[1]]);
+      await assert.rejects(repo.acknowledge({envelopeId:id,actorId:f.people[1]}),denied);
+    });
+    await t.test("M06-22 concurrent repeated first ack has one durable timestamp and token",async()=>{
+      const f=await connected(pool,keep);
+      await repo.acceptSynthetic({conversationId:f.conversationId,
+        actorId:f.people[0],clientMessageId:uuid(),opaqueFixture:fixture()});
+      const id=(await repo.unreadMetadata({actorId:f.people[1]})).at(-1).id;
+      const responses=await Promise.all([
+        repo.acknowledge({envelopeId:id,actorId:f.people[1]}),
+        repo.acknowledge({envelopeId:id,actorId:f.people[1]})
+      ]);
+      assert.deepEqual(responses.map(x=>x.status).sort(),
+        ["acknowledged","already_acknowledged"]);
+      assert.equal(responses[0].recoveryToken,responses[1].recoveryToken);
+      const row=await single(pool,
+        "SELECT state,acknowledged_at,recovery_token_digest FROM bridge_unread_deliveries WHERE id=$1",
+        [id]);
+      assert.equal(row.state,"acknowledged");
+      assert.ok(row.acknowledged_at);
+      assert.equal(row.recovery_token_digest.length,32);
+    });
+    await t.test("M06-24 recovery access expires at 15m independent of pending purge",async()=>{
+      const f=await connected(pool,keep);
+      await repo.acceptSynthetic({conversationId:f.conversationId,
+        actorId:f.people[0],clientMessageId:uuid(),opaqueFixture:fixture()});
+      const id=(await repo.unreadMetadata({actorId:f.people[1]})).at(-1).id;
+      const ack=await repo.acknowledge({envelopeId:id,actorId:f.people[1]});
+      await pool.query("UPDATE bridge_unread_deliveries SET "+
+        "accepted_at=now()-interval '1 hour',"+
+        "acknowledged_at=now()-interval '16 minutes',"+
+        "expires_at=now()+interval '6 days' WHERE id=$1",[id]);
+      await assert.rejects(repo.recoverMetadata({
+        envelopeId:id,actorId:f.people[1],recoveryToken:ack.recoveryToken
+      }),denied);
+      assert.equal((await repo.acknowledge({
+        envelopeId:id,actorId:f.people[1]})).recoveryToken,null);
+    });
+    await t.test("M06-25 envelope event contains IDs/sequence only, never fixture bytes",async()=>{
+      const f=await connected(pool,keep),raw=fixture();
+      const msg=await repo.acceptSynthetic({
+        conversationId:f.conversationId,actorId:f.people[0],
+        clientMessageId:uuid(),opaqueFixture:raw});
+      const out=await single(pool,
+        "SELECT payload FROM bridge_event_outbox WHERE event_key=$1",["message:"+msg.id]);
+      assert.equal(out.payload.messageId,msg.id);
+      assert.equal(out.payload.sequenceNumber,msg.sequenceNumber);
+      assert.deepEqual(Object.keys(out.payload).sort(),["messageId","sequenceNumber"]);
+      assert.equal(JSON.stringify(out.payload).includes(raw.toString()),false);
+    });
+    await t.test("M06-10 delayed lock past expiry refuses late acceptance",async()=>{
+      const f=await connected(pool,keep);
+      const c=await pool.connect();
+      try{
+        await c.query("BEGIN");
+        await c.query("SELECT pg_advisory_xact_lock($1)",[714411]);
+        const pending=repo.acceptSynthetic({
+          conversationId:f.conversationId,actorId:f.people[0],
+          clientMessageId:uuid(),opaqueFixture:fixture()});
+        await new Promise(resolve=>setTimeout(resolve,40));
+        await setRoomDeadline(pool,f.conversationId,-2000);
+        await c.query("COMMIT");
+        await assert.rejects(pending,denied);
+      }finally{
+        try{await c.query("ROLLBACK");}catch{}
+        c.release();
+      }
+    });
   } finally {await pool.end();}
 });
