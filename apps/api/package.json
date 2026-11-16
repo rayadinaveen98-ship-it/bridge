@@ -24,7 +24,8 @@
     "test:v2:private-schema": "node --test tests/v2/private_messaging/schema.test.mjs && node --test tests/v2/private_messaging/backup_restore.test.mjs",
     "test:v2:private-crypto": "node --test tests/v2/private_messaging/crypto.test.mjs tests/v2/private_messaging/key_contract.test.mjs",
     "test:v2:private-accept:db": "node --test tests/v2/private_messaging/b2_accept.test.mjs && node --test tests/v2/private_messaging/b2_races.test.mjs",
-    "test:v2:private-delivery:db": "node --test tests/v2/private_messaging/b2_delivery.test.mjs && node --test tests/v2/private_messaging/b2_delivery_races.test.mjs"
+    "test:v2:private-delivery:db": "node --test tests/v2/private_messaging/b2_delivery.test.mjs && node --test tests/v2/private_messaging/b2_delivery_races.test.mjs",
+    "test:v2:compatibility": "node --test tests/v2/compatibility/route_matrix.test.mjs tests/v2/compatibility/response_contract.test.mjs"
   },
   "dependencies": {
     "pg": "^8.13.0"
