@@ -36,7 +36,10 @@ export async function match(pool,people,{queue=true}={}){
     [id,matchId]);
   if(queue)for(const id of people)await pool.query(
     "INSERT INTO bridge_match_queue(account_id,request_id,state,expires_at,match_session_id)"+
-    " VALUES($1,$2,'reserved',clock_timestamp()+interval '2 minutes',$3)",
+    " VALUES($1,$2,'reserved',clock_timestamp()+interval '2 minutes',$3)"+
+    " ON CONFLICT(account_id) DO UPDATE SET request_id=EXCLUDED.request_id,"+
+    "state='reserved',expires_at=EXCLUDED.expires_at,"+
+    "match_session_id=EXCLUDED.match_session_id",
     [id,uuid(),matchId]);
   return matchId;
 }
