@@ -27,7 +27,8 @@
     "test:v2:private-delivery:db": "node --test tests/v2/private_messaging/b2_delivery.test.mjs && node --test tests/v2/private_messaging/b2_delivery_races.test.mjs",
     "test:v2:compatibility": "node --test tests/v2/compatibility/route_matrix.test.mjs tests/v2/compatibility/response_contract.test.mjs",
     "test:v2:identity": "node --test tests/v2/identity/signed_subject.test.mjs",
-    "test:v2:identity:db": "node --test tests/v2/identity/postgres_subject.test.mjs && node --test tests/v2/identity/race_subject.test.mjs"
+    "test:v2:identity:db": "node --test tests/v2/identity/postgres_subject.test.mjs && node --test tests/v2/identity/race_subject.test.mjs",
+    "test:v2:atomic-private:db": "node --test tests/v2/identity/atomic_write.test.mjs && node --test tests/v2/identity/atomic_delivery.test.mjs && node --test tests/v2/identity/atomic_races.test.mjs"
   },
   "dependencies": {
     "pg": "^8.13.0"

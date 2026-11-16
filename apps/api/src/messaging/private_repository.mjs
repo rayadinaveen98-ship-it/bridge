@@ -113,7 +113,7 @@ async function lockedContext(c,conversationId,actorId){
   }else deny();
   const accounts=(await c.query(
     "SELECT id,status,age_verified_at,safety_eligible FROM bridge_accounts "+
-    "WHERE id=ANY($1::uuid[]) ORDER BY id",[members])).rows;
+    "WHERE id=ANY($1::uuid[]) ORDER BY id FOR SHARE",[members])).rows;
   const blocked=(await c.query(
     "SELECT 1 FROM bridge_blocks WHERE (blocker_id=$1 AND blocked_id=$2) "+
     "OR (blocker_id=$2 AND blocked_id=$1) LIMIT 1",members)).rows.length>0;
@@ -158,17 +158,16 @@ export function createPrivateWriteRepository(pool,{
   const live=configuredRef(keyRefs?.live);
   const unread=configuredRef(keyRefs?.unread);
   if(live.keyId===unread.keyId)deny();
-  return Object.freeze({
-    async acceptSynthetic({
+  const acceptInExistingTx=async (c,{
       conversationId,actorId,clientMessageId,syntheticPlaintext,failureHook=null
-    }={}){
+    }={})=>{
       assertDisposable(pool);
       if(!id(conversationId)||!id(actorId)||!id(clientMessageId)||
          (failureHook!==null&&typeof failureHook!=="function"))deny();
       const canonical=validText(syntheticPlaintext);
       // Per-item keys only from synthetic injected test provider, no env fallback.
-      return withV2ConnectionTx(pool,async c=>{
-        await guardDatabaseIdentity(c);
+      if(!c||typeof c.query!=="function")deny();
+      await guardDatabaseIdentity(c);
         const {room,relation,now,recipientId}=
           await lockedContext(c,conversationId,actorId);
         const previous=(await c.query(
@@ -252,7 +251,14 @@ export function createPrivateWriteRepository(pool,{
             new Date(now.getTime()+THIRTY_MIN)]);
         if(failureHook)await failureHook("after_clock");
         return publicReceipt(messageId,seq);
-      });
+    };
+  return Object.freeze({
+    // INTERNAL synthetic same-transaction worker. Caller must hold 714411 and
+    // a signed DB-owned actor lock; not a hosted route or public actor API.
+    acceptInExistingTx,
+    async acceptSynthetic(args={}){
+      assertDisposable(pool);
+      return withV2ConnectionTx(pool,c=>acceptInExistingTx(c,args));
     }
   });
 }

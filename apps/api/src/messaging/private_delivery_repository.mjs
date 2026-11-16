@@ -129,7 +129,7 @@ function decrypt(row,meta,keyProvider){
 async function pairAccounts(c,members){
   const accounts=(await c.query(
     "SELECT id,status,age_verified_at,safety_eligible FROM bridge_accounts "+
-    "WHERE id=ANY($1::uuid[]) ORDER BY id",[members]
+    "WHERE id=ANY($1::uuid[]) ORDER BY id FOR SHARE",[members]
   )).rows;
   const blocks=(await c.query(
     "SELECT 1 FROM bridge_blocks WHERE "+
@@ -244,10 +244,11 @@ export function createPrivateDeliveryRepository(pool,{
       return work(c);
     });
   };
-  return Object.freeze({
-    async readCurrent({conversationId,actorId,cursor:pageCursor=null}={}){
+  const readCurrentInExistingTx=async (c,{conversationId,actorId,cursor:pageCursor=null}={})=>{
       if(!validId(conversationId)||!validId(actorId))deny();
-      return trans(async c=>{
+      guardedPool(pool);
+      if(!c||typeof c.query!=="function")deny();
+      await guardActual(c);
         await authorizedLive(c,conversationId,actorId);
         const after=cursorAfter(pageCursor,cursorSecret,conversationId,actorId);
         const rows=(await c.query(
@@ -272,11 +273,12 @@ export function createPrivateDeliveryRepository(pool,{
         });
         const last=rows.length?Number(rows.at(-1).sequence_number):after;
         return {messages,cursor:cursor(cursorSecret,conversationId,actorId,last)};
-      });
-    },
-    async unreadInbox({actorId}={}){
+  };
+  const unreadInboxInExistingTx=async (c,{actorId}={})=>{
       if(!validId(actorId))deny();
-      return trans(async c=>{
+      guardedPool(pool);
+      if(!c||typeof c.query!=="function")deny();
+      await guardActual(c);
         const rows=(await c.query(
           "SELECT id FROM bridge_v2_secure_unread "+
           "WHERE recipient_id=$1 AND state='unread' ORDER BY accepted_at,id LIMIT $2",
@@ -299,11 +301,12 @@ export function createPrivateDeliveryRepository(pool,{
           });
         }
         return result;
-      });
-    },
-    async acknowledge({envelopeId,actorId,presentationProof}={}){
+  };
+  const acknowledgeInExistingTx=async (c,{envelopeId,actorId,presentationProof,failureHook=null}={})=>{
       if(!validId(envelopeId)||!validId(actorId))deny();
-      return trans(async c=>{
+      guardedPool(pool);
+      if(!c||typeof c.query!=="function")deny();
+      await guardActual(c);
         const {data,nowMs}=await authorizedEnvelope(c,envelopeId,actorId);
         requireProof(presentationProof,presentationSecret,data,actorId,nowMs);
         if(data.state!=="unread"&&data.state!=="acknowledged")deny();
@@ -318,18 +321,20 @@ export function createPrivateDeliveryRepository(pool,{
             "RETURNING id",[envelopeId,new Date(nowMs),digest]
           );
           if(changed.rows.length!==1)deny();
+           if(failureHook)await failureHook("after_ack");
           return {status:"acknowledged",recoveryToken:token};
         }
         const first=asTime(data.first_acknowledged_at);
         if(first>nowMs||nowMs>=first+RECOVERY_MS||
            !compareDigest(data.recovery_token_digest,digest))deny();
         return {status:"already_acknowledged",recoveryToken:token};
-      });
-    },
-    async recover({envelopeId,actorId,recoveryToken}={}){
+  };
+  const recoverInExistingTx=async (c,{envelopeId,actorId,recoveryToken}={})=>{
       if(!validId(envelopeId)||!validId(actorId)||typeof recoveryToken!=="string"||
          !/^[A-Za-z0-9_-]{43}$/.test(recoveryToken))deny();
-      return trans(async c=>{
+      guardedPool(pool);
+      if(!c||typeof c.query!=="function")deny();
+      await guardActual(c);
         const {data,nowMs}=await authorizedEnvelope(c,envelopeId,actorId);
         if(data.state!=="acknowledged"||data.first_acknowledged_at===null)deny();
         const first=asTime(data.first_acknowledged_at);
@@ -345,7 +350,27 @@ export function createPrivateDeliveryRepository(pool,{
             sender_id:data.sender_id,accepted_at:data.accepted_at
           },"unread",actorId),keyProvider)
         };
-      });
+  };
+  return Object.freeze({
+    // Synthetic internal same-client worker; caller must already hold 714411.
+    readCurrentInExistingTx,
+    async readCurrent(args={}){
+      return trans(c=>readCurrentInExistingTx(c,args));
+    },
+    // Synthetic internal same-client worker; caller must already hold 714411.
+    unreadInboxInExistingTx,
+    async unreadInbox(args={}){
+      return trans(c=>unreadInboxInExistingTx(c,args));
+    },
+    // Synthetic internal same-client worker; caller must already hold 714411.
+    acknowledgeInExistingTx,
+    async acknowledge(args={}){
+      return trans(c=>acknowledgeInExistingTx(c,args));
+    },
+    // Synthetic internal same-client worker; caller must already hold 714411.
+    recoverInExistingTx,
+    async recover(args={}){
+      return trans(c=>recoverInExistingTx(c,args));
     }
   });
 }
