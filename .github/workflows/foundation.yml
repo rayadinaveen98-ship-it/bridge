@@ -122,3 +122,7 @@ jobs:
         env:
           BRIDGE_TEST_MIGRATION_ACK: disposable-bridge_test-only
         run: npm run test:v2:identity:db --prefix apps/api
+      - name: B3b-2 disconnected signed-actor and private-message single-transaction PG16 tests (NOT LIVE)
+        env:
+          BRIDGE_TEST_MIGRATION_ACK: disposable-bridge_test-only
+        run: npm run test:v2:atomic-private:db --prefix apps/api
