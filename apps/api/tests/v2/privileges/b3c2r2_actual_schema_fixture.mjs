@@ -15,7 +15,7 @@ const ACK="disposable-actual-0008-pg18-only";
 const DB="bridge_privproof";
 const ADMIN="bridge_privproof_admin";
 const PASSWORD="bridge_privproof_only";
-const URL="postgresql://"+ADMIN+":"+PASSWORD+"@127.0.0.1:5432/"+DB;
+const CONNECTION_STRING="postgresql://"+ADMIN+":"+PASSWORD+"@127.0.0.1:5432/"+DB;
 const FILES=[
   "0001_bridge_foundation.sql","0002_message_outbox.sql","0003_lab_credentials.sql",
   "0004_v2_metadata.sql","0005_v2_delivery.sql","0006_v2_history.sql",
@@ -28,9 +28,9 @@ export function assertOnlyDisposablePg18(env=process.env){
   if(env.CI!=="true"||env.GITHUB_ACTIONS!=="true"||
     env.BRIDGE_B3C2R2_ACK!==ACK||
     env.BRIDGE_B3C2R2_PG_MAJOR!=="18"||
-    env.BRIDGE_B3C2R2_TEST_DATABASE_URL!==URL)
+    env.BRIDGE_B3C2R2_TEST_DATABASE_URL!==CONNECTION_STRING)
       throw testOnlyFailure("environment_refused");
-  return URL;
+  return CONNECTION_STRING;
 }
 async function verifyCluster(client){
   const identity=(await client.query(
@@ -160,8 +160,8 @@ function verifierFunction(schema){
     " IF a IS NULL OR a !~ '^[0-9a-f-]{36}$' OR",
     "    e IS NULL OR e !~ '^[0-9]{10}$' OR",
     "    m IS NULL OR m !~ '^[a-f0-9]{64}$' THEN RETURN NULL; END IF;",
-    " IF e::bigint<=pg_catalog.extract(epoch from pg_catalog.clock_timestamp())::bigint OR",
-    "    e::bigint>pg_catalog.extract(epoch from pg_catalog.clock_timestamp())::bigint+35",
+    " IF e::bigint<=pg_catalog.date_part('epoch',pg_catalog.clock_timestamp())::bigint OR",
+    "    e::bigint>pg_catalog.date_part('epoch',pg_catalog.clock_timestamp())::bigint+35",
     " THEN RETURN NULL; END IF;",
     " SELECT secret INTO k FROM "+schema+".signing_secret WHERE label='test-only';",
     " IF k IS NULL THEN RETURN NULL; END IF;",
@@ -173,52 +173,6 @@ function verifierFunction(schema){
     " RETURN NULL;",
     "END $rpr$"
   ].join(" ");
-}
-async function createRestrictedProof(admin,names,credentials,secret){
-  const {migrator,app,schema}=names;
-  await admin.query(
-    "CREATE ROLE "+migrator+" LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS NOCREATEDB "+
-    "NOCREATEROLE NOREPLICATION PASSWORD '"+credentials.migrator+"'");
-  await admin.query(
-    "CREATE ROLE "+app+" LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS NOCREATEDB "+
-    "NOCREATEROLE NOREPLICATION PASSWORD '"+credentials.app+"'");
-  await admin.query("CREATE SCHEMA "+schema+" AUTHORIZATION "+migrator);
-  const owner=await login(migrator,credentials.migrator);
-  try {
-    await owner.query("BEGIN");
-    try {
-      await owner.query("CREATE TABLE "+schema+
-        ".signing_secret(label text PRIMARY KEY,secret bytea NOT NULL)");
-      await owner.query(
-        "INSERT INTO "+schema+".signing_secret(label,secret) VALUES('test-only',$1)",
-        [secret]);
-      await owner.query(verifierFunction(schema));
-      // Revoke PUBLIC EXECUTE in the SAME DDL transaction; no exposure window.
-      await owner.query("REVOKE ALL ON FUNCTION "+schema+".verified_actor() FROM PUBLIC");
-      await owner.query("GRANT USAGE ON SCHEMA "+schema+" TO "+app);
-      await owner.query("GRANT EXECUTE ON FUNCTION "+schema+".verified_actor() TO "+app);
-      await owner.query("COMMIT");
-    }catch(e){await owner.query("ROLLBACK");throw e;}
-  }finally{await owner.end();}
-  for(const name of secure)await admin.query(
-    "GRANT SELECT,INSERT ON TABLE public."+name+" TO "+app
-  );
-  await admin.query("CREATE POLICY b3r2_meta_read ON public.bridge_v2_secure_messages "+
-    "FOR SELECT TO "+app+" USING(sender_id="+schema+".verified_actor())");
-  await admin.query("CREATE POLICY b3r2_meta_write ON public.bridge_v2_secure_messages "+
-    "FOR INSERT TO "+app+" WITH CHECK(sender_id="+schema+".verified_actor())");
-  const originalOwner="EXISTS(SELECT 1 FROM public.bridge_v2_secure_messages m "+
-    "WHERE m.id=message_id AND m.sender_id="+schema+".verified_actor())";
-  await admin.query("CREATE POLICY b3r2_live_read ON public.bridge_v2_secure_live "+
-    "FOR SELECT TO "+app+" USING("+originalOwner+")");
-  await admin.query("CREATE POLICY b3r2_live_write ON public.bridge_v2_secure_live "+
-    "FOR INSERT TO "+app+" WITH CHECK("+originalOwner+")");
-  await admin.query("CREATE POLICY b3r2_unread_read ON public.bridge_v2_secure_unread "+
-    "FOR SELECT TO "+app+" USING(recipient_id="+schema+".verified_actor() AND "+
-    "state='unread' AND expires_at>clock_timestamp())");
-  await admin.query("CREATE POLICY b3r2_unread_write ON public.bridge_v2_secure_unread "+
-    "FOR INSERT TO "+app+" WITH CHECK(recipient_id<>"+schema+".verified_actor() "+
-    "AND "+originalOwner+")");
 }
 async function teardown(admin,names,created){
   const errors=[];
@@ -260,7 +214,7 @@ export async function withActualPg18SignedProof(work){
   const credentials={migrator:randomBytes(24).toString("hex"),
     app:randomBytes(24).toString("hex")};
   const secret=randomBytes(32),created={migrator:false,app:false,schema:false};
-  let appClient=null,verified=false;
+  let appClient=null;
   try{
     await verifyCluster(admin);
     const before=(await admin.query(
@@ -342,11 +296,10 @@ export async function withActualPg18SignedProof(work){
         return await callback(appClient,{actor,exp,mac,tx:tx.tx});
       }finally{await appClient.query("ROLLBACK");}
     }
-    verified=true;
     return await work(Object.freeze({admin,appClient,people,names,
       schemaReceipt,keys,signedTransaction,secure}));
   }finally{
-    if(appClient)try{await appClient.end();}catch{verified=false;}
+    if(appClient)try{await appClient.end();}catch{/* propagate teardown failures separately */}
     try{await teardown(admin,names,created);}finally{await admin.end();}
     secret.fill(0);
   }
