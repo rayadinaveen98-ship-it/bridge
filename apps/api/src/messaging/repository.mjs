@@ -82,6 +82,9 @@ const exposed=x=>({id:x.id,messageId:x.message_id,acceptedAt:x.accepted_at,
   expiresAt:x.expires_at,acknowledgedAt:x.acknowledged_at??null,state:x.state});
 export function createMessagingRepository(pool,{recoveryKey}={}) {
   assertDisposable();
+  // Bind the actual injected PG pool to the same acknowledged loopback DSN.
+  if(pool?.options?.connectionString!==process.env.BRIDGE_TEST_DATABASE_URL)
+    throw new Error("V2-06A refuses unverified PostgreSQL pools");
   if(!pool?.connect||!Buffer.isBuffer(recoveryKey)||recoveryKey.length<32)
     throw new TypeError("Synthetic PG pool and 32-byte test recovery key required");
   return Object.freeze({
@@ -157,7 +160,7 @@ export function createMessagingRepository(pool,{recoveryKey}={}) {
           [conversationId,after,POLICY])).rows;
         const end=rows.length?Number(rows[rows.length-1].sequence_number):after;
         return {messages:rows.map(x=>({id:x.id,sequenceNumber:Number(x.sequence_number),
-          sentAt:x.sent_at,fixturePresent:x.fixture_present})),
+          sentAt:x.sent_at,state:x.fixture_present?"present":"tombstone"})),
           cursor:signCursor({actorId,conversationId,afterSequence:end,key:recoveryKey})};
       });
     },
