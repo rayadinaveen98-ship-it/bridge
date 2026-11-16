@@ -67,10 +67,14 @@ async function assertConnectedOwner(admin,conf){
   const role=(await admin.query(
     "SELECT rolsuper,rolbypassrls FROM pg_roles WHERE rolname=current_user"
   )).rows[0];
-  if(v?.db!=="bridge_test"||v.usr!=="bridge_test"||
-    v.sess!=="bridge_test"||!confirmedCiDockerServiceAddress(v.host)||
-    Math.floor(v.version/10000)!==16||v.recovery!==false||
-    role?.rolsuper!==true)throw refused();
+  if(v?.db!=="bridge_test"||v.usr!=="bridge_test"||v.sess!=="bridge_test")
+    throw Error("b3c1_preflight_identity_mismatch");
+  if(!confirmedCiDockerServiceAddress(v.host))
+    throw Error("b3c1_preflight_pg16_service_attestation_failed");
+  if(Math.floor(v.version/10000)!==16||v.recovery!==false)
+    throw Error("b3c1_preflight_pg16_or_recovery_mismatch");
+  if(role?.rolsuper!==true)
+    throw Error("b3c1_preflight_ci_fixture_admin_missing");
   const source=await readFile(SQL_SRC,"utf8");
   const recorded=(await admin.query(
     "SELECT trim(checksum) checksum FROM bridge_schema_migrations WHERE version='0008'"
