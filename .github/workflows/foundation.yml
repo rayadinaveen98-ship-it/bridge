@@ -99,3 +99,7 @@ jobs:
         env:
           BRIDGE_TEST_MIGRATION_ACK: disposable-bridge_test-only
         run: npm run test:v2:messaging:db --prefix apps/api
+      - name: B1a disconnected V2-only 0008 schema, constraints, default-deny RLS and PG16 backup/restore
+        env:
+          BRIDGE_TEST_MIGRATION_ACK: disposable-bridge_test-only
+        run: npm run test:v2:private-schema --prefix apps/api
