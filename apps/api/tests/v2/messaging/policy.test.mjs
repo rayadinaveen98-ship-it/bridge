@@ -54,7 +54,10 @@ test("M06-13..15 opaque cursor binds actor, scope and room; forgery fails",()=>{
   assert.equal(verifyCursor(token,{actorId:b,conversationId:id,key:K}),null);
   assert.equal(verifyCursor(token,{actorId:a,conversationId:randomUUID(),key:K}),null);
   assert.equal(verifyCursor(token,{actorId:a,conversationId:id,scope:"unread",key:K}),null);
-  assert.equal(verifyCursor(token.slice(0,-1)+"X",{actorId:a,conversationId:id,key:K}),null);
+  const [payload,mac]=token.split(".");
+  const forged=payload+"."+(mac[0]==="A"?"B":"A")+mac.slice(1);
+  assert.notEqual(forged,token,"negative test must change authenticated MAC bytes");
+  assert.equal(verifyCursor(forged,{actorId:a,conversationId:id,key:K}),null);
   assert.equal(verifyCursor("nonsense",{actorId:a,conversationId:id,key:K}),null);
 });
 test("M06-16..21 unread is recipient-only, finite and independent of source chat closure",()=>{
