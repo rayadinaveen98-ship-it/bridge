@@ -69,3 +69,11 @@ Early planning explored a Telugu/English-focused pilot for liquidity. The **late
 - **New proposed implementation boundary, not yet founder-approved:** V2-04A session module under `apps/api/src/sessions/**`, synthetic PostgreSQL 16 tests, isolated CI and evidence, **disconnected from current routes**. Separate live migration and API activation are required; no direct relationship conversion in V2-04.
 - **No new product rule:** all decisions retain BR-004–008 and D-01 from approved V1/V2. No new device/session-auth behavior, feature monetization, paid service or public beta authorized.
 - **R0 real phone/tablet acceptance still OPEN;** 138-case comprehensive audit remains final V2-16.
+
+## V2-05 mutual connections and direct segments — proposed execution boundary, 2026-11-16
+
+- **Baseline:** V2-04A isolated random-session engine merged as PR #22 at `1ef086c6`, post-merge CI passed. Hosted QA still runs the unchanged older API; no live Neon migration.
+- **Product policy unchanged:** two independent current Keep votes create one revocable mutual relationship; new direct sessions are free, individually 30-minute-idle and do not copy random history; a terminated direct segment does not revoke the mutual relationship; block/unmatch does. Prior stranger transcript remains separate.
+- **Engineering brief prepared (NOT APPROVED FOR CODING):** [V2-05A Keep + Direct sessions](engineering/V2_05_IMPLEMENTATION_BRIEF.md). Recommend a disconnected transaction-engine + disposable PG16 tests, including 30 C05 tests and rollback/legacy preservation.
+- **Critical real integration blocker:** old `castVote()` mutates source in-place and `connections()` expects source OPEN; no old endpoint is appropriate for new V2 direct IDs without separate V2-11 read-scope protections.
+- **No new implementation authorization:** do not change application code, SQL, Neon, Render, Android, billing, retention or test-account data from this documentation. R0 physical-device acceptance is still OPEN and full 138-case What If? review remains final V2-16.
