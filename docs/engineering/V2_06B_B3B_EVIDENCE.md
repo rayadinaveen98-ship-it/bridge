@@ -1,6 +1,6 @@
 # Bridge B3b-1 — Synthetic Signed-Identity Boundary Evidence
 
-**Status:** IMPLEMENTED IN DRAFT PR / INITIAL CODE-HEAD CI PASSED / FINAL EVIDENCE-HEAD + MERGE CI PENDING / NOT LIVE.  
+**Status:** B3b-1 IMPLEMENTED / 28 NODE TAP RESULTS PASS / FINAL PR CI VERIFIED / MERGED / POST-MERGE MAIN CI VERIFIED; NOT LIVE.  
 **Approved:** founder's exact eight-file B3b-1 scope in [implementation brief](V2_06B_B3B_IMPLEMENTATION_BRIEF.md), 2026-11-16.  
 **Baseline:** verified `main@4bdfa482cad1f6c61558c47e0a42e7c53b8bfc06`; [main Foundation #43869197431](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43869197431) matching and postgres-integration SUCCESS.  
 **Reference:** [B3b trust/race matrix](V2_06B_B3B_TRUST_RACE_MATRIX.md), [B3a final evidence](V2_06B_B3_EVIDENCE.md).
@@ -60,3 +60,16 @@
 - **All hosted gates still OPEN:** actual V1 old-client read/write firewall (B3a is pure/disconnected), actual Render runtime PostgreSQL principal/RLS, key custody, real adult/policy assurance, full Block/unblock/account writer races, Android V2-10, G1/V2-11 private cutover, R0 two-device physical acceptance and final V2-16 138-case What If?. No Neon/Render/Flutter or original four-message hosted QA operation was run.
 
 **Evidence update changes Git head:** rerun final PR/push matching and postgres-integration and inspect eight-file scope at that new SHA before merge. Only then verify independently on merged main.
+
+
+## B3b-1 exact final implementation and main certification — 2026-11-16
+
+- **Implementation [PR #44](https://github.com/rayadinaveen98-ship-it/bridge/pull/44):** exactly the eight approved paths, final head `03471efbf852189aca8564cefbaa4ae2dcaf5efe`. [Final PR CI #43871374512](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43871374512) and [final branch push CI #43871366645](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43871366645): BOTH matching **SUCCESS** and postgres-integration **SUCCESS**.
+- **Merged implementation main:** `59b341a9c3a4250f5464b74a07c9ba893dd47cb7`. [Exact post-merge main Foundation #43871602728](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43871602728): matching **SUCCESS**, postgres-integration **SUCCESS**.
+- **Actual new named test results:** pure `signed_subject.test.mjs` **10/10 PASS**; disposable PostgreSQL `postgres_subject.test.mjs` **10/10 PASS** (9 nested + 1 wrapper); `race_subject.test.mjs` **8/8 PASS** (7 nested + 1 wrapper). **28/28 Node TAP results, 26 nested/independent test cases, zero failures/skips**. Full existing V1, B1a/B1b, B2a/B2b, B3a, migration rehearsal and PG16 backup/restore ran in original CI jobs and remained green. The named B3a pure suite previously proved 25/25 and is preserved.
+- **Negative evidence:** real ephemeral 3072-bit RSA RS256 JWT signature, issuer/audience/claims and token expiry checks; DB-locked `auth_subject` -> synthetic UUID mapping; fake actor/role/paid spoof rejection; restricted/age/safety/deleted account denial; verified actual database principal + 0008 receipt; one callback transaction rollback; fresh expiry recheck AFTER a 714411 wait; row FOR UPDATE blocks conflicting account status mutation; concurrent status/subject change wins; subject transfer A->B denied under the B3b-1 synthetic `b3b-disposable:<UUID>` invariant; redacted uniform denial; original four-message **synthetic local fixture** SHA unchanged; no hosted imports.
+- **Scope confirmed:** only `private_subject_adapter.mjs`, four new identity tests/fixture, additive named package scripts, additive two Foundation steps, and `V2_06B_B3B_EVIDENCE.md`. Absolutely no modifications to existing auth/V1 HTTP/PG/start/live/outbox, B1/B2 engines, SQL 0001–0008, Android, Neon/Render schema/data/roles, real encryption/JWT keys, report/evidence, history, retention or billing.
+- **Major unresolved security gates:** B3b-1 does **NOT** invoke B2a/b in the same transaction; trusted identity cannot yet authorize actual encrypted write/read/unread/ACK/recovery. **B3b-2 remains a separate founder scope decision**, including possible B2 refactor and joint account/peer locks. B3a V1 read/write and SSE firewall is still pure/disconnected, production keys and runtime RLS unverified; no public identity/age assurance, Android R0 device acceptance OPEN, G1/V2-11 cutover gated. Test-only synthetic UUID subject format is NOT a general external provider binding policy. No E2EE or live user security certification claimed.
+- **Final document-only certification:** this follow-up changes only this existing B3b-1 evidence file, records previously verified PR and post-merge main facts, and does not start B3b-2 or any hosted action. The follow-up's own final head and main CI must also pass before documentation is closed.
+
+**R0 physical device acceptance remains OPEN. Complete 138-case What If? remains FINAL at V2-16.**
