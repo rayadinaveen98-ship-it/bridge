@@ -273,5 +273,15 @@ test("V2-06A M06 disconnected synthetic PG16 metadata/unread proofs",{
         c.release();
       }
     });
+    await t.test("M06-02 random room without both valid match slots is unavailable",async()=>{
+      const f=await randomRoom(pool);
+      await pool.query(
+        "DELETE FROM bridge_active_match_slots WHERE match_session_id=$1 AND account_id=$2",
+        [f.matchId,f.people[0]]);
+      await assert.rejects(repo.acceptSynthetic({conversationId:f.room,
+        actorId:f.people[1],clientMessageId:uuid(),opaqueFixture:fixture()}),denied);
+      assert.equal(await qty(pool,
+        "SELECT count(*)::int n FROM bridge_messages WHERE conversation_id=$1",[f.room]),0);
+    });
   } finally {await pool.end();}
 });
