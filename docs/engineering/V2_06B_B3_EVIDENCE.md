@@ -1,6 +1,6 @@
 # Bridge V2-06B/B3a — Disconnected Pure Compatibility Contract Evidence
 
-**Status:** IMPLEMENTED ON ISOLATED BRANCH / CI EVIDENCE PENDING / NOT LIVE.  
+**Status:** IMPLEMENTED ON ISOLATED BRANCH / CODE-HEAD CI VERIFIED / FINAL EVIDENCE-HEAD AND POST-MERGE CI PENDING / NOT LIVE.  
 **Baseline:** main@ae4d203af1824ece939a75dbfacccd219fa7b84a; prior [main Foundation #43857847847](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43857847847) SUCCESS for matching and disposable PG16.  
 **Authorization:** Founder approved B3a **exactly** as scoped in [B3 Integration Brief](V2_06B_B3_INTEGRATION_BRIEF.md) on 2026-11-16. This authorizes the isolated seven-file pure contract and tests only; no V1 route wiring/hosted changes.
 
@@ -36,3 +36,13 @@
 5. No live migration, Render deployment, real keys, paid service or Android build is authorized. R0 physical two-device acceptance remains OPEN; the full 138-case What If? review stays **FINAL at V2-16**.
 
 **Rollback:** revert this seven-file isolated PR and discard only source/pure tests; no hosted data, schema, old QA messages or secrets were touched.
+
+
+## 2026-11-16 actual code-head results and security review
+
+- **Tested code head:** `d87ade27c1392fe73cee01a21caadbad2b3799d9`. [PR-head Foundation #43865081250](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43865081250) and [branch push #43865074153](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43865074153) each **matching SUCCESS / postgres-integration SUCCESS**. All previous V1, B1/B2 and PG16 regression suites ran in their original CI jobs. B3a itself is pure Node/matching-job only.
+- **Named test evidence:** `npm run test:v2:compatibility --prefix apps/api` produced **25/25 Node TAP tests PASS, 0 FAIL, 0 SKIPPED**; route matrix has **16** test blocks, safe response contract has **12**? Verify count below before certification: the combined runner reports 25 total, so use 25 as authoritative, not the proposed `G03-01..24` design IDs. Individual tests cover old V1 GET and POST, SSE, Keep, peer, close, bootstrap, connection and matches, ambiguous/NULL markers, spoofed UA/actor, uniform denial, bounded LIVE/UNREAD/ACK/recovery, no-history, no-secret notifications and hosted import fences.
+- **First-run fixture failure documented:** initial push CI #43864560224 exposed a test helper passing `undefined` into a fixture with a default legacy room, causing a mistaken expectation (`delegate` vs `deny`). Corrected **only the new B3a route test** to pass explicit `null` on missing room. Re-ran at `d87ade2...`: both CI jobs PASS. The pure policy itself continued to fail closed for explicit missing/ambiguous stored room.
+- **Boundary limitation:** `decideLegacyCompatibility` returns **delegate**, never an automatic auth grant, for old legacy QA routes, safety/reporting and discovery. No actual old handler calls this new policy. The future facade must supply strictly DB-sourced scope and verified bearer account; tests don't establish server-signed identity or real HTTP safe-denial. No V2 room has been exposed on hosted routes, no legacy QA data touched and no executable SQL/runtime/client change.
+- **Security review follow-ups not waived:** safe denial on **old V1 POST and GET** messages before any V2 ID appears; real SSE/bootstrap/connections/Keep/peer path tests; real Render DB nonowner RLS/grants; production KEK and token/capability custody; full block/account update races; actual Android R0 and V2-10; restricted evidence/historical consent FK redesign; founder G1/V2-11. The B2b 5-minute presentation proof is still only a test protocol, not approved public semantics.
+- **Next verification gate:** this evidence change creates a *new PR head*; confirm matching and PG16 SUCCESS on the final SHA and exact seven-file allowlist before merge. Record merged main SHA and postmerge main Foundation CI separately. No B3b, live API, Neon, Render, Android, billing, retention or key provider authority here.
