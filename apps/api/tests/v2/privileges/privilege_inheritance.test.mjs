@@ -52,12 +52,6 @@ test("B3c-1 inherited grants, PUBLIC, forbidden escalation and untrusted actor G
         rolcreaterole:false,rolcreatedb:false});
     });
     await t.test("P03-14 original secure tables never grant PUBLIC, nor OWNER via group",async()=>{
-      const pub=(await admin.query(
-        "SELECT c.relname,has_table_privilege('public',c.oid,'SELECT') possible "+
-        "FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace "+
-        "WHERE n.nspname='public' AND c.relname=ANY($1::text[])",
-        [secureTables]
-      ).catch(()=>({rows:[]}))).rows;
       // Use ACL expansion instead: PUBLIC is special grantee oid 0.
       const acl=(await admin.query(
         "SELECT c.relname,COALESCE(bool_or(a.grantee=0),false) public_grant "+
@@ -75,7 +69,6 @@ test("B3c-1 inherited grants, PUBLIC, forbidden escalation and untrusted actor G
       )).rows[0];
       assert.equal(role.usr,names.actor);
       assert.equal(role.sess,names.actor);
-      assert.equal(pub.length<=3,true);
     });
     await t.test("P03-19 SET LOCAL custom actor_id is controllable by user, not verified identity",async()=>{
       await actor.query("BEGIN");
