@@ -75,9 +75,9 @@ jobs:
           test "$(docker exec "$SERVICE_DB" psql -U bridge_test -d bridge_restore_test -X -Atc "SELECT count(*) FROM bridge_messages WHERE body LIKE 'Synthetic fixture %'")" = "4"
           test "$(docker exec "$SERVICE_DB" psql -U bridge_test -d bridge_restore_test -X -Atc "SELECT count(*) FROM bridge_active_match_slots")" = "2"
           docker exec "$SERVICE_DB" dropdb -U bridge_test bridge_restore_test
+      - name: Run full API suite against disposable PostgreSQL
+        run: npm test --prefix apps/api
       - name: V2-04A isolated random lifecycle and DB-lock race tests
         env:
           BRIDGE_TEST_MIGRATION_ACK: disposable-bridge_test-only
         run: npm run test:v2:sessions:db --prefix apps/api
-      - name: Run full API suite against disposable PostgreSQL
-        run: npm test --prefix apps/api
