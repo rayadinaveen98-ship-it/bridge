@@ -166,6 +166,43 @@ test("B2b LIVE and UNREAD secure scoped delivery (synthetic PG16 only)",{skip:!u
         assert.deepEqual(await perRoomState(pool,f.conversationId),original);
       }finally{w.destroy();}
     });
+    await t.test("D02-12 lost live KEK and unread KEK fail separately without plaintext",async()=>{
+      const f=await connected(pool,keep),w=testWriter(pool),r=reader(pool,w);
+      try{
+        const sent=await w.repository.acceptSynthetic(send(f,f.people[0]));
+        w.keyProvider.retireKey({purpose:"live",...w.keyRefs.live});
+        await assert.rejects(r.readCurrent({
+          conversationId:f.conversationId,actorId:f.people[1]
+        }),denied);
+        const inbox=await r.unreadInbox({actorId:f.people[1]});
+        assert.equal(inbox.some(x=>x.messageId===sent.id),true,
+          "independently keyed unread remains eligible when live key retired");
+        w.keyProvider.retireKey({purpose:"unread",...w.keyRefs.unread});
+        await assert.rejects(r.unreadInbox({actorId:f.people[1]}),denied);
+      }finally{w.destroy();}
+    });
+    await t.test("D02-18 unrelated but valid connection FK never authorizes unread",async()=>{
+      const f=await connected(pool,keep),other=await connected(pool,keep);
+      const w=testWriter(pool),r=reader(pool,w);
+      try{
+        const sent=await w.repository.acceptSynthetic(send(f,f.people[0]));
+        const envelope=(await pool.query(
+          "SELECT id FROM bridge_v2_secure_unread WHERE message_id=$1",
+          [sent.id]
+        )).rows[0].id;
+        // Deliberate synthetic integrity attack: FK points to a DIFFERENT
+        // existing connection. The recipient FK by itself is not enough.
+        await pool.query(
+          "UPDATE bridge_v2_secure_unread SET connection_id=$2 WHERE id=$1",
+          [envelope,other.connectionId]
+        );
+        assert.equal((await r.unreadInbox({actorId:f.people[1]}))
+          .some(x=>x.envelopeId===envelope),false);
+        await assert.rejects(r.acknowledge({
+          envelopeId:envelope,actorId:f.people[1],presentationProof:"forged"
+        }),denied);
+      }finally{w.destroy();}
+    });
     await t.test("D02-14 legacy QA never readable by disconnected encrypted reader",async()=>{
       const f=await legacyFixture(pool),w=testWriter(pool),r=reader(pool,w);
       try{
