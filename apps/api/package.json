@@ -11,7 +11,8 @@
     "test": "node --test tests/*.test.mjs",
     "start": "node src/start.mjs",
     "test:v2:contracts": "node --test tests/v2/contracts/lifecycle.test.mjs tests/v2/contracts/retention.test.mjs tests/v2/access_matrix.test.mjs tests/v2/migration_inventory.test.mjs",
-    "test:policy": "node --test tests/policy/policy.test.mjs tests/policy/security.test.mjs"
+    "test:policy": "node --test tests/policy/policy.test.mjs tests/policy/security.test.mjs",
+    "test:v2:migrations": "node --test tests/v2/migrations/rehearsal.test.mjs"
   },
   "dependencies": {
     "pg": "^8.13.0"

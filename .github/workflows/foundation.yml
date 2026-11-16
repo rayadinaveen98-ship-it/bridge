@@ -53,5 +53,25 @@ jobs:
           psql "$BRIDGE_TEST_DATABASE_URL" -X -v ON_ERROR_STOP=1 -f database/migrations/0003_lab_credentials.sql
       - name: Install server database driver
         run: npm install --prefix apps/api --no-package-lock --no-audit --no-fund
+      - name: V2-03 expand-only migration rehearsal (disposable bridge_test)
+        env:
+          BRIDGE_TEST_MIGRATION_ACK: disposable-bridge_test-only
+        run: npm run test:v2:migrations --prefix apps/api
+      - name: V2-03 disposable database backup and restore certification
+        run: |
+          set -euo pipefail
+          # Use the PG16 tools belonging to this job's disposable PG16 service.
+          # Host-side pg_restore can be newer and emit unsupported settings.
+          mapfile -t db_containers < <(docker ps --filter "ancestor=postgres:16" --format '{{.ID}}')
+          test "${#db_containers[@]}" -eq 1
+          SERVICE_DB="${db_containers[0]}"
+          docker exec "$SERVICE_DB" pg_dump -U bridge_test -d bridge_test -Fc > "$RUNNER_TEMP/bridge_v2_disposable.dump"
+          docker exec "$SERVICE_DB" createdb -U bridge_test bridge_restore_test
+          docker exec -i "$SERVICE_DB" pg_restore -U bridge_test -d bridge_restore_test --no-owner --no-acl < "$RUNNER_TEMP/bridge_v2_disposable.dump"
+          test "$(docker exec "$SERVICE_DB" psql -U bridge_test -d bridge_restore_test -X -Atc "SELECT count(*) FROM bridge_schema_migrations")" = "4"
+          test "$(docker exec "$SERVICE_DB" psql -U bridge_test -d bridge_restore_test -X -Atc "SELECT count(*) FROM pg_tables WHERE schemaname='public' AND tablename LIKE 'bridge_%'")" = "34"
+          test "$(docker exec "$SERVICE_DB" psql -U bridge_test -d bridge_restore_test -X -Atc "SELECT count(*) FROM bridge_messages WHERE body LIKE 'Synthetic fixture %'")" = "4"
+          test "$(docker exec "$SERVICE_DB" psql -U bridge_test -d bridge_restore_test -X -Atc "SELECT count(*) FROM bridge_active_match_slots")" = "2"
+          docker exec "$SERVICE_DB" dropdb -U bridge_test bridge_restore_test
       - name: Run full API suite against disposable PostgreSQL
         run: npm test --prefix apps/api
