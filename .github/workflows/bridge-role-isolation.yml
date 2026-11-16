@@ -1,0 +1,54 @@
+name: Bridge B3c-2R disposable role-isolation matrix
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/bridge-role-isolation.yml'
+      - 'apps/api/tests/v2/privileges/b3c2r_*.mjs'
+      - 'apps/api/package.json'
+      - 'docs/engineering/V2_06B_B3C2R_*.md'
+      - 'docs/ROADMAP.md'
+  push:
+    paths:
+      - '.github/workflows/bridge-role-isolation.yml'
+      - 'apps/api/tests/v2/privileges/b3c2r_*.mjs'
+      - 'apps/api/package.json'
+      - 'docs/engineering/V2_06B_B3C2R_*.md'
+      - 'docs/ROADMAP.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  disposable-roles:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pg: ['16', '18']
+    services:
+      postgres:
+        image: postgres:${{ matrix.pg }}
+        env:
+          POSTGRES_USER: bridge_role_test
+          POSTGRES_PASSWORD: bridge_role_only
+          POSTGRES_DB: bridge_role_lab
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bridge_role_test -d bridge_role_lab"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      BRIDGE_B3C2R_TEST_DATABASE_URL: postgresql://bridge_role_test:bridge_role_only@127.0.0.1:5432/bridge_role_lab
+      BRIDGE_B3C2R_ROLE_ACK: disposable-bridge-role-lab-pg16-18-only
+      BRIDGE_B3C2R_PG_MAJOR: ${{ matrix.pg }}
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install API pg dependency only
+        run: npm install --prefix apps/api --no-package-lock --no-audit --no-fund
+      - name: Prove separately authenticated runtime/migrator roles on disposable PG${{ matrix.pg }}
+        run: npm run test:v2:role-isolation:db --prefix apps/api
