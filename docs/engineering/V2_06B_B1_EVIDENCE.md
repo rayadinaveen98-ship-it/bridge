@@ -1,6 +1,6 @@
 # Bridge V2-06B/B1a — Additive 0008 Secure-Schema Evidence
 
-**Status: IMPLEMENTED ON ISOLATED BRANCH; FIRST CI PENDING.**
+**Status: IMPLEMENTED ON ISOLATED BRANCH; CODE-HEAD CI VERIFIED; MERGE / POST-MERGE CI PENDING.**
 **Authority:** [B1 implementation brief](V2_06B_B1_IMPLEMENTATION_BRIEF.md) + [schema/crypto contract](V2_06B_B1_SCHEMA_CRYPTO_CONTRACT.md); limited to B1a only. This is **NOT** B1b encryption implementation, B2 backend integration, Neon schema change, Render deployment, Android, retention or public beta.
 
 ## Baseline and exact scope
@@ -53,3 +53,13 @@ No changes to 0001–0007, existing V1/V2-01..06A Node source/test files or Andr
 - NO actual user body encryption or decryption, no new runtime code imported into apps/api/src/start.mjs, http.mjs, postgres.mjs or old API; no live model change, cloud migration, keys/roles, paid provider or Android.
 - **Rollback:** revert B1a PR and discard its disposable PG16 service. No rollback of live schema/data is required because none may be touched.
 - R0 physical phone/tablet acceptance remains OPEN. B1b real test-only crypto and its separate approval remain pending. V2-07 report evidence, V2-11 old-client privacy-safe cutover and final V2-16 138-case What If? audit remain independently gated.
+
+
+## B1a initial PR code-head CI certification (2026-11-16)
+
+- **Source head tested:** d812c15253e23d668efd2d8ba345a0c4fb5edd1a. [PR Foundation #43836163547](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43836163547): BOTH matching and postgres-integration SUCCESS. [Same-commit branch push Foundation #43836030130](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43836030130): BOTH SUCCESS.
+- **Actual test TAP result:** New B1a schema test file reports **16/16 Node tests passed**, zero failures/skips; synthetic PG16 backup-and-restore test file reports **2/2 Node tests passed**, zero failures/skips. These counts include the parent test wrapper; they must not be misrepresented as eighteen independent requirement IDs. S08-01–16 acceptance requirements are mapped to multiple nested test assertions plus the existing V1/V2 suites.
+- Disposable PG16 steps confirmed expected pre-B1a **34 tables / 4 migration ledger** and post-0008 **37 tables / 5 ledger entries**; checksum reapply and forced transaction rollback, original four-message/room/two-slot SHA preservation, composite FK/sequence uniqueness, seven-day cap/ack/check structural validation, RLS default-deny under transient nonowner, and full-format PG16 dump/restore comparing both legacy and synthetic V2 fixture hashes.
+- Scope verified against draft PR #30: **exactly eight paths**, identical to the allowlist above, with **NO** source changes to current HTTP/PG/auth, old migrations 0001–0007, V2-04A/V2-05A/V2-06A source, Android or real cloud deployment.
+- **Important non-claims:** Test crypto-shaped ciphertext bytea is **not encrypted**; no actual AES-GCM codec, key wrapping/key custody, confidential delivery, real runtime RLS role/policies or recipient-pair authorization has been implemented. The schema intentionally lacks active production grants and policies. The B2 trusted adapter and B1b crypto are separate founder decisions.
+- **Approval gate:** Update of this evidence creates a NEW PR head, so both matching and postgres-integration must pass again on the exact final head before merge. After merge, independently verify the matching/postgres jobs on exact merge SHA and record their evidence; if any CI fails, do not claim stage closed.
