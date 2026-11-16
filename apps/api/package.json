@@ -18,7 +18,9 @@
     "test:v2:connections": "node --test tests/v2/connections/keep.test.mjs",
     "test:v2:connections:db": "node --test tests/v2/connections/postgres.test.mjs",
     "test:v2:direct": "node --test tests/v2/direct/lifecycle.test.mjs",
-    "test:v2:direct:db": "node --test tests/v2/direct/postgres.test.mjs"
+    "test:v2:direct:db": "node --test tests/v2/direct/postgres.test.mjs",
+    "test:v2:messaging": "node --test tests/v2/messaging/policy.test.mjs",
+    "test:v2:messaging:db": "node --test tests/v2/messaging/postgres.test.mjs"
   },
   "dependencies": {
     "pg": "^8.13.0"
