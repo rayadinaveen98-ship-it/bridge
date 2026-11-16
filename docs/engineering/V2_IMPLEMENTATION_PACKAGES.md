@@ -158,6 +158,22 @@ The **package sequence and PR boundaries are approved for planning**, but every 
 
 **Strict limitations after test completion:** Actual V1 GET **and POST** plaintext route safe-denial, V1 SSE/bootstrap/peer/Keep/backward compatibility, Render runtime DB role/RLS and durable KEKs remain unverified/unimplemented. Real adult assurance, evidence/history/retention and Android V2-10/G1-V2-11 are separately gated. R0 phone/tablet acceptance **OPEN**; final V2-16 138-case What If? **LAST**.
 
+### Bridge V2-06B / B3c — Production security architecture and evidence gates (PLANNED ONLY)
+
+**Verified prior baseline:** `main@3d4f71036b7dc7231175959bee14f1a7104b0ee6`; [Foundation #43898590922](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43898590922) matching + PG16 SUCCESS; B3b-2 [PR #47](https://github.com/rayadinaveen98-ship-it/bridge/pull/47) code and [PR #48](https://github.com/rayadinaveen98-ship-it/bridge/pull/48) evidence merged, **29/29 synthetic TAP results passed**, still **NOT LIVE**.
+
+**B3c-0 DOCS ONLY:** [Security readiness and future gates](V2_06B_B3C_SECURITY_READINESS_BRIEF.md), [role/key cost alternatives](V2_06B_B3C_ROLE_KEY_COST_MATRIX.md). Four files for this *planning* PR: the two new docs, `docs/ROADMAP.md`, and this package record. This documentation authorizes no code, remote inspection, database role operation, key creation, vendor, Android change or deployment.
+
+**B3c-1 SEPARATELY GATED:** exact approved source/test scope for disposable PostgreSQL16 nonowner/owner RLS, grants, schema leakage and denial tests; preserve original B1/B2/B3 tests, migrations 0001–0008 and four-message synthetic fixtures. **No live Neon/Render access**, no database privileges changed outside disposable test database. This is the recommended NEXT implementation request once a specific path list is approved.
+
+**B3c-2 SEPARATELY GATED:** read-only actual hosted runtime principal evidence only with founder consent, from real Render API pool and redacted Neon catalog privilege/policy inventory; no secrets, user data query, grants, migrations, deployments or writes. Do not infer current role from repo env variable naming or owner credentials.
+
+**B3c-3 SEPARATELY GATED:** production LIVE/UNREAD purpose-specific KEK/provider decision, separate JWT/HMAC secrets, cross-node IV uniqueness, startup/restore/rotation/lost key incident denial, key audit and request budget. No subscription or paid provider until selected with exact pricing/cost and founder approval. No KMS calls inside prolonged DB locks without an approved secure two-phase design and failure tests.
+
+**Mandatory hosting blockers even AFTER B3c:** V1 GET/POST/SSE/bootstrap/Keep/peer old-client safe-denial, actual Neon nonowner RLS and role enforcement, versioned endpoints, android privacy/caches and two-device physical acceptance are G1/V2-10/11 and cannot be certified from isolated Node tests. V2-07 safety evidence FKs and V2-09 premium history currently reference legacy message IDs; do not insert fake V1 plaintext to connect them.
+
+**Release/rollback:** no hosted V2 ID until G1 firewall and key/RLS audit. A future privacy cutover is one-way safe-deny/forward-fix; never roll back to broad V1 history. R0 physical device acceptance OPEN. Final complete 138-case What If? remains **V2-16 LAST**.
+
 ### V2-07 — Report tokens and case evidence isolation
 **Paths:** `apps/api/src/safety/*`, restricted case evidence data access, tests; reviewer role/RBAC defined but no real-staff claim.  
 **Scope:** hashed 7d reporter-bound opaque post-end token; report action validates participation; capture minimum needed messages/metadata **transactionally** while content exists; encrypted scoped case snapshot, reviewer-only logged access; late reports can include user details but cannot invent purged evidence.  
