@@ -54,3 +54,10 @@ Early planning explored a Telugu/English-focused pilot for liquidity. The **late
 **2026-11-15 documentation approval:** The founder approved DOC-00 draft PR #15 for a docs-only review/merge and the package sequence and boundaries. Full 138-case What If? review remains proposed **V2-16 at the end**. R0 device acceptance remains OPEN. No application source, database, cloud deployment, billing or public beta authorization accompanies these approvals.
 
 **Historical conflict note:** Early records describing NestJS/Supabase, zero deployed backend or Android-first as only proposed are not the current design/operational baseline. Keep those entries for history, but always use the dated **2026-11-15 approved V2** decisions above when planning. No development or release was authorized by recording these decisions.
+
+## V2-03 execution boundary — status update 2026-11-16
+
+- **V2-02:** Pure central policy kernel and tests IMPLEMENTED/CI VERIFIED, PR #18 merged at `7721afbb`. Not integrated with production/private QA HTTP routes; no claims of live authorization or physical acceptance.
+- **V2-03:** [Database expansion implementation brief](engineering/V2_03_IMPLEMENTATION_BRIEF.md) PREPARED FOR REVIEW. No SQL schema implementation, live migration, change to message bodies, data deletion, server integration or infrastructure privilege change authorized.
+- **Recommended technical policy (proposed, not yet approved as implementation):** retain original random source conversations and FKs; create new direct-session records; introduce scoped unread/history/evidence tables without backfilling old records; preserve original `bridge_messages.body NOT NULL` until separately authorized safe read/retention cutover.
+- **Existing approval preserved:** R0 hardware verification still OPEN; exhaustive What If? audit final V2-16; no payment, moderation vendor, public beta or production release authorized.

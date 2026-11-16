@@ -100,6 +100,7 @@ The **package sequence and PR boundaries are approved for planning**, but every 
 **Rollback:** Disable new inactive policy path, retain logs/tests; do not change live DB grants until separate authorized gate. **Gate:** security review before applying any runtime grant change.
 
 ### V2-03 — Additive schema and migration rehearsal
+**Detailed implementation brief:** [V2-03 Additive Schema and Disposable Migration Brief](V2_03_IMPLEMENTATION_BRIEF.md) (DOCUMENTED; separate founder authorization required for any SQL/test code). Proposed four migration layers 0004–0007, 14 new scoped tables, nullable V2 metadata, synthetic legacy preservation, migration checksum ledger, test-only PostgreSQL CI and explicit no-live-Neon gate. The existing `bridge_messages.body NOT NULL` relaxation is **outside this strictly additive stage**; defer to separately approved V2-06/V2-11 cutover.
 **Paths:** `database/migrations/0004_*` and later numbered additive migration(s), DB integration tests and migration documentation.  
 **Scope:** add nullable policy/expiry/immutable-kind fields; relationship/direct-session uniqueness; message payload/metadata separation, unread envelopes, history consent/items/test grants, report-token/evidence, retention jobs, policy ledger; design `legacy_qa` protection. Use constraints/indexes gradually.  
 **Acceptance:** Disposable DB apply/reapply/backout rehearsal, FK/unique tests, production-shaped synthetic dataset, old API compatible during expand; zero missing rows; DB role privilege matrix verified.  
