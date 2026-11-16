@@ -26,6 +26,8 @@ jobs:
           npm run test:v2:direct --prefix apps/api
       - name: V2-06A pure scoped messaging and unread tests (NOT LIVE)
         run: npm run test:v2:messaging --prefix apps/api
+      - name: B1b disconnected synthetic-only AEAD and in-memory key contract tests (NOT LIVE)
+        run: npm run test:v2:private-crypto --prefix apps/api
       - name: Validate design token JSON
         run: node -e "const t=require('./design/tokens/bridge.v1.json'); if (!t.color?.dark || !t.spacing) process.exit(1)"
 
