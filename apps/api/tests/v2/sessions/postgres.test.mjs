@@ -45,7 +45,7 @@ async function setDeadline(pool,roomId,deltaMs){
  // TEST TIME TRAVEL of synthetic V2 row only. No live database connection.
  const last=new Date(Date.now()-RANDOM_IDLE_MS+deltaMs);
  await pool.query("UPDATE bridge_conversations SET last_accepted_at=$2,"+
-  "idle_expires_at=$2+interval '30 minutes' WHERE id=$1",[roomId,last]);
+  "idle_expires_at=($2::timestamptz)+interval '30 minutes' WHERE id=$1",[roomId,last]);
 }
 async function digestLegacy(pool,legacy){
  const arrays=[];
