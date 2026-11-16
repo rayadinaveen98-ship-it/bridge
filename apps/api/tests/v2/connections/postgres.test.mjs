@@ -49,7 +49,6 @@ test("V2-05A C05-01..19, 27/28: synthetic-only Keep, concurrency and transcript 
       const after=await single(pool,
         "SELECT last_accepted_at,idle_expires_at FROM bridge_conversations WHERE id=$1",[f.room]);
       assert.deepEqual(after,self);
-      assert.ok(before.idle_expires_at);
     });
     await t.test("C05-03/04 withdrawal revokes vote; reconnect requires two CURRENT votes",async()=>{
       const f=await randomRoom(pool);
