@@ -24,6 +24,8 @@ jobs:
         run: |
           npm run test:v2:connections --prefix apps/api
           npm run test:v2:direct --prefix apps/api
+      - name: V2-06A pure scoped messaging and unread tests (NOT LIVE)
+        run: npm run test:v2:messaging --prefix apps/api
       - name: Validate design token JSON
         run: node -e "const t=require('./design/tokens/bridge.v1.json'); if (!t.color?.dark || !t.spacing) process.exit(1)"
 
@@ -93,3 +95,7 @@ jobs:
         env:
           BRIDGE_TEST_MIGRATION_ACK: disposable-bridge_test-only
         run: npm run test:v2:direct:db --prefix apps/api
+      - name: V2-06A synthetic-only scoped metadata/unread PG16 tests
+        env:
+          BRIDGE_TEST_MIGRATION_ACK: disposable-bridge_test-only
+        run: npm run test:v2:messaging:db --prefix apps/api
