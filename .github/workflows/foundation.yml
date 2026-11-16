@@ -126,3 +126,8 @@ jobs:
         env:
           BRIDGE_TEST_MIGRATION_ACK: disposable-bridge_test-only
         run: npm run test:v2:atomic-private:db --prefix apps/api
+      - name: B3c-1 disposable PG16 independent-login privilege and RLS denial tests (NOT HOSTED)
+        env:
+          BRIDGE_TEST_MIGRATION_ACK: disposable-bridge_test-only
+          BRIDGE_B3C1_ROLE_TEST_ACK: disposable-pg16-service-role-ddl
+        run: npm run test:v2:privileges:db --prefix apps/api
