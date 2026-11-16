@@ -1,6 +1,6 @@
 # Bridge V2-06B/B1b — Disconnected AEAD and In-Memory Key Evidence
 
-**Current status: B1b IMPLEMENTED ON ISOLATED FEATURE BRANCH; FIRST CI, MERGE AND POST-MERGE VERIFICATION PENDING.**
+**Current status: B1b DISCONNECTED CODE-HEAD TESTS PASSED; FINAL EVIDENCE-HEAD, MERGE AND POST-MERGE CI PENDING.**
 **Authorization:** only the exact seven B1b paths named in [V2-06B/B1 Implementation Brief](V2_06B_B1_IMPLEMENTATION_BRIEF.md), [B1 Schema/Crypto Contract](V2_06B_B1_SCHEMA_CRYPTO_CONTRACT.md) and [B1a verified evidence](V2_06B_B1_EVIDENCE.md). No B2, live encryption, customer messages or deployment.
 **Source baseline:** main@eb7419407693573d9c36d0cd7c831d8cdd599618 after B1a [PR #30](https://github.com/rayadinaveen98-ship-it/bridge/pull/30), independent V2-06A test-only [PR #31](https://github.com/rayadinaveen98-ship-it/bridge/pull/31) and docs [PR #32](https://github.com/rayadinaveen98-ship-it/bridge/pull/32). [Main CI #43837799189](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43837799189) SUCCESS in both matching and PG16 integration.
 
@@ -48,3 +48,13 @@
 - Old /v1/.../messages and all legacy Android surfaces must receive safe version/deny policy at G1/V2-11 before activating V2. Never roll back to unrestricted history replay.
 - R0 physical phone/tablet acceptance OPEN. No real-user beta; no legal/moderator/identity gates passed. Comprehensive 138-case What If? review remains V2-16.
 - Rollback B1b: revert the disconnected source+tests PR; no cloud migration or real user data rollback exists because none were touched.
+
+
+## 2026-11-16 code-head CI evidence and security review
+
+- **Tested B1b code head before evidence update:** `6fceb46bcc2510ddf36b29042dfe96d42ec601d3`. [PR-specific Foundation #43840282046](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43840282046) and [same-head branch push #43840272604](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/43840272604) each completed **SUCCESS** with **matching SUCCESS and postgres-integration SUCCESS**.
+- **Actual named test log:** node --test `crypto.test.mjs` and `key_contract.test.mjs`: **21 tests passed / 0 failed / 0 skipped**. These are 21 Node test cases with numerous internal assertions; they do **not** independently prove the entire unimplemented B2/G1 runtime security acceptance matrix. Existing V1, V2-01–06A and B1a PG16 0008/backup/restore checks remained in successful CI jobs.
+- **Crypto proof covered:** known AES-256-GCM zero-key NIST vector, actual authenticated roundtrip, NFC multilingual UTF-8 handling, always-byte-changing ciphertext/tag/IV/wrap tamper tests, metadata AAD changes (sender, recipient, room, scope, policy, message ID, accepted-at), independent per-item random 32-byte DEK, per-purpose KEK wrapping with 12-byte nonce/16-byte tag, malformed/missing key denial, canonical timestamp, truncated/invalid inputs, simulated retirement/removal/rekeying and no runtime module imports.
+- **Security hardening during review:** key-provider `registerKey` rejects identical 32-byte KEK material re-registered under **any** different purpose, key ID or version, not only cross-purpose aliases; matching C08-16 test now explicitly asserts same-byte key-version reuse denial. This protects the test-only uniqueness namespace from accidental key material aliases. The in-memory IV registry detects duplicates in a single process; it does **not** guarantee cross-process or disaster-recovery uniqueness.
+- **Scope:** PR #33 changed exactly the **seven approved paths**, no SQL 0001–0008, older sources/tests, hosted startup, HTTP, Postgres/Neon, Render, Android, billing or retention touched. The key provider remains ephemeral **test-only** and no production key source exists.
+- **Outstanding gate:** This evidence commit changes the PR head; rerun both Foundation jobs on the **new exact head**, inspect changed paths again, and only merge if both succeed. Then verify exact main merge SHA against postmerge Foundation. Do not label B1b released, activated, E2EE, real-user secure chat or actual deployed ciphertext storage.
