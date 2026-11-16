@@ -86,8 +86,13 @@ export async function baseline(admin){
     "SELECT version,trim(checksum) checksum,runner_id FROM bridge_schema_migrations ORDER BY version"
   )).rows);
   result.catalog=sha((await admin.query(
-    "SELECT c.relname,c.relacl::text acl,c.relrowsecurity,c.relforcerowsecurity,"+
-    "pg_get_userbyid(c.relowner) owner,(SELECT count(*)::int FROM pg_policies p "+
+    "SELECT c.relname,c.relrowsecurity,c.relforcerowsecurity,"+
+    "pg_get_userbyid(c.relowner) owner,"+
+    "(SELECT jsonb_agg(jsonb_build_object('grantee',a.grantee,'grantor',a.grantor,"+
+    "'priv',a.privilege_type,'grantable',a.is_grantable) ORDER BY "+
+    "a.grantee,a.grantor,a.privilege_type) FROM "+
+    "aclexplode(COALESCE(c.relacl,acldefault('r',c.relowner))) a) acl,"+
+    "(SELECT count(*)::int FROM pg_policies p "+
     "WHERE p.schemaname='public' AND p.tablename=c.relname) policies "+
     "FROM pg_class c JOIN pg_namespace n ON c.relnamespace=n.oid "+
     "WHERE n.nspname='public' AND c.relkind='r' "+
@@ -164,7 +169,7 @@ export async function withRoleLab(work){
     }
     if(created){
       const steps=[
-        "REVOKE ALL PRIVILEGES ON "+secureTables.map(x=>"TABLE public."+x).join(",")+
+        "REVOKE ALL PRIVILEGES ON TABLE "+secureTables.map(x=>"public."+x).join(",")+
           " FROM "+[names.owner,names.actor,names.group].join(","),
         "REVOKE "+names.group+" FROM "+names.actor,
         "DROP SCHEMA IF EXISTS "+names.schema+" CASCADE",
