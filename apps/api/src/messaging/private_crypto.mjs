@@ -97,6 +97,7 @@ export function encryptSyntheticPrivate({
   }catch{
     cryptoDeny(); // Do not expose library errors, keys, AAD, or plaintext.
   }finally{
+    payload.fill(0); // Ephemeral normalized plaintext buffer, synthetic only.
     dek.fill(0);
     if(Buffer.isBuffer(kek))kek.fill(0);
   }
