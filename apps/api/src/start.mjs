@@ -7,6 +7,7 @@ import { createOutboxDispatcher } from "./outbox.mjs";
 import { createLabLogin } from "./lab_auth.mjs";
 import { createPublicKey } from "node:crypto";
 import { readCloudQaConfig, provisionCloudQaAccounts, verifyCloudQaCredentials } from "./cloud_qa.mjs";
+import { runtimeRoleAuditEnabled,probeRuntimeRole } from "./v2/runtime_role_probe.mjs";
 
 const cloudQa=readCloudQaConfig(process.env);
 const required=cloudQa ? ["BRIDGE_DATABASE_URL"] :
@@ -28,6 +29,10 @@ const pool=new Pool({
   statement_timeout:5000
 });
 await pool.query("SELECT 1");
+// Disabled by default; no HTTP endpoint or DB change. Future manual deployment separately gated.
+if(runtimeRoleAuditEnabled(process.env,Boolean(cloudQa))) {
+  console.log("Bridge internal DB role diagnostic",JSON.stringify(await probeRuntimeRole(pool)));
+}
 const service=createPostgresService(pool,error=>console.error("Bridge backend error",error?.code||error?.name||"unknown"));
 const liveHub=createLiveHub({maxTotal:100,maxPerSubject:2,heartbeatMs:20000});
 const dispatcher=createOutboxDispatcher(pool,event=>liveHub.publish(event),
