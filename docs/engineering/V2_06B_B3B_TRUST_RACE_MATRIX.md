@@ -61,7 +61,7 @@
 | LINK03-02 | Same transaction includes signed subject mapping and B2 current-room LIVE read |
 | LINK03-03 | UNREAD list, ACK and recovery have exact sender/recipient and relationship scoped under trusted actor after revocation |
 | LINK03-04 | Account updates, pair block, unmatch/End/Keep and source expiry lock ordering yields deterministic denial or ordered completion |
-| LINK03-05 | Real old V1 block commits just before V2 lock release / account status changes immediately after preflight | 
+| LINK03-05 | Real old V1 block commits before queued V2 send/read, or account changes after a separate preflight | Latest DB state wins in one authoritative operation; STOP if any V1 writer bypasses required locks |
 | LINK03-06 | Old client V1 GET and POST /messages cannot read, write plaintext or produce replay hints for any V2 room ID |
 | LINK03-07 | Live actor mapping and action commit share one current authority, not UI claims, expired JWT, route version or test flag |
 | LINK03-08 | Server token invalidation, key rotation, RLS and audit fail closed under restart/network latency |
