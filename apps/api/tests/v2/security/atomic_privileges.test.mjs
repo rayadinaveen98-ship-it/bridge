@@ -61,6 +61,23 @@ export async function privilegeCases(t,lab) {
       "ALTER TABLE public.bridge_v2_secure_live DISABLE ROW LEVEL SECURITY"),
       e=>e?.code==="42501");
   });
+  await t.test("R3B-40 REVOKED gateway EXECUTE never falls back to owner",async()=>{
+    const signature=lab.schema+".dispatch(uuid,text,uuid,uuid,text,bigint,text)";
+    await lab.admin.query("REVOKE EXECUTE ON FUNCTION "+signature+
+      " FROM "+lab.names.app);
+    try{
+      const access=(await lab.appClient.query(
+        "SELECT has_function_privilege(current_user,$1,'EXECUTE') AS allowed",
+        [signature])).rows[0].allowed;
+      assert.equal(access,false);
+      await assert.rejects(lab.guard.dispatch(req(a,"live",ab.roomId)),denied);
+      assert.equal((await lab.appClient.query(
+        "SELECT current_user AS who")).rows[0].who,lab.names.app);
+    }finally{
+      await lab.admin.query("GRANT EXECUTE ON FUNCTION "+signature+
+        " TO "+lab.names.app);
+    }
+  });
   await t.test("R3B-08 no session actor/credential leaks after COMMIT or ROLLBACK",async()=>{
     const result=await lab.guard.dispatch(req(a,"live",ab.roomId));
     assert.ok(Array.isArray(result.messages));

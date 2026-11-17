@@ -36,7 +36,6 @@ jobs:
     env:
       CI: 'true'
       BRIDGE_B3C2R3B1_ACK: bridge-b3c2r3b1-disposable-only
-      BRIDGE_B3C2R3B1_DIAGNOSTIC: 'yes'
       BRIDGE_B3C2R2_ACK: disposable-actual-0008-pg18-only
       BRIDGE_B3C2R2_PG_MAJOR: '18'
       BRIDGE_B3C2R2_TEST_DATABASE_URL: postgresql://bridge_privproof_admin:bridge_privproof_only@127.0.0.1:5432/bridge_privproof

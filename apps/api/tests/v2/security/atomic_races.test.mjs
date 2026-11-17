@@ -84,6 +84,39 @@ export async function raceCases(t,lab,entry){
       await lab.writer(db=>db.query("UPDATE bridge_accounts SET status='active' WHERE id=$1",[b]));
     }
   });
+  await t.test("R3B-33 peer account restriction wins over queued ACK, state unchanged",async()=>{
+    const c=await lab.pool.connect();
+    const target=(await lab.admin.query(
+      "SELECT u.id FROM bridge_v2_secure_unread u "+
+      "JOIN bridge_v2_secure_messages m ON m.id=u.message_id "+
+      "WHERE m.conversation_id=$1 AND u.state='unread' ORDER BY u.accepted_at LIMIT 1",
+      [lab.people.bc.roomId])).rows[0]?.id;
+    assert.ok(target,"must have a synthetic unread B-to-C envelope");
+    const before=(await lab.admin.query(
+      "SELECT state,first_acknowledged_at FROM bridge_v2_secure_unread WHERE id=$1",
+      [target])).rows[0];
+    try{
+      await c.query("BEGIN");
+      await c.query("SELECT pg_advisory_xact_lock($1)",[714411]);
+      const pending=lab.guard.dispatch(req(lab.people.c,"ack",target))
+        .then(result=>({ok:true,result}),error=>({ok:false,error}));
+      await sleep(70);
+      await c.query("UPDATE bridge_accounts SET safety_eligible=false WHERE id=$1",[b]);
+      await c.query("COMMIT");
+      const outcome=await pending;
+      assert.equal(outcome.ok,false);
+      assert.equal(denied(outcome.error),true);
+      const after=(await lab.admin.query(
+        "SELECT state,first_acknowledged_at FROM bridge_v2_secure_unread WHERE id=$1",
+        [target])).rows[0];
+      assert.deepEqual(after,before);
+    }finally{
+      await c.query("ROLLBACK").catch(()=>{});
+      c.release();
+      await lab.writer(db=>db.query(
+        "UPDATE bridge_accounts SET safety_eligible=true WHERE id=$1",[b]));
+    }
+  });
   await t.test("R3B-34 participant exit writer wins over queued LIVE: deny",async()=>{
     const c=await lab.pool.connect();
     try {
@@ -148,8 +181,6 @@ export async function raceCases(t,lab,entry){
       [ab.roomId])).rows[0];
     assert.deepEqual(after,before);
   });
-  await t.test("R3B-39 expected hosted blocker: legacy V1 writers not wired to mutex",()=>{
-    assert.equal(714411,714411); // Documentation marker, NOT security certification.
-    // Deliberately no fake V1 compatibility PASS; this is a future hard gate.
-  });
+  // R3B-39 is deliberately NOT a test pass: V1 writers do not coordinate.
+  t.diagnostic("R3B-39 HOSTED HOLD: legacy V1 writer synchronization is unimplemented");
 }

@@ -369,6 +369,29 @@ test("B3c-2R3B-1 real 0001..0008 PG18 restricted-role atomic command gateway",as
         assert.doesNotMatch(content,/disposable_atomic_guard\.mjs/);
       }
     });
+    await t.test("R3B-36 held transaction proof expires; full SEND rolls back",async()=>{
+      const before=(await lab.admin.query(
+        "SELECT (SELECT count(*)::int n FROM bridge_v2_secure_messages) messages,"+
+        "(SELECT count(*)::int n FROM bridge_v2_secure_live) live,"+
+        "(SELECT count(*)::int n FROM bridge_v2_secure_unread) unread,"+
+        "(SELECT next_message_sequence FROM bridge_conversations WHERE id=$1) sequence",
+        [ab.roomId])).rows[0];
+      const slowGuard=lab.createGuard(async({point,operation})=>{
+        if(point==="after_operation_before_final_token"&&operation==="send")
+          await new Promise(resolve=>setTimeout(resolve,26500));
+      });
+      await assert.rejects(slowGuard.dispatch(req(a,"send",ab.roomId,{
+        clientMessageId:randomUUID()
+      })),denied);
+      const after=(await lab.admin.query(
+        "SELECT (SELECT count(*)::int n FROM bridge_v2_secure_messages) messages,"+
+        "(SELECT count(*)::int n FROM bridge_v2_secure_live) live,"+
+        "(SELECT count(*)::int n FROM bridge_v2_secure_unread) unread,"+
+        "(SELECT next_message_sequence FROM bridge_conversations WHERE id=$1) sequence",
+        [ab.roomId])).rows[0];
+      assert.deepEqual(after,before,
+        "short signed transaction proof must not commit after expiry");
+    });
     await t.test("R3B-12 closing D1 then opening D2 cannot reveal D1 LIVE history",async()=>{
       const newRoom=randomUUID(),now=new Date();
       await lab.writer(async c=>{
