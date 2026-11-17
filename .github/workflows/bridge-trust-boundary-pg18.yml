@@ -51,4 +51,4 @@ jobs:
       - name: Install PostgreSQL client dependency (disposable only)
         run: npm install --prefix apps/api --no-package-lock --no-audit --no-fund
       - name: Run attested actual 0001..0008 PG18 trust-boundary proof
-        run: npm run test:v2:trust-boundary:pg18 --prefix apps/api
+        run: timeout --signal=TERM --kill-after=10s 140s npm run test:v2:trust-boundary:pg18 --prefix apps/api
