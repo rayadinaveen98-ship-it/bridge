@@ -134,6 +134,48 @@ test("B3c-2R3B-1 real 0001..0008 PG18 restricted-role atomic command gateway",as
         async()=>await assert.rejects(run(a,"live",ab.roomId),denied)
       );
     });
+    await t.test("R3B-10/11/22 active synthetic random session is current-only, expires in 30m",async()=>{
+      const source=(await lab.admin.query(
+        "SELECT source_conversation_id AS id FROM bridge_connections WHERE id=$1",
+        [ab.connectionId])).rows[0].id;
+      const stamp=new Date(),deadline=new Date(stamp.getTime()+30*60000);
+      await lab.writer(async client=>{
+        await client.query(
+          "UPDATE bridge_conversations SET policy_version='bridge-v2',"+
+          "v2_session_role='random',legacy_qa=false,last_accepted_at=$2,"+
+          "idle_expires_at=$3 WHERE id=$1",[source,stamp,deadline]);
+        await client.query(
+          "INSERT INTO bridge_conversation_participants(conversation_id,account_id) "+
+          "VALUES($1,$2),($1,$3)",[source,a,b]);
+      });
+      await assert.rejects(run(c,"live",source),denied);
+      assert.deepEqual((await run(a,"live",source)).messages,[]);
+      const accepted=await run(a,"send",source,{clientMessageId:randomUUID()});
+      assert.equal(accepted.sequence,1);
+      assert.equal((await run(b,"live",source)).messages[0]?.id,accepted.id);
+      assert.equal((await run(a,"live",source)).messages[0]?.id,accepted.id);
+      const delivered=(await lab.admin.query(
+        "SELECT count(*)::int n FROM bridge_v2_secure_unread WHERE message_id=$1",
+        [accepted.id])).rows[0].n;
+      assert.equal(delivered,0,"random session never creates direct unread history");
+      assert.equal((await run(a,"live",ab.roomId)).messages.length,1,
+        "Keep direct room must never import former random transcript");
+      const expired=new Date(Date.now()-31*60000);
+      await lab.writer(db=>db.query(
+        "UPDATE bridge_conversations SET last_accepted_at=$2,idle_expires_at=$3 "+
+        "WHERE id=$1",[source,expired,new Date(expired.getTime()+30*60000)]));
+      await assert.rejects(run(a,"live",source),denied);
+      await assert.rejects(run(b,"send",source,{clientMessageId:randomUUID()}),denied);
+      assert.equal((await lab.admin.query(
+        "SELECT count(*)::int n FROM bridge_v2_secure_messages WHERE conversation_id=$1",
+        [source])).rows[0].n,1,"expired session cannot append or refresh");
+      await lab.writer(db=>db.query(
+        "UPDATE bridge_conversations SET state='closed',closed_at=clock_timestamp() WHERE id=$1",
+        [source]));
+      await assert.rejects(run(a,"live",source),denied);
+      assert.equal((await run(b,"live",ab.roomId)).messages.length,1,
+        "historical random transcript must stay outside direct chat");
+    });
     await t.test("R3B-13 suspended actor cannot read LIVE or SEND",async()=>{
       await constrained(
         "UPDATE bridge_accounts SET status='suspended' WHERE id=$1",[a],

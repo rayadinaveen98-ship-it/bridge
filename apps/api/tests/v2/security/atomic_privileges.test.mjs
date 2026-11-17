@@ -21,6 +21,18 @@ export async function privilegeCases(t,lab) {
       {BRIDGE_B3C2R2_TEST_DATABASE_URL:safe.BRIDGE_B3C2R2_TEST_DATABASE_URL.replace("/bridge_privproof","/neondb")}])
       assert.throws(()=>assertDisposableB3c2r3b1({...safe,...patch}),denied);
   });
+  await t.test("R3B-01 signed expired issuer audience and future token are rejected",async()=>{
+    const now=Math.floor(Date.now()/1000);
+    const invalid=[
+      {exp:now-2},{iss:"untrusted-issuer"},{aud:"other-api"},
+      {nbf:now+120},{iat:now+90},{exp:now+7200}
+    ];
+    for(const claims of invalid)
+      await assert.rejects(lab.guard.dispatch({
+        ...req(a,"live",ab.roomId),
+        authorization:lab.tokenWithClaims(a,claims)
+      }),denied);
+  });
   await t.test("R3B-02 source rejects actor, role, query, unsafe options supplied by caller",async()=>{
     for(const patch of [{actorId:b},{schema:"public"},{sql:"SELECT *"},{policy:"allow"},
       {connectionId:ab.connectionId},{role:"bridge_privproof_admin"}])
