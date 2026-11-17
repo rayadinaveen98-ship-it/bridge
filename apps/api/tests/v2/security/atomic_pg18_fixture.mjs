@@ -57,6 +57,9 @@ export async function withAtomicPg18Fixture(work,{testGate=null}={}){
       }
       for(const t of contextTables)
         await admin.query("GRANT SELECT ON TABLE public."+t+" TO "+names.migrator);
+      // FOR UPDATE locking and atomic sequence advancement require narrowly
+      // scoped UPDATE on the synthetic conversation table; runtime gets none.
+      await admin.query("GRANT UPDATE ON TABLE public.bridge_conversations TO "+names.migrator);
       for(const t of dataTables)
         await admin.query("ALTER TABLE public."+t+" OWNER TO "+names.migrator);
       transferred=true;
