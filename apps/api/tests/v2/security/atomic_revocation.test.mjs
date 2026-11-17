@@ -420,10 +420,6 @@ test("B3c-2R3B-1 real 0001..0008 PG18 restricted-role atomic command gateway",as
       assert.deepEqual((await run(a,"live",newRoom)).messages,[]);
       assert.deepEqual((await run(b,"live",newRoom)).messages,[]);
     });
-    await t.test("R3B-39,46 mandatory hosted gates NOT certified by offline proof",()=>{
-      assert.equal(true,true);
-      // Legacy V1 writers, production principal, real KEKs, Android and R0
-      // remain documented HOLD; do not count this as hosted security proof.
-    });
+    t.diagnostic("R3B-39/46 HOSTED HOLD: legacy writer mutex, keys, Android, Neon and R0 not certified");
   });
 });
