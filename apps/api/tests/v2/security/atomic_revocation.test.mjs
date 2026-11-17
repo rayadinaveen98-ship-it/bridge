@@ -232,6 +232,7 @@ test("B3c-2R3B-1 real 0001..0008 PG18 restricted-role atomic command gateway",as
         "UPDATE bridge_v2_secure_unread SET accepted_at=$2,expires_at=$3 WHERE id=$1",
         [bEnvelope,before.accepted_at,before.expires_at]);}
     });
+    let recoveryReceipt;
     await t.test("R3B-27/28 first ACK immutable; correct token recovers <=15m",async()=>{
       const receipt=await run(b,"ack",aEnvelope);
       assert.equal(receipt.id,aEnvelope);
@@ -243,10 +244,10 @@ test("B3c-2R3B-1 real 0001..0008 PG18 restricted-role atomic command gateway",as
         recoveryToken:receipt.recoveryToken
       });
       assert.equal(recovered.id,aEnvelope);
-      lab._testReceipt={envelopeId:aEnvelope,recoveryToken:receipt.recoveryToken};
+      recoveryReceipt={envelopeId:aEnvelope,recoveryToken:receipt.recoveryToken};
     });
     await t.test("R3B-29 wrong token or wrong actor denied; 15m timer cannot be extended",async()=>{
-      const {recoveryToken}=lab._testReceipt;
+      const {recoveryToken}=recoveryReceipt;
       await assert.rejects(run(b,"recover",aEnvelope,{
         recoveryToken:recoveryToken.slice(0,-1)+"a"
       }),denied);
@@ -263,7 +264,7 @@ test("B3c-2R3B-1 real 0001..0008 PG18 restricted-role atomic command gateway",as
         [aEnvelope,original]);}
     });
     await privilegeCases(t,lab);
-    await raceCases(t,lab,lab._testReceipt);
+    await raceCases(t,lab,recoveryReceipt);
     await t.test("R3B-42,43 original migrations retained; unsafe R3A policy not copied",async()=>{
       assert.deepEqual(lab.schemaReceipt.ledger,
         ["0004","0005","0006","0007","0008"]);
