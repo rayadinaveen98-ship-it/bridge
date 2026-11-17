@@ -68,6 +68,30 @@ test("B3c-2R3B-1 real 0001..0008 PG18 restricted-role atomic command gateway",as
         blocks:blocks===0
       };
       assert.ok(Object.values(checks).every(Boolean),JSON.stringify(checks));
+      // Independently compare the synthetic issuer's transaction signature to
+      // the disposable database HMAC result without logging secret/key material.
+      await lab.appClient.query("BEGIN");
+      try{
+        const tx=(await lab.appClient.query(
+          "SELECT txid_current()::text tx,"+
+          "floor(extract(epoch from clock_timestamp()))::bigint epoch,session_user sess"
+        )).rows[0];
+        const expires=Number(tx.epoch)+25;
+        const claim={
+          actor:a,operation:"live",targetId:ab.roomId,clientMessageId:null,
+          recoveryToken:null,expires,tx:tx.tx,session:tx.sess
+        };
+        const signed=lab.signer(claim);
+        const source=[a,"live",ab.roomId,"",
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          expires,tx.tx,tx.sess].join("|");
+        const db=(await lab.admin.query(
+          "SELECT encode(public.hmac(convert_to($1,'UTF8'),"+
+          "secret,'sha256'),'hex') AS mac FROM "+lab.schema+".guard_key WHERE id=1",
+          [source]
+        )).rows[0].mac;
+        assert.equal(signed,db,"independent test-only SQL and JS proof must match");
+      }finally{await lab.appClient.query("ROLLBACK");}
     });
     await t.test("R3B-10/11 positive A+B direct room, no unauthorized C access",async()=>{
       const empty=await run(a,"live",ab.roomId);
