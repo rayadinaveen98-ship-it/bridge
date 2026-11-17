@@ -1,0 +1,95 @@
+name: Bridge R0 profile-mode QA APK (PERF-01)
+
+# PERF-01 only: produces a separately installable profiling APK from
+# unchanged Flutter app source. Never deploys API/Neon/Render or uses secrets.
+on:
+  push:
+    branches:
+      - feature/bridge-r0-perf-profile-20261117
+    paths:
+      - '.github/workflows/bridge-r0-perf-profile-apk.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/bridge-r0-perf-profile-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bridge-r0-perf-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  profile-android:
+    name: Flutter profile APK — isolated QA install
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      QA_ORIGIN: https://bridge-private-qa.onrender.com
+    steps:
+      - name: Checkout reviewed source
+        uses: actions/checkout@v4
+      - name: Require the exact approved QA HTTPS origin
+        run: |
+          test "$QA_ORIGIN" = "https://bridge-private-qa.onrender.com"
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate Android scaffolding from unchanged Flutter source
+        run: flutter create --platforms=android --project-name bridge_mobile --org com.bridge.internal --no-pub apps/mobile
+      - name: Isolate profile build package and visible app label (generated files only)
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          path = Path("apps/mobile/android/app/build.gradle.kts")
+          assert path.exists(), "Expected generated Flutter Kotlin Gradle build; STOP on scaffold drift"
+          raw = path.read_text(encoding="utf-8")
+          modified, count = re.subn(
+              r'(?m)^(\s*applicationId\s*=\s*)"com\.bridge\.internal\.bridge_mobile"',
+              r'\1"com.bridge.internal.bridge_mobile.perf"',
+              raw,
+          )
+          assert count == 1, f"Expected exactly one Android package match, found {count}"
+          path.write_text(modified, encoding="utf-8")
+          manifest = Path("apps/mobile/android/app/src/main/AndroidManifest.xml")
+          raw = manifest.read_text(encoding="utf-8")
+          modified, count = re.subn(
+              r'android:label="[^"]+"',
+              'android:label="Bridge Perf QA"',
+              raw,
+          )
+          assert count == 1, f"Expected exactly one app label match, found {count}"
+          manifest.write_text(modified, encoding="utf-8")
+          print("Generated profile app isolated; no tracked Dart or app source changed.")
+          PY
+      - name: Install Flutter dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+      - name: Existing Flutter analysis and widget/protocol tests
+        working-directory: apps/mobile
+        run: |
+          flutter analyze --no-fatal-infos
+          flutter test
+      - name: Build physical-device profile APK (NOT release, NOT debug)
+        working-directory: apps/mobile
+        run: flutter build apk --profile --dart-define=BRIDGE_QA_ORIGIN="$QA_ORIGIN"
+      - name: Verify profile artifact
+        run: |
+          test -s apps/mobile/build/app/outputs/flutter-apk/app-profile.apk
+          sha256sum apps/mobile/build/app/outputs/flutter-apk/app-profile.apk
+      - name: Upload isolated profile QA APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: bridge-r0-perf-profile-apk
+          path: apps/mobile/build/app/outputs/flutter-apk/app-profile.apk
+          retention-days: 7
+          if-no-files-found: error
