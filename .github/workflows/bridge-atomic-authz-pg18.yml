@@ -1,0 +1,50 @@
+name: Bridge B3c-2R3B-1 disposable PG18 atomic access
+on:
+  pull_request:
+    paths:
+      - 'apps/api/src/v2/security/disposable_atomic_guard.mjs'
+      - 'apps/api/tests/v2/security/**'
+      - '.github/workflows/bridge-atomic-authz-pg18.yml'
+      - 'apps/api/package.json'
+      - 'docs/engineering/V2_06B_B3C2R3B1_EVIDENCE.md'
+  push:
+    paths:
+      - 'apps/api/src/v2/security/disposable_atomic_guard.mjs'
+      - 'apps/api/tests/v2/security/**'
+      - '.github/workflows/bridge-atomic-authz-pg18.yml'
+      - 'apps/api/package.json'
+      - 'docs/engineering/V2_06B_B3C2R3B1_EVIDENCE.md'
+permissions:
+  contents: read
+jobs:
+  pg18-disconnected-atomic:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: bridge_privproof_admin
+          POSTGRES_PASSWORD: bridge_privproof_only
+          POSTGRES_DB: bridge_privproof
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bridge_privproof_admin -d bridge_privproof"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CI: 'true'
+      BRIDGE_B3C2R3B1_ACK: bridge-b3c2r3b1-disposable-only
+      BRIDGE_B3C2R2_ACK: disposable-actual-0008-pg18-only
+      BRIDGE_B3C2R2_PG_MAJOR: '18'
+      BRIDGE_B3C2R2_TEST_DATABASE_URL: postgresql://bridge_privproof_admin:bridge_privproof_only@127.0.0.1:5432/bridge_privproof
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated test-only PostgreSQL dependency
+        run: npm install --prefix apps/api --no-package-lock --no-audit --no-fund
+      - name: Verify PostgreSQL 18 actual schema, independent runtime, revocation and races
+        run: npm run test:v2:atomic-authz:pg18 --prefix apps/api
