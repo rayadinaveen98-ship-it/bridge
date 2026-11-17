@@ -4,10 +4,12 @@
  * Synthetic secret is test-fixture-owned; no production issuer selected.
  */
 import assert from "node:assert/strict";
-import {randomBytes,randomUUID} from "node:crypto";
+import {randomBytes} from "node:crypto";
+import {verifyBearer} from "../../../src/auth.mjs";
+import {signedToken,subject,syntheticSigning} from "../identity/fixtures.mjs";
 
 export async function capabilityChecks(t,lab){
-  const {admin,clients,schemas,roles,people,withTx}=lab;
+  const {admin,clients,schemas,roles,people,keys,withTx}=lab;
   const deny=async(action)=>assert.rejects(action,e=>e.code==="42501");
   await t.test("TB-C01: mutate every bound claim without new issuer signature",async()=>{
     await withTx(async({client,issue,call})=>{
@@ -87,5 +89,47 @@ export async function capabilityChecks(t,lab){
     // valid metadata command. Nothing in this lab decrypts message bytes.
     await deny(()=>clients.runtime.query("SELECT * FROM bridge_v2_secure_live"));
     await deny(()=>clients.runtime.query("SELECT * FROM bridge_v2_secure_unread"));
+  });
+  await t.test("TB-C08: issued proof denied after live Block revocation, then one-time recovery",async()=>{
+    await withTx(async({client,issue,call})=>{
+      const cap=issue();
+      await admin.query("INSERT INTO public.bridge_blocks(blocker_id,blocked_id) VALUES($1,$2)",
+        [people.b,people.a]);
+      try{
+        await deny(()=>call(client,cap));
+      }finally{
+        await admin.query("DELETE FROM public.bridge_blocks WHERE blocker_id=$1 AND blocked_id=$2",
+          [people.b,people.a]);
+      }
+      assert.equal(await call(client,cap),1,
+        "authorization must recheck current Block state and allow a still-valid proof after rollback");
+      await deny(()=>call(client,cap));
+    });
+  });
+  await t.test("TB-C09: attacker temp-table and search_path spoof cannot change qualified command",async()=>{
+    await withTx(async({client,issue,call})=>{
+      await client.query("CREATE TEMP TABLE bridge_blocks(blocker_id uuid,blocked_id uuid)");
+      await client.query("SET LOCAL search_path=pg_temp,public");
+      await client.query("SELECT pg_catalog.set_config('bridge.tb.room',$1,true)",
+        [people.bc.roomId]);
+      assert.equal(await call(client,issue()),1,
+        "real fully-qualified eligibility checks and command-owned RLS context must prevail");
+    });
+  });
+  await t.test("TB-C10: synthetic JWT key rotation and expiry fail closed",()=>{
+    const old=signedToken(keys,{sub:subject(people.a)});
+    assert.equal(verifyBearer(old,keys.authentication).subject,subject(people.a));
+    const rotated=syntheticSigning();
+    assert.throws(()=>verifyBearer(old,rotated.authentication),
+      e=>e.status===401&&e.code==="unauthorized");
+    const replacement=signedToken(rotated,{sub:subject(people.a)});
+    assert.throws(()=>verifyBearer(replacement,keys.authentication),
+      e=>e.status===401&&e.code==="unauthorized");
+    const expired=signedToken(keys,{sub:subject(people.a),
+      claims:{exp:Math.floor(Date.now()/1000)-5}});
+    assert.throws(()=>verifyBearer(expired,keys.authentication),
+      e=>e.status===401&&e.code==="unauthorized");
+    // No per-JWT denylist exists: account/Block revocation is checked by the
+    // SQL command and hosted token revocation remains a separate production gate.
   });
 }
