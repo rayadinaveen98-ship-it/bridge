@@ -93,7 +93,7 @@ export async function actorAndRoleChecks(t,lab){
       [schemas.cmd+".inspect(uuid,text,uuid,uuid,text,text,bigint,text,text)"])).rows[0].name;
     assert.equal(owner,roles.exec);
   });
-  await t.test("TB-B04: current eligibility, Block and relationship checks deny",async()=>{
+  await sub.test("TB-B04: current eligibility, Block and relationship checks deny",async sub=>{
     const scenarios=[
       ["suspend actor","UPDATE bridge_accounts SET status='suspended' WHERE id=$1",
         "UPDATE bridge_accounts SET status='active' WHERE id=$1",[people.a]],
@@ -110,7 +110,7 @@ export async function actorAndRoleChecks(t,lab){
       ["room closed","UPDATE bridge_conversations SET state='closed',closed_at=clock_timestamp() WHERE id=$1",
         "UPDATE bridge_conversations SET state='open',closed_at=NULL WHERE id=$1",[people.ab.roomId]]
     ];
-    for(const [label,change,restore,params] of scenarios)await t.test(label,async()=>{
+    for(const [label,change,restore,params] of scenarios)await sub.test(label,async()=>{
       await admin.query(change,params);
       try{
         await withTx(async({client,issue,call})=>{
@@ -119,7 +119,7 @@ export async function actorAndRoleChecks(t,lab){
       }finally{await admin.query(restore,params);}
     });
     for(const [blocker,blocked] of [[people.a,people.b],[people.b,people.a]])
-      await t.test("Block direction denies "+blocker.slice(0,6),async()=>{
+      await sub.test("Block direction denies "+blocker.slice(0,6),async()=>{
         await admin.query("INSERT INTO bridge_blocks(blocker_id,blocked_id) VALUES($1,$2)",
           [blocker,blocked]);
         try{
