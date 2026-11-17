@@ -26,6 +26,49 @@ test("B3c-2R3B-1 real 0001..0008 PG18 restricted-role atomic command gateway",as
       try{await fn();}
       finally{await mutate(restore,restoreArgs);}
     }
+    await t.test("R3B-00 fixture eligibility invariants are actually satisfied",async()=>{
+      const room=(await lab.admin.query(
+        "SELECT kind,state,policy_version,v2_session_role,legacy_qa,idle_expires_at,"+
+        "connection_id FROM bridge_conversations WHERE id=$1",[ab.roomId]
+      )).rows[0];
+      const pair=(await lab.admin.query(
+        "SELECT id,policy_version,ended_at,member_low,member_high "+
+        "FROM bridge_connections WHERE id=$1",[ab.connectionId]
+      )).rows[0];
+      const members=(await lab.admin.query(
+        "SELECT p.account_id,p.left_at,a.status,a.auth_subject,"+
+        "a.safety_eligible,a.age_verified_at,a.deleted_at "+
+        "FROM bridge_conversation_participants p "+
+        "JOIN bridge_accounts a ON a.id=p.account_id "+
+        "WHERE p.conversation_id=$1 ORDER BY p.account_id",[ab.roomId]
+      )).rows;
+      const segment=(await lab.admin.query(
+        "SELECT state,connection_id,policy_version FROM bridge_v2_direct_sessions "+
+        "WHERE conversation_id=$1",[ab.roomId]
+      )).rows[0];
+      const blocks=(await lab.admin.query(
+        "SELECT count(*)::int n FROM bridge_blocks WHERE "+
+        "(blocker_id=$1 AND blocked_id=$2) OR "+
+        "(blocker_id=$2 AND blocked_id=$1)",[a,b]
+      )).rows[0].n;
+      const checks={
+        kind:room.kind==="connection",roomOpen:room.state==="open",
+        policy:room.policy_version==="bridge-v2",role:room.v2_session_role==="direct",
+        legacy:room.legacy_qa===false,roomConnection:room.connection_id===pair.id,
+        idle:room.idle_expires_at instanceof Date&&room.idle_expires_at>Date.now(),
+        pair:pair.policy_version==="bridge-v2"&&pair.ended_at===null,
+        two:members.length===2,
+        sorted:members.length===2&&members[0].account_id===pair.member_low&&
+          members[1].account_id===pair.member_high,
+        accounts:members.every(x=>x.status==="active"&&x.age_verified_at!=null&&
+          x.safety_eligible===true&&x.deleted_at===null&&
+          x.auth_subject==="b3b-disposable:"+x.account_id),
+        segment:segment?.state==="open"&&segment.connection_id===pair.id&&
+          segment.policy_version==="bridge-v2",
+        blocks:blocks===0
+      };
+      assert.ok(Object.values(checks).every(Boolean),JSON.stringify(checks));
+    });
     await t.test("R3B-10/11 positive A+B direct room, no unauthorized C access",async()=>{
       const empty=await run(a,"live",ab.roomId);
       assert.deepEqual(empty.messages,[]);
