@@ -316,19 +316,21 @@ test("B3c-2R3B-1 real 0001..0008 PG18 restricted-role atomic command gateway",as
     await t.test("R3B-29 wrong token or wrong actor denied; 15m timer cannot be extended",async()=>{
       const {recoveryToken}=recoveryReceipt;
       await assert.rejects(run(b,"recover",aEnvelope,{
-        recoveryToken:recoveryToken.slice(0,-1)+"a"
+        recoveryToken:recoveryToken.slice(0,-1)+(recoveryToken.at(-1)==="a"?"b":"a")
       }),denied);
       await assert.rejects(run(c,"recover",aEnvelope,{recoveryToken}),denied);
       const original=(await lab.admin.query(
-        "SELECT first_acknowledged_at FROM bridge_v2_secure_unread WHERE id=$1",
-        [aEnvelope])).rows[0].first_acknowledged_at;
+        "SELECT accepted_at,first_acknowledged_at FROM bridge_v2_secure_unread WHERE id=$1",
+        [aEnvelope])).rows[0];
+      const priorAccepted=new Date(Date.now()-18*60000);
+      const priorAck=new Date(Date.now()-16*60000);
       await mutate(
-        "UPDATE bridge_v2_secure_unread SET first_acknowledged_at=clock_timestamp()-interval '16 minutes' WHERE id=$1",
-        [aEnvelope]);
+        "UPDATE bridge_v2_secure_unread SET accepted_at=$2,first_acknowledged_at=$3 WHERE id=$1",
+        [aEnvelope,priorAccepted,priorAck]);
       try{await assert.rejects(run(b,"recover",aEnvelope,{recoveryToken}),denied);}
       finally{await mutate(
-        "UPDATE bridge_v2_secure_unread SET first_acknowledged_at=$2 WHERE id=$1",
-        [aEnvelope,original]);}
+        "UPDATE bridge_v2_secure_unread SET accepted_at=$2,first_acknowledged_at=$3 WHERE id=$1",
+        [aEnvelope,original.accepted_at,original.first_acknowledged_at]);}
     });
     await privilegeCases(t,lab);
     await raceCases(t,lab,recoveryReceipt);
