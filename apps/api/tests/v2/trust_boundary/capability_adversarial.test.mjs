@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import {randomBytes,randomUUID} from "node:crypto";
 
 export async function capabilityChecks(t,lab){
-  const {clients,schemas,roles,people,withTx}=lab;
+  const {admin,clients,schemas,roles,people,withTx}=lab;
   const deny=async(action)=>assert.rejects(action,e=>e.code==="42501");
   await t.test("TB-C01: mutate every bound claim without new issuer signature",async()=>{
     await withTx(async({client,issue,call})=>{
@@ -69,9 +69,9 @@ export async function capabilityChecks(t,lab){
       ".verify(NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)"));
     await deny(()=>rt.query("CREATE FUNCTION "+schemas.cmd+
       ".inspect() RETURNS int LANGUAGE sql AS 'SELECT 1'"));
-    const hasKeyRead=(await rt.query(
-      "SELECT has_table_privilege(current_user,$1,'SELECT') yes",
-      [schemas.key+".private_key"])).rows[0].yes;
+    const hasKeyRead=(await admin.query(
+      "SELECT has_table_privilege($1,$2,'SELECT') yes",
+      [roles.runtime,schemas.key+".private_key"])).rows[0].yes;
     assert.equal(hasKeyRead,false);
     const privilege=(await rt.query(
       "SELECT has_function_privilege($1,$2,'EXECUTE') can_call",
