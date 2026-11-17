@@ -212,9 +212,9 @@ export async function raceCases(t,lab,entry){
       "(SELECT next_message_sequence FROM bridge_conversations WHERE id=$1) sequence",
       [ab.roomId])).rows[0];
     await lab.admin.query("CREATE FUNCTION "+triggerFn+
-      " RETURNS trigger LANGUAGE plpgsql SET search_path=pg_catalog AS $ "+
+      " RETURNS trigger LANGUAGE plpgsql SET search_path=pg_catalog AS $stage$ "+
       "BEGIN RAISE EXCEPTION 'synthetic_db_stage_failure' USING ERRCODE='P0001'; "+
-      "END $");
+      "END; $stage$");
     try{
       for(const table of ["bridge_v2_secure_messages","bridge_v2_secure_live",
         "bridge_v2_secure_unread"]){
@@ -246,9 +246,9 @@ export async function raceCases(t,lab,entry){
       const sequences=messages.map(m=>Number(m.sequence)).sort((x,y)=>x-y);
       assert.deepEqual(sequences,[Number(before),Number(before)+1]);
       assert.notEqual(messages[0].id,messages[1].id);
-      assert.equal((await lab.admin.query(
+      assert.equal(Number((await lab.admin.query(
         "SELECT next_message_sequence AS seq FROM bridge_conversations WHERE id=$1",
-        [ab.roomId])).rows[0].seq,Number(before)+2);
+        [ab.roomId])).rows[0].seq),Number(before)+2);
       assert.equal((await lab.guard.dispatch(req(a,"live",ab.roomId))).messages.length>=2,
         true);
     });
