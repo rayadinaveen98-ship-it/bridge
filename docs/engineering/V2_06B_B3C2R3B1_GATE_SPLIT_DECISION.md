@@ -1,6 +1,6 @@
 # Bridge B3c-2R3B-1 — proposed split of offline merge acceptance from hosted V2 activation
 
-**Decision state: PROPOSED / FOUNDER REVIEW REQUIRED, NOT APPROVED, NOT MERGED.**  
+**Decision state: GATE SEPARATION FOUNDER-APPROVED (2026-11-17) / PR #61 MERGE NOT APPROVED / HOSTED V2 HOLD.**  
 **Date:** 2026-11-17  
 **Current authoritative source:** `main@e3aa65517a5aae2c593170cf1d334b43599897f8`; B3c-2R3B-1 [draft PR #61](https://github.com/rayadinaveen98-ship-it/bridge/pull/61) at `5692082a2444eaa1b0373df5a2b67e4d91c5789a`.  
 **Evidence:** [B3c-2R3B-1 evidence on PR #61](https://github.com/rayadinaveen98-ship-it/bridge/blob/feature/bridge-b3c2r3b1-disposable-atomic-pg18-20261117/docs/engineering/V2_06B_B3C2R3B1_EVIDENCE.md); [original eight-file implementation brief](V2_06B_B3C2R3B_IMPLEMENTATION_BRIEF.md); [original 46-area matrix](V2_06B_B3C2R3B_ATTACK_MATRIX.md).
@@ -13,13 +13,13 @@
 - This is **synthetic data and fake ciphertext shapes** in a disposable GitHub Actions PostgreSQL 18 service. No production AES key management or E2EE is demonstrated.
 - PR #61 is currently **DRAFT, UNMERGED**, and hosted V2 is **HOLD**. Do not infer that green CI authorizes production or that a branch is deployed.
 
-## 2. Founder decision to make — two *separate* gates
+## 2. Founder-approved separation — two *separate* gates
 
-### Gate L — merge an isolated security **test laboratory** to main (proposed exception, NOT yet approved)
+### Gate L — eligibility to merge an isolated security **test laboratory** to main (framework approved; PR #61 merge NOT approved)
 
-**Proposed narrowly revised acceptance rule:** PR #61 may be reviewed for a *repository-only* merge once (a) all implemented offline tests pass on its **exact final head**, (b) the exact eight-file allowlist and absence of live imports/deployment triggers are verified, (c) all 46 areas have a truthful individually classified disposition, (d) 2 PARTIAL and 2 BLOCKED requirements are explicitly **carried to Gate H, never called green**, (e) its synthetic secrets/roles/table-owner bypass are clearly marked test-only and blocked from hosted use, and (f) the founder gives **fresh, express authorization for this exact exception and merge**. PR #61 must remain draft and unmerged until that happens.
+**Founder-approved Gate L framework (subject to separate PR #61 merge approval):** PR #61 may be reviewed for a *repository-only* merge once (a) all implemented offline tests pass on its **exact final head**, (b) the exact eight-file allowlist and absence of live imports/deployment triggers are verified, (c) all 46 areas have a truthful individually classified disposition, (d) 2 PARTIAL and 2 BLOCKED requirements are explicitly **carried to Gate H, never called green**, (e) its synthetic secrets/roles/table-owner bypass are clearly marked test-only and blocked from hosted use, and (f) the founder gives **fresh, express authorization for this exact exception and merge**. PR #61 must remain draft and unmerged until that happens.
 
-**This is a proposal to revise the founder's original "full security matrix before merging" condition.** The prior condition remains controlling unless the founder explicitly changes it. An approval to plan, document, test or continue is **not** an approval to change the gate or merge PR #61.
+**Founder decision recorded 2026-11-17:** The Gate L / Gate H split is approved for governance. The former full-matrix condition may be considered separately at a *test-laboratory repository merge* decision without certifying hosted security. This approval does **not** approve or merge PR #61, waive any Gate H security blockers, or permit any live source import/deployment. The founder has explicitly reserved PR #61's merge for a separate approval.
 
 Mergeable-as-a-lab means only that **test infrastructure enters the repository**, not that V2 feature behavior is integrated or security certified. No operational release status advances from it. A merge does **not** grant permission to expose, import or reuse the synthetic guard in HTTP routes or deploy database functions.
 
@@ -51,7 +51,8 @@ Mergeable-as-a-lab means only that **test infrastructure enters the repository**
 | `LAB_IMPLEMENTED` | The approved eight-file disconnected package exists in draft PR #61 | **YES** |
 | `LAB_TESTED` | PG18 53/53 plus all four predecessor workflow families green on exact PR head | **YES** |
 | `LAB_AUDITED` | 46 areas explicitly classified (42 proven / 2 partial / 2 blocked), not passed by fiat | **YES** |
-| `LAB_MERGE_EXCEPTION_APPROVED` | Founder explicitly authorizes revised Gate L and PR #61 merge despite deferred four areas | **NO** |
+| `LAB_GATE_SEPARATION_APPROVED` | Founder authorized distinct offline-lab and hosted-release review gates | **YES** |
+| `LAB_PR61_MERGE_APPROVED` | Founder separately authorizes PR #61 test-only code merge after exact-head review | **NO** |
 | `LAB_MERGED` | PR #61 actually merged and CI/repo commit recorded | **NO** |
 | `HOSTED_V2_SECURITY_CERTIFIED` | All separate trust, compatibility, key and operational gates verified | **NO** |
 | `HOSTED_V2_RELEASED` | Founder-approved deployment and production acceptance | **NO** |
@@ -62,14 +63,14 @@ Mergeable-as-a-lab means only that **test infrastructure enters the repository**
 
 **Risks:** `apps/api/src/v2/security/disposable_atomic_guard.mjs` lives under the normal source tree, so a future engineer might import it in production; the synthetic HMAC and owner-bypassing function could be mistaken for a valid security architecture. A passing 53-test suite is not a proof of zero vulnerabilities. Documentation or CI guards alone do not eliminate this risk. Require negative import tests and explicit review at each source PR; consider a later separately approved relocation into a test-only tree if ongoing maintenance demands it. Such relocation is **outside** PR #61's founder-approved eight-file scope.
 
-**Recommended founder choice:** authorize only the **gate separation as a documented governance decision first**; then independently approve the *exact* PR #61 merge if the checklist passes. Do not auto-merge from this planning work. If founder declines to revise the original rule, leave #61 draft until all 46 areas are certified (which requires separately scoped hosted projects).
+**Founder decision implemented:** Gate separation governance is approved. PR #61 remains draft and unmerged. The recommended **next separate founder decision** is whether to authorize the exact PR #61 code merge under the approved Gate L review after its checklist passes. No automatic merge or production release follows from this governance approval.
 
-## 4. Execution gates after this proposal
+## 4. Execution gates after founder approval of gate separation
 
-1. **NOW — documented proposal:** inspect verified artifacts, publish this decision record and an append-only roadmap marker in a docs-only draft PR. No application changes, no hosted access, no merge of PR #61.
-2. **Next founder decision:** approve or reject the revised `Gate L` and, separately, authorize or withhold a specifically referenced PR #61 merge. If approved, perform final SHA/CI/diff/guard audit, switch PR to ready and merge only if all checks pass. A failed check leaves it draft.
+1. **NOW — approved documentation:** merge only the two documentation files in PR #62 after exact-head CI and scope review. No application changes, hosted access, or merge of PR #61.
+2. **Next founder decision:** separately authorize or withhold a specifically referenced PR #61 merge under Gate L. Only with that fresh approval perform final SHA/CI/diff/guard audit, mark PR #61 ready and merge if every check passes. A failed check leaves it draft.
 3. **Future architecture stage:** prepare exact scope for production-safe nonowner identity/authorization, existing V1 writer firewall, least-privileged role cutover, rollback and performance/deadlock testing. *Documentation only* until explicit new approval.
 4. **Future hosted stage:** independently authorize Neon/Render read-only preservation inspection, then any carefully staged migration/deployment under separate approval. No silent expansion into hosted operations or Android.
 5. **Later:** R0 physical acceptance and final V2-16 comprehensive What If? review; public launch gated by privacy, safety and operational readiness.
 
-**This record does NOT amend the previously approved merge condition by itself. The founder decides whether Gate L supersedes that part of the former condition.**
+**This record now documents founder approval of Gate L / Gate H separation only. It does NOT constitute a PR #61 merge authorization, hosted security certification, deployment authorization, or approval to waive any unresolved safety/release requirement.**
