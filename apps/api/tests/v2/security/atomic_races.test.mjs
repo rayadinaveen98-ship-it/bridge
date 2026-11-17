@@ -183,6 +183,7 @@ export async function raceCases(t,lab,entry){
       "SELECT (SELECT count(*)::int FROM bridge_v2_secure_messages) messages,"+
       "(SELECT count(*)::int FROM bridge_v2_secure_live) live,"+
       "(SELECT count(*)::int FROM bridge_v2_secure_unread) unread,"+
+      "(SELECT count(*)::int FROM bridge_event_outbox) outbox,"+
       "(SELECT next_message_sequence FROM bridge_conversations WHERE id=$1) sequence",
       [ab.roomId])).rows[0];
     const failGuard=lab.createGuard(async({point,operation})=>{
@@ -196,12 +197,13 @@ export async function raceCases(t,lab,entry){
       "SELECT (SELECT count(*)::int FROM bridge_v2_secure_messages) messages,"+
       "(SELECT count(*)::int FROM bridge_v2_secure_live) live,"+
       "(SELECT count(*)::int FROM bridge_v2_secure_unread) unread,"+
+      "(SELECT count(*)::int FROM bridge_event_outbox) outbox,"+
       "(SELECT next_message_sequence FROM bridge_conversations WHERE id=$1) sequence",
       [ab.roomId])).rows[0];
     assert.deepEqual(after,before);
   });
   // R3B-39 is deliberately NOT a test pass: V1 writers do not coordinate.
-  await t.test("R3B-37 metadata/LIVE/UNREAD insert faults roll back ALL artifacts",async()=>{
+  await t.test("R3B-37 metadata/LIVE/UNREAD/outbox inserts each roll back ALL artifacts",async()=>{
     const triggerName="b3r1_inject_failure";
     const triggerFn=lab.schema+".reject_stage()";
     const snapshot=async()=>(await lab.admin.query(
@@ -217,7 +219,7 @@ export async function raceCases(t,lab,entry){
       "END; $stage$");
     try{
       for(const table of ["bridge_v2_secure_messages","bridge_v2_secure_live",
-        "bridge_v2_secure_unread"]){
+        "bridge_v2_secure_unread","bridge_event_outbox"]){
         const initial=await snapshot();
         await lab.admin.query("CREATE TRIGGER "+triggerName+
           " BEFORE INSERT ON public."+table+
@@ -233,6 +235,27 @@ export async function raceCases(t,lab,entry){
         }
       }
     }finally{await lab.admin.query("DROP FUNCTION "+triggerFn);}
+  });
+  await t.test("R3B-37 successful SEND includes one payload-free outbox event",async()=>{
+    const before=Number((await lab.admin.query(
+      "SELECT count(*)::int n FROM bridge_event_outbox WHERE conversation_id=$1",
+      [ab.roomId])).rows[0].n);
+    const receipt=await lab.guard.dispatch(req(a,"send",ab.roomId,{
+      clientMessageId:randomUUID()
+    }));
+    const event=(await lab.admin.query(
+      "SELECT event_type,payload,event_key FROM bridge_event_outbox "+
+      "WHERE event_key=$1",["message:"+receipt.id])).rows[0];
+    assert.equal(event.event_type,"conversation.message.accepted");
+    assert.deepEqual(event.payload,{
+      messageId:receipt.id,sequenceNumber:Number(receipt.sequence)
+    });
+    assert.equal(JSON.stringify(event.payload).includes("ciphertext"),false);
+    assert.equal(JSON.stringify(event.payload).includes("body"),false);
+    const after=Number((await lab.admin.query(
+      "SELECT count(*)::int n FROM bridge_event_outbox WHERE conversation_id=$1",
+      [ab.roomId])).rows[0].n);
+    assert.equal(after,before+1);
   });
   await t.test("R3B-38 two independently logged-in nonowner sessions serialize SEND safely",async()=>{
     await lab.withSecondaryRuntime(async secondary=>{
