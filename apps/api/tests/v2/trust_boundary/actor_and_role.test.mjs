@@ -93,7 +93,7 @@ export async function actorAndRoleChecks(t,lab){
       [schemas.cmd+".inspect(uuid,text,uuid,uuid,text,text,bigint,text,text)"])).rows[0].name;
     assert.equal(owner,roles.exec);
   });
-  await sub.test("TB-B04: current eligibility, Block and relationship checks deny",async sub=>{
+  await t.test("TB-B04: current eligibility, Block and relationship checks deny",async sub=>{
     const scenarios=[
       ["suspend actor","UPDATE bridge_accounts SET status='suspended' WHERE id=$1",
         "UPDATE bridge_accounts SET status='active' WHERE id=$1",[people.a]],
