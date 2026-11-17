@@ -14,6 +14,7 @@ const URI="postgresql://bridge_privproof_admin:bridge_privproof_only@127.0.0.1:5
 export async function legacyWriterChecks(t,lab){
   const {admin,people}=lab;
   const pool=new pg.Pool({connectionString:URI,max:3,connectionTimeoutMillis:4000,
+    statement_timeout:8000,query_timeout:12000,
     application_name:"b3c2r3b2a_synthetic_v1_negative_control"});
   const legacy=createPostgresService(pool);
   try{
