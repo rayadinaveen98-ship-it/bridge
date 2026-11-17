@@ -139,7 +139,7 @@ export async function withAtomicPg18Fixture(work,{testGate=null}={}){
               "SELECT has_table_privilege(current_user,$1,'SELECT') AS allowed",
               ["public."+table])).rows[0].allowed,false);
           const secondary=createDisposableAtomicGuard({
-            checkout:async()=>({query:(...args)=>second.query(...),release:()=>{}}),
+            checkout:async()=>({query:(...args)=>second.query(...args),release:()=>{}}),
             authentication:lab.keys.authentication,proofSigner:signer,schema,env
           });
           return await work(Object.freeze({guard:secondary,client:second,role}));
