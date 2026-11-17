@@ -60,6 +60,11 @@ export async function withAtomicPg18Fixture(work,{testGate=null}={}){
       // FOR UPDATE locking and atomic sequence advancement require narrowly
       // scoped UPDATE on the synthetic conversation table; runtime gets none.
       await admin.query("GRANT UPDATE ON TABLE public.bridge_conversations TO "+names.migrator);
+      // Original V1 context tables are ALSO RLS default-deny. Disposable
+      // command-owner must inspect them to certify current Block/eligibility.
+      // This temporary owner-rights bypass is NOT a production architecture.
+      for(const t of contextTables)
+        await admin.query("ALTER TABLE public."+t+" OWNER TO "+names.migrator);
       for(const t of dataTables)
         await admin.query("ALTER TABLE public."+t+" OWNER TO "+names.migrator);
       transferred=true;
@@ -161,6 +166,8 @@ export async function withAtomicPg18Fixture(work,{testGate=null}={}){
       if(pool)await pool.end();
       if(transferred) {
         for(const table of dataTables)
+          await admin.query("ALTER TABLE public."+table+" OWNER TO bridge_privproof_admin");
+        for(const table of contextTables)
           await admin.query("ALTER TABLE public."+table+" OWNER TO bridge_privproof_admin");
         for(const table of contextTables)
           await admin.query("REVOKE ALL ON TABLE public."+table+" FROM "+names.migrator);
