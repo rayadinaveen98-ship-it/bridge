@@ -226,7 +226,7 @@ export async function withTrustFixture(work){
           return await fn({client:c,issue,call,tx:row.tx,epoch:Number(row.epoch)});
         } finally {await c.query("ROLLBACK");}
       };
-      await work(Object.freeze({admin,clients,roles,schemas,people,call,withTx,
+      await work(Object.freeze({admin,clients,roles,schemas,people,keys,call,withTx,
         shaEmpty:SHA_EMPTY,secureTables,schemaReceipt}));
     }finally{
       for(const c of Object.values(clients))try{await c.end();}catch{}
