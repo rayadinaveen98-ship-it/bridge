@@ -1,6 +1,6 @@
 # Bridge B3c-2R3B-2A — PostgreSQL 18 trust-boundary feasibility evidence
 
-**Status: IMPLEMENTATION CANDIDATE / CI NOT YET CERTIFIED / UNMERGED / HOSTED GATE H = HOLD_V2.**
+**Status: TESTED / DISCONNECTED PG18 / DRAFT-UNMERGED / HOSTED GATE H = HOLD_V2.** **25/25 new TAP** on code head `ee210f177ccf6e0611430a6b6b28f0bd6b7d2958`; five predecessor workflow families GREEN. The proposed least-privilege design remains **NOT production-certified**.
 **Founder approval:** Exact seven-file disconnected test scope only, 2026-11-17. No live user identity, hosted DB role/grant/env or Render deployment permitted.
 **Baseline:** `main@58eee1236e587c06a6c62460d1eb79508b384c86`; existing PR #66 repository-only workflow merged, existing QA untouched.
 
@@ -27,10 +27,29 @@
 - `TB-L02`: legacy `unblock` commits without the common advisory mutex while it is held by another PostgreSQL session. Test success **means writer coordination is MISSING**. Multiwriter/producer races, LIVE/ACK, V1 SSE, Keep, bootstrap, admin writer pathways and the 24-case F01–F24 gate remain **BLOCKED/UNTESTED**.
 - V1 test behavior is exercised in a synthetic throwaway database only; no existing hosted V1 QA data is modified.
 
-## CI/evidence acceptance (to update from actual GitHub Actions)
+## Verified code-head CI evidence (2026-11-17)
 
-- Enforce exact known localhost URL, CI + dual ACK, container-image PostgreSQL18 identity and **independent Docker system identifier** before any test DDL. The checked-in unmodified 0001–0008 migrations must apply with 37 tables, five migration receipts and three default-deny secure RLS tables.
-- Record failing/denied negative cases and distinguishing positive cases with TAP numbers, exact PR SHA and runs. Fail on any forged actor access, privileged role inheritance, missing issuer key isolation, teardown error or false-green assertion.
-- Confirm existing predecessor PG18 53/53 Gate L, PG16/18 role matrix, actual 0008 PG18, R3A deliberate red-team and Foundation CI remain green on final code SHA. Do not claim these pass in advance.
-- Explicitly verify exact seven files, no imports in hosted `apps/api/src/start.mjs`, no original SQL migration changes, no Neon, Render, Android or QA data touches.
-- **Exit state now: IMPLEMENTED_ON_BRANCH / TESTING_PENDING.** A passing isolated capability prototype is never `HOSTED_READY`; B3c-2R3B-2B/-2C/-2D and Gate H need separate founder approvals. PR remains unmerged until reviewed.
+**Audited code-head:** `ee210f177ccf6e0611430a6b6b28f0bd6b7d2958` on [draft PR #67](https://github.com/rayadinaveen98-ship-it/bridge/pull/67), exact seven-file change scope. The evidence update + explicit TAP reporter in the single additive package script will need a separate **final-head CI result** before any merge.
+
+| Workflow / code-head | Run | Evidence |
+|---|---|---|
+| B3c-2R3B-2A restricted PG18 PR | [44040609988](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44040609988) | **25/25 TAP**, zero fail/cancel, SUCCESS |
+| B3c-2R3B-2A restricted PG18 branch | [44040600713](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44040600713) | **25/25 TAP**, zero fail/cancel, SUCCESS |
+| R3B-1 atomic predecessor | [44040609921](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44040609921) | SUCCESS (prior 53/53 offline suite preserved) |
+| R3B-2 actual schema PG18 | [44040609922](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44040609922) | SUCCESS |
+| R3B-2 PG16/18 restricted roles | [44040609902](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44040609902) | Both role jobs SUCCESS |
+| R3A explicit unsafe revocation negative control | [44040609954](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44040609954) | SUCCESS means former gap remains intentionally reproduced |
+| Foundation matching and PG16 integration | [44040609869](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44040609869) | Both jobs SUCCESS |
+
+**New TAP breakdown:** 2 top-level tests including nested A/B/negative-control subtests, 25 assertions reported by Node's TAP runner. All tested unauthorized SQL access, role elevation, forged op/actor/target/recipient/digest/nonce/transaction/expiry, replay, Block/room/participant revocation were denied on the **fixed metadata command**. The A model's forged-GUC read is an EXPECTED UNSAFE REPRODUCTION, not a safe result. The V1 plaintext POST and uncoordinated Unblock are also EXPECTED UNSAFE REPRODUCTIONS, not firewall passes. A total of 25 TAP successes must **not** be interpreted as 25 production privacy guarantees.
+
+**Test run diagnostics:** An initial nested Node-test scheduling mistake timed out; corrected without changing security assumptions. A later assertion attempted to inspect an intentionally private issuer schema directly and correctly received PostgreSQL 42501; privilege inspection was moved to the disposable administrator catalog while retaining runtime permission-denied assertions. These intermediate red CI attempts are not hidden or counted as success.
+
+**Attestation/cleanup:** Existing PG18 fixture independently verifies one Docker postgres:18 container, same PostgreSQL cluster system identifier, fixed loopback URI, PostgreSQL major, CI+ACK, real 0001..0008 checksums, 37 checked-in tables, five migration receipts and three secure RLS tables before test role DDL. Generated role connections, scratch policies/schemas and synthetic key are cleaned up. The command executor owns **no** checked-in table; unrestricted SQL LOGIN has no secure ciphertext/history grants. Tests use generated synthetic IDs exclusively.
+
+## Explicit GATE H HOLD and next work
+
+- **CANNOT CLAIM production safe authorization**: locally held test HMAC issuer key, non-production SQL command for metadata read only, executor context SELECT policies `USING(true)`, and old V1 writers missing common lock/marker deny remain unacceptable for hosted V2.
+- **BLOCKED:** R3B-38 production throughput/deadlock/retry, R3B-39 V1 writer coordination/F01..F24 tests, R3B-42 preservation/hosted role cutover, R3B-46 integrated runtime+Android. No live key custody, real signing authority, encryption, SSE isolation or premium history certified.
+- **Next, independent founder approval:** B3c-2R3B-2B exact V1 privacy firewall and writer coordination file scope, followed by -2C production issuer/nonowner SQL role + -2D hosted read-only preservation/migration reviews. Keep final 138-case V2-16 What If? last.
+- **Do not merge or deploy under this evidence update.** PR #67 remains draft; no hosted data/query/migration, source route, Android, real credential, or payment touched.
