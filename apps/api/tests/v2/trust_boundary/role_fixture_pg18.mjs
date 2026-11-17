@@ -111,7 +111,8 @@ async function asRole(admin,role,sql,params=[]){
 }
 async function connectRole(name,password){
   const client=new pg.Client({host:"127.0.0.1",port:5432,database:"bridge_privproof",
-    user:name,password,connectionTimeoutMillis:4000,application_name:"b3c2r3b2a_disposable_only"});
+    user:name,password,connectionTimeoutMillis:4000,statement_timeout:8000,query_timeout:12000,
+    application_name:"b3c2r3b2a_disposable_only"});
   await client.connect();
   assert.deepEqual((await client.query("SELECT current_user usr,session_user sess")).rows[0],
     {usr:name,sess:name});
@@ -121,6 +122,8 @@ export async function withTrustFixture(work){
   assertTrustEnvironment();
   return withActualPg18SignedProof(async prior=>{
     const {admin,people,schemaReceipt,keys}=prior;
+    await admin.query("SET statement_timeout = '8000ms'");
+    await admin.query("SET lock_timeout = '5000ms'");
     assert.equal(schemaReceipt.tables,37);
     assert.equal(schemaReceipt.rlsTables,3);
     const stem="tb_"+randomBytes(6).toString("hex")+"_";
@@ -266,7 +269,8 @@ test("TB-00: reject any non-attested/remote/missing ACK configuration",()=>{
     {BRIDGE_B3C2R2_ACK:""},
   ])assert.throws(()=>assertTrustEnvironment({...env,...change}));
 });
-test("TB-01: independently logged-in nonowner command and documented negative controls",async t=>{
+test("TB-01: independently logged-in nonowner command and documented negative controls",
+  {timeout:90000},async t=>{
   await withTrustFixture(async lab=>{
     await actorAndRoleChecks(t,lab);
     await capabilityChecks(t,lab);
