@@ -1,6 +1,6 @@
 # Bridge B3c-2R3B-1 — disconnected atomic authorization evidence ledger
 
-**STATUS: OFFLINE 40/40 TAP GREEN ON IMPLEMENTATION SHA 4763e07c; 46-CASE ACCEPTANCE AUDITED, NOT FULLY CERTIFIED; DRAFT PR UNMERGED / NOT HOSTED / NOT PRODUCTION-SAFE.**  
+**STATUS: OFFLINE 39/39 TAP PASS, ALL FIVE CI WORKFLOW FAMILIES GREEN ON REVIEW SHA `60f82c942684c1eeb4d00b66e11fb730dd1fdb5e`; 46-CASE MATRIX NOT FULLY CERTIFIED; PR #61 DRAFT/UNMERGED; V2 HOSTED HOLD.**  
 Founder approved **exactly eight files** for synthetic identity and strictly disposable PostgreSQL 18 testing.  
 Pinned baseline main: e3aa65517a5aae2c593170cf1d334b43599897f8.
 
@@ -37,6 +37,15 @@ Pinned baseline main: e3aa65517a5aae2c593170cf1d334b43599897f8.
 - [Foundation #44006054891](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44006054891): matching and disposable PG16 PostgreSQL integration both SUCCESS.
 - [B3c-2R PG16/18 matrix #44006054854](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44006054854): both versions SUCCESS. [R2 actual 0008 PG18 #44006054902](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44006054902): SUCCESS. [R3A red-team #44006054853](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44006054853): SUCCESS; that red-team PASS means UNSAFE OLD prototype behavior was reproduced, NOT promoted.
 - The 40/40 SHA precedes this documentation revision and replacement of the dummy hosted-case TAP with a diagnostic. **The final PR-head CI must be rerun and separately verified before any merge decision.**
+
+## Final audited PR-head verification (before this documentation update)
+
+- **B3c-2R3B-1 actual nonowner PG18:** [run #44006373255](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44006373255), **39/39 TAP PASS**, 0 fails/skips. Removal of the fake R3B-39/46 hosted-case PASS deliberately reduced the test count from 40 to 39 without weakening any tested security checks. The R3B-36 deliberate short authorization-proof expiry test passes after >26-second hold; it does not establish expired-JWT enforcement across every production client path.
+- **B3c-2R PostgreSQL 16/18 role matrix:** [run #44006373237](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44006373237), both independent jobs SUCCESS.
+- **B3c-2R2 actual 0008 PostgreSQL 18:** [run #44006373270](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44006373270), SUCCESS.
+- **B3c-2R3A intentionally unsafe prototype red-team:** [run #44006373215](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44006373215), SUCCESS. This is a RED-TEAM GAP CONTROL and does not imply a valid policy.
+- **Foundation matching + disposable PostgreSQL 16 regressions:** [run #44006373269](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44006373269), both SUCCESS.
+- Code and audit head tested: `60f82c942684c1eeb4d00b66e11fb730dd1fdb5e`. This recording is a new documentation-only commit; its exact HEAD CI must be rechecked separately. **Do not merge PR #61 yet.** Remaining 12 PARTIAL, 1 OPEN and 2 BLOCKED acceptance areas need individually justified closure or a founder-approved change in the acceptance scope.
 
 ## 46-case audit — final scope distinction (2026-11-17)
 
@@ -102,7 +111,7 @@ Pinned baseline main: e3aa65517a5aae2c593170cf1d334b43599897f8.
 - [x] Positive synthetic direct-session LIVE/SEND/UNREAD/ACK/recovery verified (random-session positive remains OPEN)
 - [x] Selected Block/account/participant/Keep races and full-command pre-COMMIT rollback verified (multi-client stress and intermediate-artifact injection PARTIAL)
 - [x] Disposable test-only attestation, teardown and generated function/schema/role cleanup verified; no QA connection
-- [ ] All five workflows GREEN on exact latest PR HEAD **pending** this evidence and anti-dummy-test revision; prior implementation SHA green
+- [x] Five workflow families all SUCCESS at prior audited code HEAD `60f82c942684c1eeb4d00b66e11fb730dd1fdb5e`; [ ] post-evidence HEAD pending CI verification, merge held for acceptance gaps
 - [ ] Independently verify PR merge and any postmerge main CI when available
 - [ ] Outstanding 46-case matrix gaps UNRESOLVED; **DO NOT CLAIM FULL CERTIFICATION**.
 
