@@ -276,5 +276,81 @@ export async function raceCases(t,lab,entry){
         true);
     });
   });
+  await t.test("R3B-38 three independent restricted LOGINs maintain contiguous SEND sequence and outbox",async()=>{
+    await lab.withSecondaryRuntime(async second=>{
+      await lab.withSecondaryRuntime(async third=>{
+        const first=Number((await lab.admin.query(
+          "SELECT next_message_sequence AS seq FROM bridge_conversations WHERE id=$1",
+          [ab.roomId])).rows[0].seq);
+        const beforeOutbox=Number((await lab.admin.query(
+          "SELECT count(*)::int n FROM bridge_event_outbox WHERE conversation_id=$1",
+          [ab.roomId])).rows[0].n);
+        const seen=[];
+        const distinctIds=new Set();
+        for(let batch=0;batch<6;batch++){
+          const result=await Promise.all([
+            lab.guard.dispatch(req(a,"send",ab.roomId,{clientMessageId:randomUUID()})),
+            second.guard.dispatch(req(b,"send",ab.roomId,{clientMessageId:randomUUID()})),
+            third.guard.dispatch(req(a,"send",ab.roomId,{clientMessageId:randomUUID()}))
+          ]);
+          for(const item of result){
+            seen.push(Number(item.sequence));
+            distinctIds.add(item.id);
+          }
+        }
+        assert.equal(seen.length,18);
+        assert.equal(distinctIds.size,18);
+        assert.deepEqual(seen.sort((a,b)=>a-b),
+          Array.from({length:18},(_,i)=>first+i));
+        const snapshot=(await lab.admin.query(
+          "SELECT next_message_sequence AS seq FROM bridge_conversations WHERE id=$1",
+          [ab.roomId])).rows[0];
+        assert.equal(Number(snapshot.seq),first+18);
+        const events=Number((await lab.admin.query(
+          "SELECT count(*)::int n FROM bridge_event_outbox WHERE conversation_id=$1",
+          [ab.roomId])).rows[0].n);
+        assert.equal(events,beforeOutbox+18);
+      });
+    });
+  });
+  await t.test("R3B-38 lock timeout fails closed with ZERO retries or partial outbox writes",async()=>{
+    const hold=await lab.pool.connect();
+    let held=false;
+    try{
+      await hold.query("BEGIN");
+      await hold.query("SELECT pg_advisory_xact_lock($1)",[714411]);
+      held=true;
+      const before=(await lab.admin.query(
+        "SELECT (SELECT count(*)::int FROM bridge_v2_secure_messages) messages,"+
+        "(SELECT count(*)::int FROM bridge_v2_secure_live) live,"+
+        "(SELECT count(*)::int FROM bridge_v2_secure_unread) unread,"+
+        "(SELECT count(*)::int FROM bridge_event_outbox) outbox,"+
+        "(SELECT next_message_sequence FROM bridge_conversations WHERE id=$1) sequence",
+        [ab.roomId])).rows[0];
+      const now=Date.now();
+      await assert.rejects(lab.guard.dispatch(req(b,"send",ab.roomId,{
+        clientMessageId:randomUUID()
+      })),denied);
+      const elapsed=Date.now()-now;
+      assert.ok(elapsed>=900&&elapsed<=10000,
+        "test-only lock wait must return unavailable within a bounded interval");
+      const after=(await lab.admin.query(
+        "SELECT (SELECT count(*)::int FROM bridge_v2_secure_messages) messages,"+
+        "(SELECT count(*)::int FROM bridge_v2_secure_live) live,"+
+        "(SELECT count(*)::int FROM bridge_v2_secure_unread) unread,"+
+        "(SELECT count(*)::int FROM bridge_event_outbox) outbox,"+
+        "(SELECT next_message_sequence FROM bridge_conversations WHERE id=$1) sequence",
+        [ab.roomId])).rows[0];
+      assert.deepEqual(after,before,"timeout may not partially persist a SEND");
+    }finally{
+      if(held)await hold.query("ROLLBACK").catch(()=>{});
+      hold.release();
+    }
+    const recovered=await lab.guard.dispatch(req(b,"send",ab.roomId,{
+      clientMessageId:randomUUID()
+    }));
+    assert.equal(typeof recovered.id,"string",
+      "denied lock wait must not poison the reused test runtime client");
+  });
   t.diagnostic("R3B-39 HOSTED HOLD: legacy V1 writer synchronization is unimplemented");
 }

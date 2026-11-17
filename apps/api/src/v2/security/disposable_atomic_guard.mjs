@@ -65,6 +65,10 @@ export function createDisposableAtomicGuard({
            typeof client.release!=="function")deny();
         await client.query("BEGIN");
         active=true;
+        // Test-only fail-closed policy: no authorization retry and bounded lock
+        // waits. Real hosted retry/throughput design is separately gated.
+        await client.query("SET LOCAL lock_timeout = '1500ms'");
+        await client.query("SET LOCAL statement_timeout = '6500ms'");
         const lock=await client.query("SELECT pg_advisory_xact_lock($1)",[714411]);
         if(!lock)deny();
         if(testGate)await testGate({point:"after_mutex",operation:req.operation,client});
