@@ -1,6 +1,6 @@
 # Bridge B3c-2R3B-1 — disconnected atomic authorization evidence ledger
 
-**STATUS: OFFLINE 50/50 TAP PASS AND FIVE CI FAMILIES GREEN AT `57299958620813b6f43fa9bfe970abdea1cc9358`; 46-CASE MATRIX 41 PROVEN / 3 PARTIAL / 0 OPEN / 2 BLOCKED; PR #61 DRAFT/UNMERGED; V2 HOSTED HOLD.**  
+**STATUS: OFFLINE 53/53 TAP PASS AND ALL FIVE CI FAMILIES GREEN AT `00f8100d1a866a52799c698a73dd7594aabde4ed`; 46-AREA MATRIX 42 PROVEN / 2 PARTIAL / 0 OPEN / 2 BLOCKED; PR #61 STILL DRAFT/UNMERGED; HOSTED V2 HOLD.**  
 Founder approved **exactly eight files** for synthetic identity and strictly disposable PostgreSQL 18 testing.  
 Pinned baseline main: e3aa65517a5aae2c593170cf1d334b43599897f8.
 
@@ -55,7 +55,17 @@ Pinned baseline main: e3aa65517a5aae2c593170cf1d334b43599897f8.
 - [PostgreSQL 16/18 role matrix #44010667892](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44010667892): SUCCESS; [R2 PG18 actual schema #44010667847](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44010667847): SUCCESS; [R3A intentionally unsafe predecessor red-team #44010667972](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44010667972): SUCCESS. This last one is a negative-control demonstration that original synthetic policies were unsafe.
 - [Foundation checks #44010667857](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44010667857): matching and independent PG16 database regression jobs SUCCESS.
 - **Strictly test-only security model:** synthetic verifier signing and non-BYPASSRLS command owner with temporary ownership of twelve enumerated context/outbox/match/secure tables. This is **not** a valid production least-privilege design or hosted authorization certification. No actual message encryption keys, E2EE, billing, Neon, Render or Android changes.
-- **Outstanding exact acceptance gaps (and why this remains a DRAFT, unmerged PR):** R3B-37 requires real outbox-stage atomicity; R3B-38 still needs deadlock/stress thresholds and bounded retry proof; R3B-42 requires separate hosted QA preservation evidence before a live migration. R3B-39 needs legacy V1 writers to follow compatible locks or a firewall, and R3B-46 needs new hosted role/KEK/Android/R0/V2-16 approvals. These **3 partial + 2 blocked** requirements cannot be silently certified or merged as complete under existing approval.
+- **Current exact acceptance gaps (PR #61 remains DRAFT/unmerged):** R3B-37 synthetic outbox atomicity is now proven in PG18. R3B-38 has three independent LOGINs, 18 concurrent sends and bounded fail-closed lock denial, but hosted-scale deadlock/retry/SLOs are NOT certified. R3B-42 needs separately approved hosted QA preservation evidence before any live migration. R3B-39 requires compatible V1 writer locks or firewall and R3B-46 requires separate production role/key, Android, R0 and V2-16 gates. **2 PARTIAL + 2 BLOCKED** under original full-matrix merge condition.
+
+## Latest expanded PR revision — independent CI evidence (2026-11-17)
+
+**Audited code SHA:** `00f8100d1a866a52799c698a73dd7594aabde4ed` in [draft PR #61](https://github.com/rayadinaveen98-ship-it/bridge/pull/61). This new documentation-only commit requires its own exact SHA CI verification. The PR remains draft and unmerged under the founder's full 46-area gate.
+
+- **[Atomic PG18 #44014584091](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44014584091): 53/53 Node TAP PASS, 0 failures, 0 skipped.** Actual checked-in 0001–0008 migrations and separate ephemeral identities and credentials in independently attested disposable PostgreSQL 18. New positive/negative checks: payload-free `bridge_event_outbox` commit, induced rollback at metadata/LIVE/UNREAD/outbox inserts, 3 restricted LOGINs / 18 ordered messages / 18 events, fail-closed 1.5s lock timeout with session reuse, positive random-session matching with two active slots, and denial after match ended or one slot removed.
+- **[Foundation #44014584122](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44014584122):** matching + disposable PostgreSQL 16 integration both SUCCESS. **[Role-isolation PG16/18 #44014584102](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44014584102):** both SUCCESS. **[Actual schema PG18 #44014584031](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44014584031):** SUCCESS. **[R3A known-unsafe prototype red-team #44014584086](https://github.com/rayadinaveen98-ship-it/bridge/actions/runs/44014584086):** SUCCESS as a negative control, NOT security remediation.
+- **Classification:** 42/46 individual acceptance **areas PROVEN in scoped offline model**, two PARTIAL (38: real throughput/deadlocks/retry; 42: hosted QA preservation/migration) and two BLOCKED (39: V1 legacy writer compatibility; 46: hosted roles/keys, Android/R0 and V2-16). These are **not 46 separate TAP tests**. Do not claim full product security or real-user data protection from this lab.
+- **No change** to hosted Neon, Render, Android, QA records, existing SQL migration files, real keys, paid services, or runtime V1 API. Synthetic DB function owner holds temporary ownership of 12 enumerated tables for tests, a deliberately non-production authorization boundary. API runtime role still has no unrestricted SELECT/INSERT; hosted pool still requires independent least privilege remediation before V2.
+- **Merge gate:** User required full matrix and regressions before merging. The 2 partial and 2 blocked stages make PR #61 **NOT MERGE-ELIGIBLE** despite green test CI. No sneaky scope widening. Keep R0 physical signoff OPEN, hosted V2 HOLD, V2-16 final review LAST.
 
 ## 46-case audit — final scope distinction (2026-11-17)
 
@@ -99,8 +109,8 @@ Pinned baseline main: e3aa65517a5aae2c593170cf1d334b43599897f8.
 | R3B-34 | PROVEN | Participant exit commits before queued LIVE, denies |
 | R3B-35 | PROVEN | Keep relationship ends before recovery, denies despite valid token |
 | R3B-36 | PROVEN | Short transaction proof delayed >26s and separate real short-lived JWT delayed after successful synthetic write both force full rollback before COMMIT |
-| R3B-37 | PARTIAL | Independent SQL triggers inject failure before metadata, LIVE and UNREAD insertion; all secure rows/counter/outbox snapshot rolls back. Actual outbox write path absent from disconnected gateway |
-| R3B-38 | PARTIAL | Two independent restricted LOGIN sessions concurrently SEND without duplicate sequences; synthetic writer/reader lock ordering verified. Multi-client stress, deadlock budget and bounded retry policy remain open |
+| R3B-37 | PROVEN | Under the checked-in 0002 outbox table, synthetic SEND writes metadata, LIVE, UNREAD, payload-free event and conversation sequence atomically. Forced insert errors at all FOUR tables and after operation before COMMIT roll back every row/outbox/clock in PG18. Hosted notification worker not certified |
+| R3B-38 | PARTIAL | Three separately authenticated restricted LOGINs complete 18 concurrent sends with contiguous sequences and 18 outbox events; test-only 1.5s lock timeout denies and rolls back with zero retry. Production deadlock policy, retry/throughput SLOs and legacy-writer integration still open |
 | R3B-39 | BLOCKED | Hosted legacy V1 Block/Keep/GET/POST/SSE writers do NOT share mutex |
 | R3B-40 | PROVEN | Revoking runtime gateway EXECUTE denies; no fallback to privileged owner |
 | R3B-41 | PROVEN | Exact CI/ACK/localhost/PG18 Docker system ID attested before DDL |
@@ -110,7 +120,7 @@ Pinned baseline main: e3aa65517a5aae2c593170cf1d334b43599897f8.
 | R3B-45 | PROVEN | Exactly eight-path diff, existing app HTTP/start/auth unmodified and no guard import |
 | R3B-46 | BLOCKED | Hosted role/keys, G1 old-client firewall, R0 Android and final V2-16 need separate approval |
 
-**Audit totals:** PROVEN 41; PARTIAL 3; OPEN 0; BLOCKED 2. R3B-39/46 are intentionally not counted as test passes. **Full 46-case acceptance remains OPEN.**
+**Audit totals:** PROVEN 42; PARTIAL 2; OPEN 0; BLOCKED 2. R3B-39/46 are intentionally not counted as test passes. **Full 46-case acceptance remains OPEN.**
 
 ## Verification checklist (no premature pass claims)
 
@@ -123,7 +133,7 @@ Pinned baseline main: e3aa65517a5aae2c593170cf1d334b43599897f8.
 - [x] Disposable test-only attestation, teardown and generated function/schema/role cleanup verified; no QA connection
 - [x] Five workflow families all SUCCESS at prior audited code HEAD `60f82c942684c1eeb4d00b66e11fb730dd1fdb5e`; [ ] post-evidence HEAD pending CI verification, merge held for acceptance gaps
 - [ ] Independently verify PR merge and any postmerge main CI when available
-- [ ] Three partial and two blocked matrix areas UNRESOLVED; **DO NOT CLAIM FULL CERTIFICATION**.
+- [ ] Two partial (R3B-38, R3B-42) and two blocked (R3B-39, R3B-46) areas remain; **DO NOT CLAIM FULL CERTIFICATION**.
 
 **STOP/GO:** Passing this test-only prototype is not production authorization or permission to merge a production role/policy. All hosted Neon, Render, Android, QA account, billing and key service changes require separate founder approval. V2 HOLD. R0 physical acceptance OPEN; final 138-case V2-16 LAST.
 
