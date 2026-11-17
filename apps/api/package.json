@@ -34,7 +34,8 @@
     "test:v2:role-isolation:db": "node --test tests/v2/privileges/b3c2r_matrix.test.mjs",
     "test:v2:pg18-signed-rls": "node --test tests/v2/privileges/b3c2r2_actual_schema.test.mjs",
     "test:v2:revocation-gaps:db": "node --test tests/v2/privileges/b3c2r3_revocation_gap.test.mjs",
-    "test:v2:atomic-authz:pg18": "node --test tests/v2/security/atomic_revocation.test.mjs"
+    "test:v2:atomic-authz:pg18": "node --test tests/v2/security/atomic_revocation.test.mjs",
+    "test:v2:trust-boundary:pg18": "node --test --test-reporter=tap tests/v2/trust_boundary/role_fixture_pg18.mjs"
   },
   "dependencies": {
     "pg": "^8.13.0"
