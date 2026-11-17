@@ -116,7 +116,8 @@ export function createDisposableAtomicGuard({
         if(env.CI==="true"&&env.GITHUB_ACTIONS==="true"&&
            env.BRIDGE_B3C2R3B1_DIAGNOSTIC==="yes")
           console.error("B3C2R3B1_CI_FAILURE",String(error?.code??"none"),
-            String(error?.message??"unknown").slice(0,140));
+            String(error?.message??"unknown").slice(0,140),
+            "line",String(error?.where??"").match(/line ([0-9]+)/)?.[1]??"none");
         if(active&&client)try{await client.query("ROLLBACK");}catch{}
         deny();
       }finally{
