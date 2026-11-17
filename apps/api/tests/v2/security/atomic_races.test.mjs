@@ -15,6 +15,25 @@ export async function raceCases(t,lab,entry){
     await lab.writer(c=>c.query("DELETE FROM bridge_blocks WHERE "+
       "blocker_id=$1 AND blocked_id=$2",[b,a]));
   }
+  await t.test("R3B-03 subject reassignment wins mutex between JWT preflight and room lock",async()=>{
+    const c=await lab.pool.connect();
+    try{
+      await c.query("BEGIN");
+      await c.query("SELECT pg_advisory_xact_lock($1)",[714411]);
+      const pending=lab.guard.dispatch(req(a,"live",ab.roomId))
+        .then(result=>({ok:true,result}),error=>({ok:false,error}));
+      await sleep(75);
+      await c.query("UPDATE bridge_accounts SET auth_subject=$2 WHERE id=$1",
+        [a,"reassigned-"+randomUUID()]);
+      await c.query("COMMIT");
+      const result=await pending;
+      assert.equal(result.ok,false);assert.equal(denied(result.error),true);
+    }finally{
+      await c.query("ROLLBACK").catch(()=>{});c.release();
+      await lab.writer(db=>db.query("UPDATE bridge_accounts SET auth_subject=$2 WHERE id=$1",
+        [a,"b3b-disposable:"+a]));
+    }
+  });
   await t.test("R3B-30 Block writer wins mutex before pending SEND: deny and zero write",async()=>{
     const hold=await lab.pool.connect();
     const initial=(await lab.admin.query("SELECT count(*)::int n FROM bridge_v2_secure_messages")).rows[0].n;

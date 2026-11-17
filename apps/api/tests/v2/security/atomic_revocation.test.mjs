@@ -194,6 +194,22 @@ test("B3c-2R3B-1 real 0001..0008 PG18 restricted-role atomic command gateway",as
           await assert.rejects(run(b,"live",ab.roomId),denied);
         });
     });
+    await t.test("R3B-14 peer suspension and age withdrawal deny both LIVE reads",async()=>{
+      await constrained(
+        "UPDATE bridge_accounts SET status='suspended' WHERE id=$1",[b],
+        "UPDATE bridge_accounts SET status='active' WHERE id=$1",[b],
+        async()=>{
+          await assert.rejects(run(a,"live",ab.roomId),denied);
+          await assert.rejects(run(b,"live",ab.roomId),denied);
+        });
+      await constrained(
+        "UPDATE bridge_accounts SET age_verified_at=NULL WHERE id=$1",[b],
+        "UPDATE bridge_accounts SET age_verified_at=clock_timestamp() WHERE id=$1",[b],
+        async()=>{
+          await assert.rejects(run(a,"live",ab.roomId),denied);
+          await assert.rejects(run(b,"live",ab.roomId),denied);
+        });
+    });
     await t.test("R3B-15 missing age and actor safety eligibility deny previously sent LIVE",async()=>{
       await constrained(
         "UPDATE bridge_accounts SET age_verified_at=NULL WHERE id=$1",[a],
@@ -355,6 +371,22 @@ test("B3c-2R3B-1 real 0001..0008 PG18 restricted-role atomic command gateway",as
         "UPDATE bridge_v2_secure_unread SET accepted_at=$2,expires_at=$3 WHERE id=$1",
         [bEnvelope,before.accepted_at,before.expires_at]);}
     });
+    await t.test("R3B-25 UNREAD and ACK are denied after recipient suspension or age loss",async()=>{
+      await constrained(
+        "UPDATE bridge_accounts SET status='suspended' WHERE id=$1",[b],
+        "UPDATE bridge_accounts SET status='active' WHERE id=$1",[b],
+        async()=>{
+          await assert.rejects(run(b,"unread",aEnvelope),denied);
+          await assert.rejects(run(b,"ack",aEnvelope),denied);
+        });
+      await constrained(
+        "UPDATE bridge_accounts SET age_verified_at=NULL WHERE id=$1",[b],
+        "UPDATE bridge_accounts SET age_verified_at=clock_timestamp() WHERE id=$1",[b],
+        async()=>{
+          await assert.rejects(run(b,"unread",aEnvelope),denied);
+          await assert.rejects(run(b,"ack",aEnvelope),denied);
+        });
+    });
     let recoveryReceipt;
     await t.test("R3B-27/28 first ACK immutable; correct token recovers <=15m",async()=>{
       const receipt=await run(b,"ack",aEnvelope);
@@ -387,6 +419,21 @@ test("B3c-2R3B-1 real 0001..0008 PG18 restricted-role atomic command gateway",as
       finally{await mutate(
         "UPDATE bridge_v2_secure_unread SET accepted_at=$2,first_acknowledged_at=$3 WHERE id=$1",
         [aEnvelope,original.accepted_at,original.first_acknowledged_at]);}
+    });
+    await t.test("R3B-25 previously ACKed recovery denied after Block or account restriction",async()=>{
+      const proof=recoveryReceipt.recoveryToken;
+      await constrained(
+        "INSERT INTO bridge_blocks(blocker_id,blocked_id) VALUES($1,$2)",[a,b],
+        "DELETE FROM bridge_blocks WHERE blocker_id=$1 AND blocked_id=$2",[a,b],
+        async()=>await assert.rejects(run(b,"recover",aEnvelope,{recoveryToken:proof}),denied));
+      await constrained(
+        "UPDATE bridge_accounts SET status='suspended' WHERE id=$1",[a],
+        "UPDATE bridge_accounts SET status='active' WHERE id=$1",[a],
+        async()=>await assert.rejects(run(b,"recover",aEnvelope,{recoveryToken:proof}),denied));
+      await constrained(
+        "UPDATE bridge_accounts SET safety_eligible=false WHERE id=$1",[b],
+        "UPDATE bridge_accounts SET safety_eligible=true WHERE id=$1",[b],
+        async()=>await assert.rejects(run(b,"recover",aEnvelope,{recoveryToken:proof}),denied));
     });
     await privilegeCases(t,lab);
     await raceCases(t,lab,recoveryReceipt);
@@ -433,6 +480,34 @@ test("B3c-2R3B-1 real 0001..0008 PG18 restricted-role atomic command gateway",as
         [ab.roomId])).rows[0];
       assert.deepEqual(after,before,
         "short signed transaction proof must not commit after expiry");
+    });
+    await t.test("R3B-36 a real short-lived JWT expires before COMMIT, SEND rolls back",async()=>{
+      const before=(await lab.admin.query(
+        "SELECT (SELECT count(*)::int FROM bridge_v2_secure_messages) messages,"+
+        "(SELECT count(*)::int FROM bridge_v2_secure_live) live,"+
+        "(SELECT count(*)::int FROM bridge_v2_secure_unread) unread,"+
+        "(SELECT next_message_sequence FROM bridge_conversations WHERE id=$1) sequence",
+        [ab.roomId])).rows[0];
+      let reached=false;
+      const shortGuard=lab.createGuard(async({point,operation})=>{
+        if(point==="after_operation_before_final_token"&&operation==="send"){
+          reached=true;
+          await new Promise(resolve=>setTimeout(resolve,4200));
+        }
+      });
+      const epoch=Math.floor(Date.now()/1000);
+      await assert.rejects(shortGuard.dispatch({
+        authorization:lab.tokenWithClaims(a,{iat:epoch-1,nbf:epoch-1,exp:epoch+3}),
+        operation:"send",targetId:ab.roomId,clientMessageId:randomUUID()
+      }),denied);
+      assert.equal(reached,true,"real JWT must reach post-write gate before expiring");
+      const after=(await lab.admin.query(
+        "SELECT (SELECT count(*)::int FROM bridge_v2_secure_messages) messages,"+
+        "(SELECT count(*)::int FROM bridge_v2_secure_live) live,"+
+        "(SELECT count(*)::int FROM bridge_v2_secure_unread) unread,"+
+        "(SELECT next_message_sequence FROM bridge_conversations WHERE id=$1) sequence",
+        [ab.roomId])).rows[0];
+      assert.deepEqual(after,before,"expired JWT must rollback every secure artifact");
     });
     await t.test("R3B-12 closing D1 then opening D2 cannot reveal D1 LIVE history",async()=>{
       const newRoom=randomUUID(),now=new Date();

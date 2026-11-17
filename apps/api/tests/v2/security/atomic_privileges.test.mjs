@@ -57,6 +57,38 @@ export async function privilegeCases(t,lab) {
     await assert.rejects(lab.guard.dispatch(req(a,"history",ab.roomId)),denied);
     await assert.rejects(lab.guard.dispatch(req(a,"live",randomUUID(),{sql:"SELECT 1"})),denied);
   });
+  await t.test("R3B-04 captured HMAC proof cannot replay after transaction ends",async()=>{
+    const client=lab.appClient,epoch=Math.floor(Date.now()/1000);
+    await client.query("BEGIN");
+    let old;
+    try{
+      const state=(await client.query(
+        "SELECT txid_current()::text AS tx,session_user AS sess"
+      )).rows[0];
+      old=lab.signer({
+        actor:a,operation:"live",targetId:ab.roomId,clientMessageId:null,
+        recoveryToken:null,expires:epoch+20,tx:state.tx,session:state.sess
+      });
+    }finally{await client.query("ROLLBACK");}
+    await client.query("BEGIN");
+    try{
+      await assert.rejects(client.query(
+        "SELECT "+lab.schema+".dispatch("+
+        "$1::uuid,$2::text,$3::uuid,$4::uuid,$5::text,$6::bigint,$7::text)",
+        [a,"live",ab.roomId,null,null,String(epoch+20),old]
+      ),e=>e?.code==="P0001");
+    }finally{await client.query("ROLLBACK");}
+  });
+  await t.test("R3B-09 session search_path cannot bypass fixed SQL and permission checks",async()=>{
+    await lab.appClient.query("SET search_path TO pg_temp,public");
+    try{
+      const result=await lab.guard.dispatch(req(a,"live",ab.roomId));
+      assert.ok(Array.isArray(result.messages));
+      await assert.rejects(lab.appClient.query(
+        "SELECT * FROM public.bridge_v2_secure_live LIMIT 1"
+      ),e=>e?.code==="42501");
+    }finally{await lab.appClient.query("RESET search_path");}
+  });
   await t.test("R3B-05/06/07 runtime independent role has no table, legacy, evidence or key grants",async()=>{
     await lab.verify();
     for(const table of ["bridge_messages","bridge_accounts","bridge_report_evidence",
