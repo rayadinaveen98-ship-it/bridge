@@ -120,6 +120,20 @@ test("B3c-2R3B-1 real 0001..0008 PG18 restricted-role atomic command gateway",as
       assert.equal(another.messages[0].id,bMessage);
       await assert.rejects(run(a,"live",bc.roomId),denied);
     });
+    await t.test("R3B-03 reassigned or deleted subject denies stale signed A account",async()=>{
+      await constrained(
+        "UPDATE bridge_accounts SET auth_subject=$2 WHERE id=$1",
+        [a,"disabled-"+randomUUID()],
+        "UPDATE bridge_accounts SET auth_subject=$2 WHERE id=$1",
+        [a,"b3b-disposable:"+a],
+        async()=>await assert.rejects(run(a,"live",ab.roomId),denied)
+      );
+      await constrained(
+        "UPDATE bridge_accounts SET deleted_at=clock_timestamp() WHERE id=$1",[a],
+        "UPDATE bridge_accounts SET deleted_at=NULL WHERE id=$1",[a],
+        async()=>await assert.rejects(run(a,"live",ab.roomId),denied)
+      );
+    });
     await t.test("R3B-13 suspended actor cannot read LIVE or SEND",async()=>{
       await constrained(
         "UPDATE bridge_accounts SET status='suspended' WHERE id=$1",[a],
@@ -354,6 +368,34 @@ test("B3c-2R3B-1 real 0001..0008 PG18 restricted-role atomic command gateway",as
         const content=await readFile(new URL(file,root),"utf8");
         assert.doesNotMatch(content,/disposable_atomic_guard\.mjs/);
       }
+    });
+    await t.test("R3B-12 closing D1 then opening D2 cannot reveal D1 LIVE history",async()=>{
+      const newRoom=randomUUID(),now=new Date();
+      await lab.writer(async c=>{
+        await c.query("UPDATE bridge_v2_direct_sessions "+
+          "SET state='closed',closed_at=$2 WHERE conversation_id=$1",
+          [ab.roomId,now]);
+        await c.query("UPDATE bridge_conversations "+
+          "SET state='closed',closed_at=$2,closed_reason='expired' WHERE id=$1",
+          [ab.roomId,now]);
+        await c.query(
+          "INSERT INTO bridge_conversations("+
+          "id,kind,state,policy_version,v2_session_role,legacy_qa,connection_id,"+
+          "next_message_sequence,last_accepted_at,idle_expires_at) "+
+          "VALUES($1,'connection','open','bridge-v2','direct',false,$2,1,$3,$4)",
+          [newRoom,ab.connectionId,now,new Date(now.getTime()+30*60000)]);
+        await c.query(
+          "INSERT INTO bridge_conversation_participants(conversation_id,account_id) "+
+          "VALUES($1,$2),($1,$3)",[newRoom,a,b]);
+        await c.query(
+          "INSERT INTO bridge_v2_direct_sessions("+
+          "conversation_id,connection_id,state,policy_version,opened_at) "+
+          "VALUES($1,$2,'open','bridge-v2',$3)",[newRoom,ab.connectionId,now]);
+      });
+      await assert.rejects(run(a,"live",ab.roomId),denied);
+      await assert.rejects(run(b,"live",ab.roomId),denied);
+      assert.deepEqual((await run(a,"live",newRoom)).messages,[]);
+      assert.deepEqual((await run(b,"live",newRoom)).messages,[]);
     });
     await t.test("R3B-39,46 mandatory hosted gates NOT certified by offline proof",()=>{
       assert.equal(true,true);
