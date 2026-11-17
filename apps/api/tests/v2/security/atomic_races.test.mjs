@@ -201,5 +201,57 @@ export async function raceCases(t,lab,entry){
     assert.deepEqual(after,before);
   });
   // R3B-39 is deliberately NOT a test pass: V1 writers do not coordinate.
+  await t.test("R3B-37 metadata/LIVE/UNREAD insert faults roll back ALL artifacts",async()=>{
+    const triggerName="b3r1_inject_failure";
+    const triggerFn=lab.schema+".reject_stage()";
+    const snapshot=async()=>(await lab.admin.query(
+      "SELECT (SELECT count(*)::int FROM bridge_v2_secure_messages) messages,"+
+      "(SELECT count(*)::int FROM bridge_v2_secure_live) live,"+
+      "(SELECT count(*)::int FROM bridge_v2_secure_unread) unread,"+
+      "(SELECT count(*)::int FROM bridge_event_outbox) outbox,"+
+      "(SELECT next_message_sequence FROM bridge_conversations WHERE id=$1) sequence",
+      [ab.roomId])).rows[0];
+    await lab.admin.query("CREATE FUNCTION "+triggerFn+
+      " RETURNS trigger LANGUAGE plpgsql SET search_path=pg_catalog AS $ "+
+      "BEGIN RAISE EXCEPTION 'synthetic_db_stage_failure' USING ERRCODE='P0001'; "+
+      "END $");
+    try{
+      for(const table of ["bridge_v2_secure_messages","bridge_v2_secure_live",
+        "bridge_v2_secure_unread"]){
+        const initial=await snapshot();
+        await lab.admin.query("CREATE TRIGGER "+triggerName+
+          " BEFORE INSERT ON public."+table+
+          " FOR EACH ROW EXECUTE FUNCTION "+triggerFn);
+        try{
+          await assert.rejects(lab.guard.dispatch(req(a,"send",ab.roomId,{
+            clientMessageId:randomUUID()
+          })),denied);
+          assert.deepEqual(await snapshot(),initial,
+            "trigger failure on "+table+" must roll back all secure tables and clocks");
+        }finally{
+          await lab.admin.query("DROP TRIGGER "+triggerName+" ON public."+table);
+        }
+      }
+    }finally{await lab.admin.query("DROP FUNCTION "+triggerFn);}
+  });
+  await t.test("R3B-38 two independently logged-in nonowner sessions serialize SEND safely",async()=>{
+    await lab.withSecondaryRuntime(async secondary=>{
+      const before=(await lab.admin.query(
+        "SELECT next_message_sequence AS seq FROM bridge_conversations WHERE id=$1",
+        [ab.roomId])).rows[0].seq;
+      const messages=await Promise.all([
+        lab.guard.dispatch(req(a,"send",ab.roomId,{clientMessageId:randomUUID()})),
+        secondary.guard.dispatch(req(b,"send",ab.roomId,{clientMessageId:randomUUID()}))
+      ]);
+      const sequences=messages.map(m=>Number(m.sequence)).sort((x,y)=>x-y);
+      assert.deepEqual(sequences,[Number(before),Number(before)+1]);
+      assert.notEqual(messages[0].id,messages[1].id);
+      assert.equal((await lab.admin.query(
+        "SELECT next_message_sequence AS seq FROM bridge_conversations WHERE id=$1",
+        [ab.roomId])).rows[0].seq,Number(before)+2);
+      assert.equal((await lab.guard.dispatch(req(a,"live",ab.roomId))).messages.length>=2,
+        true);
+    });
+  });
   t.diagnostic("R3B-39 HOSTED HOLD: legacy V1 writer synchronization is unimplemented");
 }

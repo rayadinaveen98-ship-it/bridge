@@ -107,6 +107,50 @@ export async function withAtomicPg18Fixture(work,{testGate=null}={}){
         authentication:lab.keys.authentication,proofSigner:signer,
         schema,testGate:hook,env
       });
+      async function withSecondaryRuntime(work){
+        // New independent, synthetic LOGIN. The parent fixture's actor role
+        // credentials are intentionally private; never borrow its client.
+        const role="b3r1_"+randomBytes(6).toString("hex")+"_v";
+        const password=randomBytes(24).toString("hex");
+        let second=null,created=false;
+        await admin.query("CREATE ROLE "+role+
+          " LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE "+
+          "NOREPLICATION PASSWORD '"+password+"'");
+        created=true;
+        try{
+          await admin.query("GRANT USAGE ON SCHEMA "+schema+" TO "+role);
+          await admin.query("GRANT EXECUTE ON FUNCTION "+schema+
+            ".dispatch(uuid,text,uuid,uuid,text,bigint,text) TO "+role);
+          second=new pg.Client({
+            host:"127.0.0.1",port:5432,database:"bridge_privproof",
+            user:role,password,connectionTimeoutMillis:4000,
+            application_name:"bridge_r3b1_independent_runtime"
+          });
+          await second.connect();
+          const attrs=(await second.query(
+            "SELECT current_user usr,session_user sess,r.rolsuper,r.rolbypassrls,"+
+            "r.rolcreatedb,r.rolcreaterole,r.rolinherit "+
+            "FROM pg_roles r WHERE rolname=current_user")).rows[0];
+          assert.equal(attrs.usr,role);assert.equal(attrs.sess,role);
+          for(const k of ["rolsuper","rolbypassrls","rolcreatedb","rolcreaterole","rolinherit"])
+            assert.equal(attrs[k],false);
+          for(const table of dataTables)
+            assert.equal((await second.query(
+              "SELECT has_table_privilege(current_user,$1,'SELECT') AS allowed",
+              ["public."+table])).rows[0].allowed,false);
+          const secondary=createDisposableAtomicGuard({
+            checkout:async()=>({query:(...args)=>second.query(...),release:()=>{}}),
+            authentication:lab.keys.authentication,proofSigner:signer,schema,env
+          });
+          return await work(Object.freeze({guard:secondary,client:second,role}));
+        }finally{
+          if(second)try{await second.end();}catch{}
+          if(created){
+            await admin.query("DROP OWNED BY "+role);
+            await admin.query("DROP ROLE "+role);
+          }
+        }
+      }
       async function writer(change){
         const client=await pool.connect();
         try{
@@ -159,7 +203,7 @@ export async function withAtomicPg18Fixture(work,{testGate=null}={}){
       await verify();
       return await work(Object.freeze({
         guard,createGuard,verify,admin,appClient,people,names,schema,
-        signer,seed,writer,pool,schemaReceipt,env,
+        signer,seed,writer,withSecondaryRuntime,pool,schemaReceipt,env,
         token:actor=>signedToken(lab.keys,{sub:subject(actor)}),
         tokenWithClaims:(actor,claims)=>signedToken(lab.keys,{sub:subject(actor),claims})
       }));
