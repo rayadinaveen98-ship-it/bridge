@@ -139,17 +139,47 @@ test("B3c-2R3B-1 real 0001..0008 PG18 restricted-role atomic command gateway",as
         "SELECT source_conversation_id AS id FROM bridge_connections WHERE id=$1",
         [ab.connectionId])).rows[0].id;
       const stamp=new Date(),deadline=new Date(stamp.getTime()+30*60000);
+      const matchId=randomUUID(),sorted=[a,b].sort();
       await lab.writer(async client=>{
+        await client.query(
+          "INSERT INTO bridge_supported_languages(code,display_name,moderation_ready) "+
+          "VALUES('en','English',true) ON CONFLICT (code) DO NOTHING");
+        await client.query(
+          "INSERT INTO bridge_match_sessions("+
+          "id,member_low,member_high,language_code,state,lease_expires_at,activated_at) "+
+          "VALUES($1,$2,$3,'en','active',$4,$5)",
+          [matchId,sorted[0],sorted[1],new Date(stamp.getTime()+3600000),stamp]);
+        await client.query(
+          "INSERT INTO bridge_active_match_slots(account_id,match_session_id) "+
+          "VALUES($1,$3),($2,$3)",[a,b,matchId]);
         await client.query(
           "UPDATE bridge_conversations SET policy_version='bridge-v2',"+
           "v2_session_role='random',legacy_qa=false,last_accepted_at=$2,"+
-          "idle_expires_at=$3 WHERE id=$1",[source,stamp,deadline]);
+          "idle_expires_at=$3,match_session_id=$4 WHERE id=$1",
+          [source,stamp,deadline,matchId]);
         await client.query(
           "INSERT INTO bridge_conversation_participants(conversation_id,account_id) "+
           "VALUES($1,$2),($1,$3)",[source,a,b]);
       });
       await assert.rejects(run(c,"live",source),denied);
       assert.deepEqual((await run(a,"live",source)).messages,[]);
+      await constrained(
+        "UPDATE bridge_match_sessions SET state='ended',ended_at=clock_timestamp() "+
+        "WHERE id=$1",[matchId],
+        "UPDATE bridge_match_sessions SET state='active',ended_at=NULL WHERE id=$1",
+        [matchId],
+        async()=>{
+          await assert.rejects(run(a,"live",source),denied);
+          await assert.rejects(run(b,"send",source,{clientMessageId:randomUUID()}),denied);
+        });
+      await constrained(
+        "DELETE FROM bridge_active_match_slots WHERE account_id=$1",[a],
+        "INSERT INTO bridge_active_match_slots(account_id,match_session_id) VALUES($1,$2)",
+        [a,matchId],
+        async()=>{
+          await assert.rejects(run(a,"live",source),denied);
+          await assert.rejects(run(b,"send",source,{clientMessageId:randomUUID()}),denied);
+        });
       const accepted=await run(a,"send",source,{clientMessageId:randomUUID()});
       assert.equal(accepted.sequence,1);
       assert.equal((await run(b,"live",source)).messages[0]?.id,accepted.id);
